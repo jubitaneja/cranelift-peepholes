@@ -114,6 +114,21 @@ impl<'a> Lexer<'a> {
          }
     }
 
+    // Is the current character a digit?
+    pub fn is_digit(&mut self, ch: Option<char>) -> bool {
+        match ch {
+            Some('0' ... '9') => {
+                true
+            },
+            Some(_) => {
+                false
+            },
+            _ => {
+                false
+            },
+         }
+    }
+
     // Get the next character.
     fn next_ch(&mut self) -> Option<char> {
         // TODO: do we need to look for '\n' at the first?
@@ -152,7 +167,12 @@ impl<'a> Lexer<'a> {
         token(TokKind::Comment(text), loc)
     }
 
-    // Scan all useful characters here (except, newline, comments, etc.).
+    // Scan instructions in Souper IR.
+    // Examples:
+    // %0:i32 = var
+    // %a:i64 = add %0, 1:i64
+    // infer %a
+    // result %a
     fn scan_rest(&mut self) -> Result<LocatedToken<'a>, LocatedError> {
         let loc = self.loc();
         match self.lookahead {
@@ -161,10 +181,12 @@ impl<'a> Lexer<'a> {
             //None => None,
             Some(',') => {
                 self.next_ch();
+                println!("Token: Comma");
                 token(TokKind::Comma, loc)
             },
             Some('=') => {
                 self.next_ch();
+                println!("Token: Eq");
                 token(TokKind::Equal, loc)
             },
             Some('%') => {
@@ -172,23 +194,71 @@ impl<'a> Lexer<'a> {
                 let mut startPos = self.pos;
                 let mut current_ch = self.lookahead.clone();
 
+                // scan the LHS identifier
                 while self.is_alphadigit(current_ch) {
                     self.next_ch();
                     current_ch = self.lookahead.clone();
                 }
 
                 //FIXME: we want to exit here if error occurs
+                // FIXME: we have to eventually return that error kind of token
+                // do we have to break with a value even though there is no loop?
                 if self.pos - startPos == 0 {
                     error(Error::InvalidChar, "expected an identifier".to_string(), loc.clone());
+                    //token(TokKind::Error, loc)
                 }
 
+                // Look for bitwidth specifications, if any
+                if self.lookahead == Some(':') {
+                    self.next_ch();
+                    if self.lookahead != Some('i') {
+                        error(Error::InvalidChar, "expected 'i' to specify bitwidth".to_string(), loc.clone());
+                        //token(TokKind::Error, loc)
+                    }
+
+                    // scan the width
+                    self.next_ch();
+                    let mut widthBegin = self.pos;
+                    let mut width = 0;
+                    current_ch = self.lookahead.clone();
+                    while self.is_digit(current_ch) {
+                        self.next_ch();
+                        current_ch = self.lookahead.clone();
+                    }
+                    //FIXME: get the sliced width string and convert
+                    //it to int value
+
+                    // Make sure you got something in the width
+                    if self.pos - widthBegin == 0 {
+                        error(Error::InvalidChar, "expected an integer".to_string(), loc.clone());
+                        //token(TokKind::Error, loc)
+                    }
+                    // FIXME: enable this width = 0 check once width
+                    // is actually computed (str -> int)
+                    //if width == 0 {
+                    //    error(Error::InvalidChar, "width must be atleast 1".to_string(), loc.clone());
+                    //    //token(TokKind::Error, loc)
+                    //}
+                }
+                println!("Token: ValName");
+                token(TokKind::ValName, loc)
+            },
+            Some('a' ... 'z') | Some('A' ... 'Z') => {
+                self.next_ch();
+                println!("Token: Ident");
                 token(TokKind::Ident, loc)
+            },
+            Some('0' ... '9') => {
+                self.next_ch();
+                println!("Token: Int");
+                token(TokKind::Int, loc)
             },
             _ => {
                 // FIXME: I think this is not required, do something else
                 // with this case.
                 self.next_ch();
                 // FIXME: random token type was added for the time being
+                println!("Token not handled");
                 token(TokKind::ValName, loc)
             }
         }

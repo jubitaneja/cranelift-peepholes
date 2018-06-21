@@ -1,1 +1,3 @@
 %a:i32 = var
+%1 = add %a, 100
+infer %1
