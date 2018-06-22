@@ -93,16 +93,10 @@ impl<'a> Lexer<'a> {
         lex
     }
 
-    // Is the currnt character alphabet(a-z | A-Z)) or digit (0-9)?
-    pub fn is_alphadigit(&mut self, ch: Option<char>) -> bool {
+    // Is the current character a digit?
+    pub fn is_digit(&mut self, ch: Option<char>) -> bool {
         match ch {
             Some('0' ... '9') => {
-                true
-            },
-            Some('a' ... 'z') => {
-                true
-            },
-            Some('A' ... 'Z') => {
                 true
             },
             Some(_) => {
@@ -114,10 +108,10 @@ impl<'a> Lexer<'a> {
          }
     }
 
-    // Is the current character a digit?
-    pub fn is_digit(&mut self, ch: Option<char>) -> bool {
+    // Is the current character an alphabet?
+    pub fn is_alphabet(&mut self, ch: Option<char>) -> bool {
         match ch {
-            Some('0' ... '9') => {
+            Some('a' ... 'z') | Some ('A' ... 'Z')=> {
                 true
             },
             Some(_) => {
@@ -195,7 +189,7 @@ impl<'a> Lexer<'a> {
                 let mut current_ch = self.lookahead.clone();
 
                 // scan the LHS identifier
-                while self.is_alphadigit(current_ch) {
+                while self.is_alphabet(current_ch) | self.is_digit(current_ch) {
                     self.next_ch();
                     current_ch = self.lookahead.clone();
                 }
