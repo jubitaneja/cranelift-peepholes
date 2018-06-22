@@ -238,7 +238,11 @@ impl<'a> Lexer<'a> {
                 token(TokKind::ValName, loc)
             },
             Some('a' ... 'z') | Some('A' ... 'Z') => {
-                self.next_ch();
+                let mut current_ch = self.lookahead.clone();
+                while self.is_alphabet(current_ch) {
+                    self.next_ch();
+                    current_ch = self.lookahead.clone();
+                }
                 println!("Token: Ident");
                 token(TokKind::Ident, loc)
             },
