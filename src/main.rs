@@ -21,5 +21,5 @@ fn main () {
         .expect("something went wrong reading the file");
 
     // Start Tokenizing
-    lexer::startLexer(&contents);
+    lexer::start_lexer(&contents);
 }

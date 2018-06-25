@@ -11,9 +11,6 @@ pub enum TokKind<'a>{
     Equal,
     Int,
     UntypedInt,
-    KnownBits,
-    OpenParen,
-    CloseParen,
     Comment(&'a str),
     Eof,
 }
@@ -170,7 +167,7 @@ impl<'a> Lexer<'a> {
         let loc = self.loc();
         match self.lookahead {
             // FIXME: ideally there won't be None here, because
-            // its handled by getNextToken()
+            // its handled by get_next_token()
             //None => None,
             Some(',') => {
                 self.next_ch();
@@ -184,7 +181,7 @@ impl<'a> Lexer<'a> {
             },
             Some('%') => {
                 self.next_ch();
-                let mut startPos = self.pos;
+                let mut start_pos = self.pos;
                 let mut current_ch = self.lookahead.clone();
 
                 // scan the LHS identifier
@@ -196,7 +193,7 @@ impl<'a> Lexer<'a> {
                 //FIXME: we want to exit here if error occurs
                 // FIXME: we have to eventually return that error kind of token
                 // do we have to break with a value even though there is no loop?
-                if self.pos - startPos == 0 {
+                if self.pos - start_pos == 0 {
                     error(Error::InvalidChar, "expected an identifier".to_string(), loc.clone());
                     //token(TokKind::Error, loc)
                 }
@@ -211,7 +208,7 @@ impl<'a> Lexer<'a> {
 
                     // scan the width
                     self.next_ch();
-                    let mut widthBegin = self.pos;
+                    let mut width_begin = self.pos;
                     let mut width = 0;
                     current_ch = self.lookahead.clone();
                     while self.is_digit(current_ch) {
@@ -222,7 +219,7 @@ impl<'a> Lexer<'a> {
                     //it to int value
 
                     // Make sure you got something in the width
-                    if self.pos - widthBegin == 0 {
+                    if self.pos - width_begin == 0 {
                         error(Error::InvalidChar, "expected an integer".to_string(), loc.clone());
                         //token(TokKind::Error, loc)
                     }
@@ -282,7 +279,7 @@ impl<'a> Lexer<'a> {
 
     // Get next token. This function is a driver to invoke the token generator
     // (scan_rest) to scan the meaningful characters.
-    pub fn getNextToken(&mut self) -> Option<Result<LocatedToken<'a>, LocatedError>> {
+    pub fn get_next_token(&mut self) -> Option<Result<LocatedToken<'a>, LocatedError>> {
         loop {
             let loc = self.loc();
             match self.lookahead {
@@ -327,11 +324,11 @@ impl<'a> Lexer<'a> {
 }
 
 // Lexer Driver
-pub fn startLexer(text: & str) {
-    let mut inputLex = Lexer::new(text);
+pub fn start_lexer(text: & str) {
+    let mut input_lex = Lexer::new(text);
     // Lex until EOF token is found.
     loop {
-        let tok = inputLex.getNextToken();
+        let tok = input_lex.get_next_token();
         match tok {
             Some(Ok(LocatedToken { kind, location })) => {
                 match kind {
