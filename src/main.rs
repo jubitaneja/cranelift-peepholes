@@ -237,6 +237,7 @@ impl<'a> Lexer<'a> {
                 println!("Token: ValName");
                 token(TokKind::ValName, loc)
             },
+            // FIXME: modularize all these cases
             Some('a' ... 'z') | Some('A' ... 'Z') => {
                 let mut current_ch = self.lookahead.clone();
                 while self.is_alphabet(current_ch) {
@@ -246,8 +247,19 @@ impl<'a> Lexer<'a> {
                 println!("Token: Ident");
                 token(TokKind::Ident, loc)
             },
+            // FIXME: Take care of negative int too
             Some('0' ... '9') => {
-                self.next_ch();
+                let mut current_ch = self.lookahead.clone();
+                while self.is_digit(current_ch) {
+                    self.next_ch();
+                    current_ch = self.lookahead.clone();
+                }
+                // TODO: Scan the lookahead after the above while loop
+                // to see if it is ':'
+                // if yes, look for next_ch = 'i'
+                // look for bitwidth further
+                // FIXME: refactor scanning 'i32' part in a function (same can be
+                // used in '%' thing too)
                 println!("Token: Int");
                 token(TokKind::Int, loc)
             },
@@ -323,7 +335,12 @@ fn startLexer(text: & str) {
         let tok = inputLex.getNextToken();
         match tok {
             Some(Ok(LocatedToken { kind, location })) => {
-                break;
+                match kind {
+                    TokKind::Eof => {
+                        break;
+                    },
+                    _ => {}
+                }
             },
             Some(_) => {},
             _ => {}
