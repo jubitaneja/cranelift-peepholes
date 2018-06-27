@@ -3,6 +3,7 @@
 use std::str::CharIndices;
 
 // Types of Tokens
+#[derive(Clone)]
 pub enum TokKind<'a>{
     Error,
     Ident,
@@ -16,6 +17,7 @@ pub enum TokKind<'a>{
 }
 
 // Error type
+#[derive(Clone)]
 pub enum Error {
     InvalidChar,
 }
@@ -230,7 +232,7 @@ impl<'a> Lexer<'a> {
                     //    //token(TokKind::Error, loc)
                     //}
                 }
-                println!("Token: ValName");
+                println!(" --- Token: ValName");
                 token(TokKind::ValName, loc)
             },
             // FIXME: modularize all these cases
@@ -282,7 +284,7 @@ impl<'a> Lexer<'a> {
     pub fn get_next_token(&mut self) -> Option<Result<LocatedToken<'a>, LocatedError>> {
         loop {
             let loc = self.loc();
-            match self.lookahead {
+            return match self.lookahead {
                 None => {
                     // Break with an EOF token.
                     break Some(token(TokKind::Eof, loc));
@@ -315,16 +317,16 @@ impl<'a> Lexer<'a> {
                     continue;
                 },
                 _ => {
-                    Some(self.scan_rest());
-                    continue;
+                    break Some(self.scan_rest());
+                    //continue;
                 },
-            }
+            };
         }
     }
 }
 
 // Lexer Driver
-pub fn start_lexer(text: & str) {
+pub fn start_lexer(text: &str) {
     let mut input_lex = Lexer::new(text);
     // Lex until EOF token is found.
     loop {
