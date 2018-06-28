@@ -30,7 +30,7 @@ impl<'a> Parser<'a> {
     fn get_token_name(&mut self) {
         match self.lookahead {
             Some(TokKind::ValName) => println!("ValName "),
-            Some(TokKind::Ident) => println!("Ident "),
+            Some(TokKind::Ident(text)) => println!("Ident "),
             Some(TokKind::Comma) => println!("Comma "),
             Some(TokKind::Equal) => println!("Eq "),
             Some(TokKind::Int) => println!("Int "),
@@ -123,10 +123,20 @@ impl<'a> Parser<'a> {
 //                // build error
 //                println!("unexpected ops type");
 //            },
-        }
+//        }
+//      }
     }
 
     fn parse_inst_types(&mut self) {
+        if let Some(TokKind::Ident(text)) = self.lookahead {
+            match text {
+                "var" => {
+                    println!("Ident = Var");
+                    self.consume_token();
+                },
+                _ => {}
+            }
+        }
 //        instKind = self.instkind;
 //
 //        match instkind {
@@ -184,35 +194,43 @@ impl<'a> Parser<'a> {
         // context.getInst()
 
         self.consume_token();
+        println!("Dbg: COnsumed token after Valname is : ");
+        self.get_token_name();
 
         // Look for Equal token now
         match self.lookahead {
-            _ => {
-                // Build error "expected ="
-                println!("Expected ValName -> ???? Eq");
-            },
             Some(TokKind::Equal) => {
+                println!("Dbg: its Tok::Equal");
                 self.consume_token();
+                println!("Dbg: COnsumed token after Equal is : ");
+                self.get_token_name();
 
                 // Look for ident tokens like, var; add; phi; etc.
                 match self.lookahead {
-                    _ => {
-                        // build error "expected identifier here:Valname -> Eq -> Ident"
-                        println!("Expected valname -> Eq -> ??? Ident");
-                    },
-                    Some(TokKind::Ident) => {
+                    Some(TokKind::Ident(text)) => {
                         // Deal with actual part of inst, like:
                         // var
                         // add %0, %1
                         // phi %0, 1, 2
+                        println!("Dbg: It's Ident token");
+                        println!("Dbg: call parse_inst_types()");
                         self.parse_inst_types();
                     },
+                    _ => {
+                        // build error "expected identifier here:Valname -> Eq -> Ident"
+                        println!("Expected valname -> Eq -> ??? Ident");
+                    },
                 }
+            },
+            _ => {
+                // Build error "expected ="
+                println!("Expected ValName -> ???? Eq");
             },
         }
     }
 
     fn parse_ident_inst(&mut self) {
+        // extend this later
     }
 
     // parse each instruction
@@ -225,6 +243,8 @@ impl<'a> Parser<'a> {
 
         match self.lookahead {
             Some(TokKind::ValName) => {
+                println!("Dbg: In parse_inst() - current token is ValName");
+                println!("Call: Parse_valname_inst()");
                 self.parse_valname_inst();
 //                self.consume_token();
 //                match self.lookahead {
@@ -237,7 +257,7 @@ impl<'a> Parser<'a> {
 //                    },
 //                }
             },
-            Some(TokKind::Ident) => {
+            Some(TokKind::Ident(text)) => {
                 self.parse_ident_inst();
 //                println!("Ident in parseInst");
 //                self.consume_token();
@@ -248,49 +268,32 @@ impl<'a> Parser<'a> {
             },
         }
     }
-
-    // parse line
-///    fn parse_lines(&mut self) {
-///        // Loop until EOF token
-///        loop {
-///            println!("Before");
-///            self.get_token_name();
-///            let mut x = self.consume_token();
-///            println!("After");
-///            self.get_token_name();
-///            match x {
-///                Some(TokKind::Eof) => {
-///                    break;
-///                },
-///                _ => {
-///                    self.parse_inst();
-///                    continue;
-///                },
-///            }
-///        }
-///        if let Some(ref mut err) = self.lex_error {
-///            println!("Error case");
-///            return match err {
-///                //lexer::Error::InvalidChar => err!(self.loc, "invalid character"),
-///                lexer::Error::InvalidChar => println!("Error case in parse_lines"),
-///            };
-///        }
-///    }
 }
 
 
 pub fn parse(text: &str) {
+    println!("*** Dbg: Parsing begins ***");
     let mut p = Parser::new(text);
 
     p.consume_token();
+    println!("--- Dbg: first token consumed by parser is: ----");
+    p.get_token_name(); //Dbg
 
     // FIXMEL we want a ret value from parse_line() to
     // be used later for code gen purpose
 
     loop {
-        match self.lookahead {
+        println!("Dbg -- enter the major loop");
+        println!("************************  Current token to start this loop is: ");
+        p.get_token_name();
+        match p.lookahead {
             Some(TokKind::Eof) => break,
-            _ => p.parse_inst(),
+            //_ => p.parse_inst(),
+            _ => {
+                println!("Dbg: Not Tok::EOF, call parse_inst()");
+                p.parse_inst();
+                println!("Dbg: Call returned from parse_inst");
+            },
         }
     }
 }
