@@ -173,12 +173,12 @@ impl<'a> Lexer<'a> {
             //None => None,
             Some(',') => {
                 self.next_ch();
-                println!("Token: Comma");
+                //println!("Token: Comma");
                 token(TokKind::Comma, loc)
             },
             Some('=') => {
                 self.next_ch();
-                println!("Token: Eq");
+                //println!("Token: Eq");
                 token(TokKind::Equal, loc)
             },
             Some('%') => {
@@ -232,7 +232,7 @@ impl<'a> Lexer<'a> {
                     //    //token(TokKind::Error, loc)
                     //}
                 }
-                println!("Token: ValName");
+                //println!("Token: ValName");
                 token(TokKind::ValName, loc)
             },
             // FIXME: modularize all these cases
@@ -244,7 +244,7 @@ impl<'a> Lexer<'a> {
                     current_ch = self.lookahead.clone();
                 }
                 let text = &self.source[begin_pos..self.pos];
-                println!("Token: Ident");
+                //println!("Token: Ident");
                 token(TokKind::Ident(text), loc)
             },
             // FIXME: Take care of negative int too
@@ -260,7 +260,7 @@ impl<'a> Lexer<'a> {
                 // look for bitwidth further
                 // FIXME: refactor scanning 'i32' part in a function (same can be
                 // used in '%' thing too)
-                println!("Token: Int");
+                //println!("Token: Int");
                 token(TokKind::Int, loc)
             },
             _ => {
@@ -268,7 +268,7 @@ impl<'a> Lexer<'a> {
                 // with this case.
                 self.next_ch();
                 // FIXME: random token type was added for the time being
-                println!("Token not handled");
+                //println!("Token not handled");
                 token(TokKind::ValName, loc)
             }
         }
@@ -320,7 +320,6 @@ impl<'a> Lexer<'a> {
                 },
                 _ => {
                     break Some(self.scan_rest());
-                    //continue;
                 },
             };
         }
