@@ -2,6 +2,19 @@
 
 use lexer::{self, Lexer, TokKind, Location, LocatedToken, LocatedError};
 
+pub enum InstKind {
+    Var,
+    Const,
+    UntypedConst,
+    Add,
+    AddNW,
+    AddNSW,
+    AddNUW,
+    Sub,
+    Mul,
+    NoneType,
+}
+
 #[derive(Clone)]
 pub struct Parser<'a> {
     lex: Lexer<'a>,
@@ -23,6 +36,15 @@ impl<'a> Parser<'a> {
             lookahead: None,
             loc: Location { line_num: 0 },
             lex_error: None,
+        }
+    }
+
+    // return inst Kind for the given inst names
+    fn get_inst_kind(&mut self, name: &str) -> InstKind {
+        match name {
+            "var" => InstKind::Var,
+            "add" => InstKind::Add,
+            _ => InstKind::NoneType,
         }
     }
 
@@ -129,12 +151,15 @@ impl<'a> Parser<'a> {
 
     fn parse_inst_types(&mut self) {
         if let Some(TokKind::Ident(text)) = self.lookahead {
-            match text {
-                "var" => {
-                    println!("Ident = Var");
+            match self.get_inst_kind(text) {
+                InstKind::Var => {
+                    println!("InstKind::Var");
                     self.consume_token();
                 },
-                _ => {}
+                _ => {
+                    println!("InstKind:: Unknown");
+                    self.consume_token();
+                },
             }
         }
 //        instKind = self.instkind;
