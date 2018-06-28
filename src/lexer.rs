@@ -6,7 +6,7 @@ use std::str::CharIndices;
 #[derive(Clone)]
 pub enum TokKind<'a>{
     Error,
-    Ident,
+    Ident(&'a str),
     ValName,
     Comma,
     Equal,
@@ -232,18 +232,20 @@ impl<'a> Lexer<'a> {
                     //    //token(TokKind::Error, loc)
                     //}
                 }
-                println!(" --- Token: ValName");
+                println!("Token: ValName");
                 token(TokKind::ValName, loc)
             },
             // FIXME: modularize all these cases
             Some('a' ... 'z') | Some('A' ... 'Z') => {
+                let begin_pos = self.pos;
                 let mut current_ch = self.lookahead.clone();
                 while self.is_alphabet(current_ch) {
                     self.next_ch();
                     current_ch = self.lookahead.clone();
                 }
+                let text = &self.source[begin_pos..self.pos];
                 println!("Token: Ident");
-                token(TokKind::Ident, loc)
+                token(TokKind::Ident(text), loc)
             },
             // FIXME: Take care of negative int too
             Some('0' ... '9') => {

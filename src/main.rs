@@ -5,6 +5,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 mod lexer;
+mod parser;
 
 fn main () {
     let args: Vec<String> = env::args().collect();
@@ -22,4 +23,7 @@ fn main () {
 
     // Start Tokenizing
     lexer::start_lexer(&contents);
+
+    // Start Parsing
+    parser::parse(&contents);
 }
