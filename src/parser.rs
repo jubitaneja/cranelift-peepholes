@@ -1,5 +1,6 @@
 // Parser for souper tokens
 
+use std::collections::HashMap;
 use lexer::{self, Lexer, TokKind, Location, LocatedToken, LocatedError};
 
 pub enum InstKind {
@@ -16,8 +17,9 @@ pub enum InstKind {
     NoneType,
 }
 
-pub struct Inst {
+pub struct Inst<'a> {
     pub kind: InstKind,
+    pub lhs: &'a str,
     //pub instWidth: u32,
     // ops: Vec<Inst>
 }
@@ -36,6 +38,10 @@ pub struct Parser<'a> {
 
     /// LHS Valname
     lhs_valname: &'a str,
+
+    // hash map of LHS valnames to Index values
+    lhsValNames_to_Idx: HashMap<&'a str, u32>,
+
 }
 
 impl<'a> Parser<'a> {
@@ -47,6 +53,26 @@ impl<'a> Parser<'a> {
             loc: Location { line_num: 0 },
             lex_error: None,
             lhs_valname: "",
+            lhsValNames_to_Idx: HashMap::new(),
+        }
+    }
+
+    fn create_var(&mut self, instkind: InstKind, instname: &'a str) -> Inst<'a> {
+        // return the inst struct with details
+        // FIXME: add more details later if required
+        Inst {
+            kind: instkind,
+            lhs: instname,
+        }
+    }
+
+    fn create_inst(&mut self, instkind: InstKind, instname: &'a str) -> Inst<'a> {
+        // return the inst struct with details
+        // FIXME: add more details later if required
+        // Add Ops details too here: Major TODO
+        Inst {
+            kind: instkind,
+            lhs: instname,
         }
     }
 
@@ -108,8 +134,24 @@ impl<'a> Parser<'a> {
         }
     }
 
-    //fn parse_ops(&mut self) -> Option<Inst> {
     fn parse_ops(&mut self) {
+        loop {
+            //op = self.parse_op();
+            self.parse_op();
+
+            // parse_op() already consumed next token, so look
+            // for comma token now.
+            match self.lookahead {
+                Some(TokKind::Comma) => {
+                    self.consume_token();
+                },
+                _ => break,
+            }
+        }
+    }
+
+    //fn parse_ops(&mut self) -> Option<Inst> {
+    fn parse_op(&mut self) {
         match self.lookahead {
             Some(TokKind::ValName(lhs)) => {
                 // error checking: self.width == 0 => error unexpected width of op
@@ -149,7 +191,7 @@ impl<'a> Parser<'a> {
     }
     //}
 
-    fn parse_inst_types(&mut self) {
+    fn parse_inst_types(&mut self) -> Option<Inst<'a>> {
         if let Some(TokKind::Ident(text)) = self.lookahead {
             match self.get_inst_kind(text) {
                 InstKind::Var => {
@@ -162,34 +204,44 @@ impl<'a> Parser<'a> {
                     // create Var instruction and return that
                     // self.createVar(instValName, instWidth);
                     println!("Build Var Instruction");
+                    // Discuss: Rust study group
+                    // Error: cannot borrow `self.lhs_valname` as immutable because `*self` is also borrowed as mutable
+                    //Some(self.create_var(InstKind::Var, self.lhs_valname.clone()))
+
+                    let instname = self.lhs_valname.clone();
+
+                    // TODO: HASHMAP: store instnames to index values in hash map
+                    //self.lhsValName_to_Idx.insert(instname, )
+
+                    Some(self.create_var(InstKind::Var, instname))
                 },
                 _ => {
                     let instKind = self.get_inst_kind(text);
+
                     // Start parsing Ops
                     self.consume_token();
+                    self.parse_ops();
 
-                    loop {
-                        //op = self.parse_ops();
-                        self.parse_ops();
-
-                        // parse_ops() already consumed next token, so look
-                        // for comma token now.
-                        match self.lookahead {
-                            Some(TokKind::Comma) => {
-                                self.consume_token();
-                            },
-                            _ => break,
-                        }
-                    }
                     println!("Build {} instruction", text);
                     // TODO: return the build instruction
                     // IC.getInst(instwidth, instkind, ops)
+                    //Some(self.create_inst(instKind, self.lhs_valname.clone()))
+                    let instname = self.lhs_valname.clone();
+                    
+                    // TODO: HASHMAP: store instnames to index values in hash map
+
+                    Some(self.create_inst(instKind, instname))
                 },
             }
+        } else {
+            // return an error here
+            println!("Not a valid inst type");
+            let inst = None;
+            inst
         }
     }
 
-    fn parse_valname_inst(&mut self) {
+    fn parse_valname_inst(&mut self) -> Option<Inst<'a>> {
         // FIXME: Jubi: Add this info to token struct and get it
         // instwidth = self.width
         // instValName = self.instValname
@@ -212,30 +264,38 @@ impl<'a> Parser<'a> {
                         // var
                         // add %0, %1
                         // phi %0, 1, 2
-                        self.parse_inst_types();
+                        self.parse_inst_types()
                     },
                     _ => {
                         // build error "expected identifier here:Valname -> Eq -> Ident"
                         println!("Error: Expected valname -> Eq -> ??? Ident");
+                        // FIXME: here, either build error inst or error return by panic
+                        let inst = None;
+                        inst
                     },
                 }
             },
             _ => {
                 // Build error "expected ="
                 println!("Error: Expected ValName -> ???? Eq");
+                // FIXME: here, either build error inst or error return by panic
+                let inst = None;
+                inst
             },
         }
     }
 
-    fn parse_ident_inst(&mut self) {
+    fn parse_ident_inst(&mut self) -> Option<Inst<'a>> {
         // extend this later
         println!("Ident type instructions are not yet handled, like infer, cand, result, pc, blockpc");
         // FIXME: For now, I am simply cnsuming further tokens
         self.consume_token();
+        let inst = None;
+        inst
     }
 
     // parse each instruction
-    fn parse_inst(&mut self) {
+    fn parse_inst(&mut self) -> Option<Inst<'a>> {
         // Instructions start either with valname or Ident
         // Example:
         // %1:i32 = .... 
@@ -245,21 +305,23 @@ impl<'a> Parser<'a> {
         match self.lookahead {
             Some(TokKind::ValName(lhs)) => {
                 self.lhs_valname = lhs;
-                self.parse_valname_inst();
+                self.parse_valname_inst()
             },
             Some(TokKind::Ident(text)) => {
-                self.parse_ident_inst();
+                self.parse_ident_inst()
             },
             _ => {
                 println!("Error: Instruction either start with ValName token or Ident token");
                 // FIXME: Jubi: Build an error
+                let inst = None;
+                inst
             },
         }
     }
 }
 
 
-pub fn parse(text: &str) {
+pub fn parse(text: &str) -> Vec<Option<Inst>> {
     let mut p = Parser::new(text);
 
     p.consume_token();
@@ -267,13 +329,28 @@ pub fn parse(text: &str) {
     // FIXMEL we want a ret value from parse_line() to
     // be used later for code gen purpose
 
+    let mut insts: Vec<Option<Inst>> = Vec::new();
     loop {
         match p.lookahead {
             Some(TokKind::Eof) => break,
-            //_ => p.parse_inst(),
             _ => {
-                p.parse_inst();
+                let inst = p.parse_inst();
+                insts.push(inst);
+
+                //FIXME: Do we need this error checking with match?
+                //match inst {
+                //    Some(Inst {kind, lhs} ) => {
+                //        println!("Inst LHS at the end ======= {}", lhs);
+                //        // Push the inst parsed in a vector here
+                //        let i = inst.clone();
+                //        insts.push(i);
+                //    },
+                //    _ => {
+                //        println!("Invalid Inst parsed");
+                //    },
+                //}
             },
         }
     }
+    insts
 }
