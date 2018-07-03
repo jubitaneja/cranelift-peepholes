@@ -7,7 +7,7 @@ use std::str::CharIndices;
 pub enum TokKind<'a>{
     Error,
     Ident(&'a str),
-    ValName,
+    ValName(&'a str),
     Comma,
     Equal,
     Int,
@@ -199,6 +199,7 @@ impl<'a> Lexer<'a> {
                     error(Error::InvalidChar, "expected an identifier".to_string(), loc.clone());
                     //token(TokKind::Error, loc)
                 }
+                let LHS_ValName = &self.source[start_pos-1..self.pos];
 
                 // Look for bitwidth specifications, if any
                 if self.lookahead == Some(':') {
@@ -233,7 +234,7 @@ impl<'a> Lexer<'a> {
                     //}
                 }
                 //println!("Token: ValName");
-                token(TokKind::ValName, loc)
+                token(TokKind::ValName(LHS_ValName), loc)
             },
             // FIXME: modularize all these cases
             Some('a' ... 'z') | Some('A' ... 'Z') => {
@@ -269,7 +270,7 @@ impl<'a> Lexer<'a> {
                 self.next_ch();
                 // FIXME: random token type was added for the time being
                 //println!("Token not handled");
-                token(TokKind::ValName, loc)
+                token(TokKind::Error, loc)
             }
         }
     }

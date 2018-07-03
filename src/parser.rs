@@ -18,7 +18,7 @@ pub enum InstKind {
 
 pub struct Inst {
     pub kind: InstKind,
-    // pub instWidth: u32,
+    //pub instWidth: u32,
     // ops: Vec<Inst>
 }
 
@@ -33,6 +33,9 @@ pub struct Parser<'a> {
     loc: Location,
 
     lex_error: Option<lexer::Error>,
+
+    /// LHS Valname
+    lhs_valname: &'a str,
 }
 
 impl<'a> Parser<'a> {
@@ -43,6 +46,7 @@ impl<'a> Parser<'a> {
             lookahead: None,
             loc: Location { line_num: 0 },
             lex_error: None,
+            lhs_valname: "",
         }
     }
 
@@ -59,7 +63,7 @@ impl<'a> Parser<'a> {
     // print token name
     fn get_token_name(&mut self) {
         match self.lookahead {
-            Some(TokKind::ValName) => println!("ValName "),
+            Some(TokKind::ValName(lhs)) => println!("ValName "),
             Some(TokKind::Ident(text)) => println!("Ident "),
             Some(TokKind::Comma) => println!("Comma "),
             Some(TokKind::Equal) => println!("Eq "),
@@ -107,7 +111,7 @@ impl<'a> Parser<'a> {
     //fn parse_ops(&mut self) -> Option<Inst> {
     fn parse_ops(&mut self) {
         match self.lookahead {
-            Some(TokKind::ValName) => {
+            Some(TokKind::ValName(lhs)) => {
                 // error checking: self.width == 0 => error unexpected width of op
 
                 // Inst I = createInst with inst width, instvalname
@@ -239,7 +243,8 @@ impl<'a> Parser<'a> {
         // pc ... , blockpc ... , 
 
         match self.lookahead {
-            Some(TokKind::ValName) => {
+            Some(TokKind::ValName(lhs)) => {
+                self.lhs_valname = lhs;
                 self.parse_valname_inst();
             },
             Some(TokKind::Ident(text)) => {
