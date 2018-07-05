@@ -237,9 +237,6 @@ impl<'a> Parser<'a> {
 
                     let instname = self.lhs_valname.clone();
 
-                    // TODO: HASHMAP: store instnames to index values in hash map
-                    //self.lhsValName_to_Idx.insert(instname, )
-
                     Some(self.create_var(InstKind::Var, instname))
                 },
                 _ => {
@@ -254,8 +251,6 @@ impl<'a> Parser<'a> {
                     // IC.getInst(instwidth, instkind, ops)
                     //Some(self.create_inst(instKind, self.lhs_valname.clone()))
                     let instname = self.lhs_valname.clone();
-                    
-                    // TODO: HASHMAP: store instnames to index values in hash map
 
                     Some(self.create_inst(instKind, instname))
                 },
@@ -363,6 +358,8 @@ pub fn parse(text: &str) {
             _ => {
                 let inst = p.parse_inst();
                 insts.push(inst);
+
+                // create hashmap and keep inserting valnames + index pair
 
                 //FIXME: Do we need this error checking with match?
                 //match inst {
