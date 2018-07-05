@@ -17,11 +17,38 @@ pub enum InstKind {
     NoneType,
 }
 
+pub enum CtonValueDef {
+    Result,
+    Param,
+}
+
+pub enum CtonInstKind {
+    Unary,
+    UnaryImm,
+    Binary,
+    BinaryImm,
+    Var,
+}
+
+pub enum CtonOpcode {
+    Iadd,
+    IaddImm,
+    Var,
+}
+
 pub struct Inst<'a> {
     pub kind: InstKind,
     pub lhs: &'a str,
     //pub instWidth: u32,
     // ops: Vec<Inst>
+}
+
+pub struct CtonInst<'a> {
+    pub valuedef: CtonValueDef,
+    pub kind: CtonInstKind,
+    pub opcode: CtonOpcode,
+    // FIXME: just replica of souper's lhs" do we need this?
+    pub lhs: &'a str,
 }
 
 #[derive(Clone)]
@@ -321,7 +348,7 @@ impl<'a> Parser<'a> {
 }
 
 
-pub fn parse(text: &str) -> Vec<Option<Inst>> {
+pub fn parse(text: &str) {
     let mut p = Parser::new(text);
 
     p.consume_token();
@@ -352,5 +379,79 @@ pub fn parse(text: &str) -> Vec<Option<Inst>> {
             },
         }
     }
-    insts
+    //lowering_souper_isa_to_cton_isa(insts);
+    let ctonInsts = lowering_souper_isa_to_cton_isa(insts);
+    for c in ctonInsts {
+        println!("cton inst created: {:?}, {:?}, {:?}", getCtonValDefName(c.valuedef), getCtonOpCodeName(c.opcode), c.lhs)
+    }
+}
+
+pub fn getCtonOpCodeName(opcode: CtonOpcode) {
+    match opcode {
+        CtonOpcode::Iadd => println!("Cton: Iadd"),
+        _ => println!("Cton: other type yet to be handled"),
+    }
+}
+
+pub fn getCtonValDefName(vdef: CtonValueDef) {
+    match vdef {
+        CtonValueDef::Result => println!("Cton: ValueDef"),
+        CtonValueDef::Param => println!("Cton: Param"),
+        _ => println!("Cton: No such value def types"),
+    }
+}
+
+pub fn mapping_souper_to_cton_isa(souper_inst: Option<Inst>) -> CtonInst {
+    match souper_inst {
+        Some(Inst{kind, lhs}) => {
+            match kind {
+                InstKind::Add => {
+                    CtonInst{
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Iadd,
+                        lhs: lhs,
+                    }
+                },
+                InstKind::Var => {
+                    CtonInst{
+                        valuedef: CtonValueDef::Param,
+                        kind: CtonInstKind::Var,
+                        opcode: CtonOpcode::Var,
+                        lhs: lhs,
+                    }
+                },
+                _ => {
+                    CtonInst{
+                        valuedef: CtonValueDef::Param,
+                        kind: CtonInstKind::Var,
+                        opcode: CtonOpcode::Var,
+                        lhs: lhs,
+                    }
+                },
+            }
+        },
+        _ => {
+            CtonInst{
+                valuedef: CtonValueDef::Param,
+                kind: CtonInstKind::Var,
+                opcode: CtonOpcode::Var,
+                lhs: "",
+            }
+        },
+    }
+}
+
+//fn lowering_souper_isa_to_cton_isa(souper_insts: Vec<Inst>) {
+fn lowering_souper_isa_to_cton_isa(souper_insts: Vec<Option<Inst>>) -> Vec<CtonInst> {
+    let mut cton_insts: Vec<CtonInst> = Vec::new();
+    for souper_inst in souper_insts {
+        // get the mapping souper ISA to cretonne ISA
+        // And, insert each cton inst to a new vec<cton_inst>
+        // add more details to cton inst structure:
+        // name, binary/unary instruction data, 
+        let cton_inst = mapping_souper_to_cton_isa(souper_inst);
+        cton_insts.push(cton_inst);
+    }
+    cton_insts
 }
