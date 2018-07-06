@@ -67,7 +67,7 @@ pub struct Parser<'a> {
     lhs_valname: &'a str,
 
     // hash map of LHS valnames to Index values
-    lhsValNames_to_Idx: HashMap<&'a str, u32>,
+    lhsValNames_to_Idx: HashMap<&'a str, usize>,
 
 }
 
@@ -218,7 +218,7 @@ impl<'a> Parser<'a> {
     }
     //}
 
-    fn parse_inst_types(&mut self) -> Option<Inst<'a>> {
+    fn parse_inst_types(&mut self) -> Inst<'a> {
         if let Some(TokKind::Ident(text)) = self.lookahead {
             match self.get_inst_kind(text) {
                 InstKind::Var => {
@@ -237,7 +237,7 @@ impl<'a> Parser<'a> {
 
                     let instname = self.lhs_valname.clone();
 
-                    Some(self.create_var(InstKind::Var, instname))
+                    self.create_var(InstKind::Var, instname)
                 },
                 _ => {
                     let instKind = self.get_inst_kind(text);
@@ -252,18 +252,15 @@ impl<'a> Parser<'a> {
                     //Some(self.create_inst(instKind, self.lhs_valname.clone()))
                     let instname = self.lhs_valname.clone();
 
-                    Some(self.create_inst(instKind, instname))
+                    self.create_inst(instKind, instname)
                 },
             }
         } else {
-            // return an error here
-            println!("Not a valid inst type");
-            let inst = None;
-            inst
+            panic!("Error: fn: parse_inst_types()");
         }
     }
 
-    fn parse_valname_inst(&mut self) -> Option<Inst<'a>> {
+    fn parse_valname_inst(&mut self) -> Inst<'a> {
         // FIXME: Jubi: Add this info to token struct and get it
         // instwidth = self.width
         // instValName = self.instValname
@@ -290,34 +287,32 @@ impl<'a> Parser<'a> {
                     },
                     _ => {
                         // build error "expected identifier here:Valname -> Eq -> Ident"
-                        println!("Error: Expected valname -> Eq -> ??? Ident");
+                        //println!("Error: Expected valname -> Eq -> ??? Ident");
                         // FIXME: here, either build error inst or error return by panic
-                        let inst = None;
-                        inst
+                        panic!("Error: Expected a valid Identifier after ValName -> Eq token");
                     },
                 }
             },
             _ => {
                 // Build error "expected ="
-                println!("Error: Expected ValName -> ???? Eq");
+                //println!("Error: Expected ValName -> ???? Eq");
                 // FIXME: here, either build error inst or error return by panic
-                let inst = None;
-                inst
+                panic!("Error: Expected Eq token followed by Valname token");
             },
         }
     }
 
-    fn parse_ident_inst(&mut self) -> Option<Inst<'a>> {
+    fn parse_ident_inst(&mut self) -> Inst<'a> {
         // extend this later
-        println!("Ident type instructions are not yet handled, like infer, cand, result, pc, blockpc");
+        //println!("Ident type instructions are not yet handled, like infer, cand, result, pc, blockpc");
         // FIXME: For now, I am simply cnsuming further tokens
         self.consume_token();
-        let inst = None;
-        inst
+        // FIXME: handle ident instructions and remove this panic
+        panic!("Error: Ident instructions are not yet handled");
     }
 
     // parse each instruction
-    fn parse_inst(&mut self) -> Option<Inst<'a>> {
+    fn parse_inst(&mut self) -> Inst<'a> {
         // Instructions start either with valname or Ident
         // Example:
         // %1:i32 = .... 
@@ -333,10 +328,9 @@ impl<'a> Parser<'a> {
                 self.parse_ident_inst()
             },
             _ => {
-                println!("Error: Instruction either start with ValName token or Ident token");
+                //println!("Error: Instruction either start with ValName token or Ident token");
                 // FIXME: Jubi: Build an error
-                let inst = None;
-                inst
+                panic!("Error: Either instruction should start with valname or identifier");
             },
         }
     }
@@ -351,15 +345,17 @@ pub fn parse(text: &str) {
     // FIXMEL we want a ret value from parse_line() to
     // be used later for code gen purpose
 
-    let mut insts: Vec<Option<Inst>> = Vec::new();
+    let mut insts: Vec<Inst> = Vec::new();
     loop {
         match p.lookahead {
             Some(TokKind::Eof) => break,
             _ => {
                 let inst = p.parse_inst();
+                let LHS = inst.lhs;
                 insts.push(inst);
 
                 // create hashmap and keep inserting valnames + index pair
+                p.lhsValNames_to_Idx.insert(LHS, insts.len());
 
                 //FIXME: Do we need this error checking with match?
                 //match inst {
@@ -375,6 +371,10 @@ pub fn parse(text: &str) {
                 //}
             },
         }
+    }
+    // printing hash map for debug purpose only: FIXME: delete this later
+    for (lhs, idx) in &p.lhsValNames_to_Idx {
+        println!("lhs = {}, idx = {}", lhs, idx);
     }
     //lowering_souper_isa_to_cton_isa(insts);
     let ctonInsts = lowering_souper_isa_to_cton_isa(insts);
@@ -398,9 +398,9 @@ pub fn getCtonValDefName(vdef: CtonValueDef) {
     }
 }
 
-pub fn mapping_souper_to_cton_isa(souper_inst: Option<Inst>) -> CtonInst {
+pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
     match souper_inst {
-        Some(Inst{kind, lhs}) => {
+        Inst{kind, lhs} => {
             match kind {
                 InstKind::Add => {
                     CtonInst{
@@ -440,7 +440,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Option<Inst>) -> CtonInst {
 }
 
 //fn lowering_souper_isa_to_cton_isa(souper_insts: Vec<Inst>) {
-fn lowering_souper_isa_to_cton_isa(souper_insts: Vec<Option<Inst>>) -> Vec<CtonInst> {
+fn lowering_souper_isa_to_cton_isa(souper_insts: Vec<Inst>) -> Vec<CtonInst> {
     let mut cton_insts: Vec<CtonInst> = Vec::new();
     for souper_inst in souper_insts {
         // get the mapping souper ISA to cretonne ISA
