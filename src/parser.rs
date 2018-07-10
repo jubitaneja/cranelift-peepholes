@@ -36,11 +36,24 @@ pub enum CtonOpcode {
     Var,
 }
 
+pub enum SouperOpType {
+    Index,
+    Constant,
+}
+
+pub struct SouperOperand {
+    pub kind: SouperOpType,
+    // what should be the type of constants values?
+    pub idx_val: Option<usize>,
+    pub const_val: Option<i64>,
+    //pub width: u32,
+}
+
 pub struct Inst<'a> {
     pub kind: InstKind,
     pub lhs: &'a str,
     //pub instWidth: u32,
-    // ops: Vec<Inst>
+    pub ops: Option<Vec<SouperOperand>>,
 }
 
 pub struct CtonInst<'a> {
@@ -90,16 +103,18 @@ impl<'a> Parser<'a> {
         Inst {
             kind: instkind,
             lhs: instname,
+            ops: None,
         }
     }
 
-    fn create_inst(&mut self, instkind: InstKind, instname: &'a str) -> Inst<'a> {
+    fn create_inst(&mut self, instkind: InstKind, instname: &'a str, ops: Vec<SouperOperand>) -> Inst<'a> {
         // return the inst struct with details
         // FIXME: add more details later if required
         // Add Ops details too here: Major TODO
         Inst {
             kind: instkind,
             lhs: instname,
+            ops: Some(ops),
         }
     }
 
@@ -161,10 +176,12 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_ops(&mut self) {
+    fn parse_ops(&mut self) -> Vec<SouperOperand> {
+        let mut ops: Vec<SouperOperand> = Vec::new();
         loop {
             //op = self.parse_op();
-            self.parse_op();
+            let op = self.parse_op();
+            ops.push(op);
 
             // parse_op() already consumed next token, so look
             // for comma token now.
@@ -175,10 +192,10 @@ impl<'a> Parser<'a> {
                 _ => break,
             }
         }
+        ops
     }
 
-    //fn parse_ops(&mut self) -> Option<Inst> {
-    fn parse_op(&mut self) {
+    fn parse_op(&mut self) -> SouperOperand {
         match self.lookahead {
             Some(TokKind::ValName(lhs)) => {
                 // error checking: self.width == 0 => error unexpected width of op
@@ -188,9 +205,26 @@ impl<'a> Parser<'a> {
                 // if I is None => error "%<x> is not an inst"
 
                 println!("Op: Valname");
+                println!("*************** Lookup for op in hash map **********");
+                /// FIXME: find an efficient way to retrieve the value corresponding to the key
+                /// I can look for the key using contains_key(lhs) on hashmap, but had no idea how
+                /// to get the corresponding value
+                let mut value = None;
+                for (key, val) in &self.lhsValNames_to_Idx {
+                    if key == &lhs {
+                        println!("Yes! key found = {}", key);
+                        println!("Val index at this key is: {}", val);
+                        value = Some(*val);
+                    }
+                }
                 self.consume_token();
 
                 //return I
+                SouperOperand {
+                    kind: SouperOpType::Index,
+                    idx_val: value,
+                    const_val: None,
+                }
             },
             Some(TokKind::Int) => {
                 // get the value of const
@@ -200,6 +234,11 @@ impl<'a> Parser<'a> {
                 self.consume_token();
 
                 // return I
+                SouperOperand {
+                    kind: SouperOpType::Constant,
+                    idx_val: None,
+                    const_val: Some(0),
+                }
             },
             Some(TokKind::UntypedInt) => {
                 // get the value of const
@@ -209,10 +248,15 @@ impl<'a> Parser<'a> {
                 self.consume_token();
 
                 // return I
+                SouperOperand {
+                    kind: SouperOpType::Constant,
+                    idx_val: None,
+                    const_val: Some(0),
+                }
             },
             _ => {
                 // build error
-                println!("unexpected token type of Op");
+                panic!("unexpected token type of Op");
             },
         }
     }
@@ -244,7 +288,7 @@ impl<'a> Parser<'a> {
 
                     // Start parsing Ops
                     self.consume_token();
-                    self.parse_ops();
+                    let ops = self.parse_ops();
 
                     println!("Build {} instruction", text);
                     // TODO: return the build instruction
@@ -252,7 +296,7 @@ impl<'a> Parser<'a> {
                     //Some(self.create_inst(instKind, self.lhs_valname.clone()))
                     let instname = self.lhs_valname.clone();
 
-                    self.create_inst(instKind, instname)
+                    self.create_inst(instKind, instname, ops)
                 },
             }
         } else {
@@ -355,20 +399,7 @@ pub fn parse(text: &str) {
                 insts.push(inst);
 
                 // create hashmap and keep inserting valnames + index pair
-                p.lhsValNames_to_Idx.insert(LHS, insts.len());
-
-                //FIXME: Do we need this error checking with match?
-                //match inst {
-                //    Some(Inst {kind, lhs} ) => {
-                //        println!("Inst LHS at the end ======= {}", lhs);
-                //        // Push the inst parsed in a vector here
-                //        let i = inst.clone();
-                //        insts.push(i);
-                //    },
-                //    _ => {
-                //        println!("Invalid Inst parsed");
-                //    },
-                //}
+                p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
             },
         }
     }
@@ -400,14 +431,14 @@ pub fn getCtonValDefName(vdef: CtonValueDef) {
 
 pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
     match souper_inst {
-        Inst{kind, lhs} => {
+        Inst{kind, lhs, ops} => {
             match kind {
                 InstKind::Add => {
                     CtonInst{
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Iadd,
-                        lhs: lhs,
+                        lhs,
                     }
                 },
                 InstKind::Var => {
@@ -415,7 +446,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Param,
                         kind: CtonInstKind::Var,
                         opcode: CtonOpcode::Var,
-                        lhs: lhs,
+                        lhs,
                     }
                 },
                 _ => {
@@ -423,7 +454,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Param,
                         kind: CtonInstKind::Var,
                         opcode: CtonOpcode::Var,
-                        lhs: lhs,
+                        lhs,
                     }
                 },
             }
