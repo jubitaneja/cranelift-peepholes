@@ -62,6 +62,8 @@ pub struct CtonInst<'a> {
     pub opcode: CtonOpcode,
     // FIXME: just replica of souper's lhs" do we need this?
     pub lhs: &'a str,
+    //FIXME: We have to get rid of Souper's structs here!
+    pub cops: Option<Vec<SouperOperand>>,
 }
 
 #[derive(Clone)]
@@ -125,6 +127,16 @@ impl<'a> Parser<'a> {
             "add" => InstKind::Add,
             "mul" => InstKind::Mul,
             _ => InstKind::NoneType,
+        }
+    }
+
+    // return souper inst kind name for the given inst kind
+    fn get_kind_name(&mut self, kind: InstKind) -> &str {
+        match kind {
+            InstKind::Var => "var",
+            InstKind::Add => "add",
+            InstKind::Mul => "mul",
+            _ => "Inst Kind name is not yet handled in function: get_kind_name()",
         }
     }
 
@@ -400,6 +412,7 @@ pub fn parse(text: &str) {
 
                 // create hashmap and keep inserting valnames + index pair
                 p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
+
             },
         }
     }
@@ -439,6 +452,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Iadd,
                         lhs,
+                        cops: ops,
                     }
                 },
                 InstKind::Var => {
@@ -447,6 +461,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         kind: CtonInstKind::Var,
                         opcode: CtonOpcode::Var,
                         lhs,
+                        cops: ops,
                     }
                 },
                 _ => {
@@ -455,6 +470,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         kind: CtonInstKind::Var,
                         opcode: CtonOpcode::Var,
                         lhs,
+                        cops: ops,
                     }
                 },
             }
@@ -465,6 +481,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 kind: CtonInstKind::Var,
                 opcode: CtonOpcode::Var,
                 lhs: "",
+                cops: None,
             }
         },
     }
