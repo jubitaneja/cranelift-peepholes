@@ -245,7 +245,6 @@ impl<'a> Parser<'a> {
             },
         }
     }
-    //}
 
     fn parse_inst_types(&mut self) -> Inst<'a> {
         if let Some(TokKind::Ident(text)) = self.lookahead {

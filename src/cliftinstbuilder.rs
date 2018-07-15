@@ -4,6 +4,7 @@
 
 use parser::{self, Parser, Inst, InstKind, SouperOperand};
 
+#[derive(Clone)]
 pub struct CtonInst<'a> {
     pub valuedef: CtonValueDef,
     pub kind: CtonInstKind,
@@ -14,11 +15,13 @@ pub struct CtonInst<'a> {
     //pub cops: Option<Vec<SouperOperand>>,
 }
 
+#[derive(Clone)]
 pub enum CtonValueDef {
     Result,
     Param,
 }
 
+#[derive(Clone)]
 pub enum CtonInstKind {
     Unary,
     UnaryImm,
@@ -27,6 +30,7 @@ pub enum CtonInstKind {
     Var,
 }
 
+#[derive(Clone)]
 pub enum CtonOpcode {
     Iadd,
     IaddImm,

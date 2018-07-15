@@ -7,6 +7,7 @@ use std::io::prelude::*;
 mod lexer;
 mod parser;
 mod cliftinstbuilder;
+mod patternmatcher;
 
 fn main () {
     let args: Vec<String> = env::args().collect();
@@ -32,9 +33,12 @@ fn main () {
     // 1. Cranelift instruction builder
     let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
 
-    for c in clift_insts {
-        println!("======== Cton inst created =======");
-        cliftinstbuilder::getCtonValDefName(c.valuedef);
-        cliftinstbuilder::getCtonOpCodeName(c.opcode);
-    }
+///    for c in clift_insts {
+///        println!("======== Cton inst created =======");
+///        cliftinstbuilder::getCtonValDefName(c.valuedef);
+///        cliftinstbuilder::getCtonOpCodeName(c.opcode);
+///    }
+
+    // Codegen Phase 2: Generate pattern matcher
+    patternmatcher::generate_patterns(clift_insts);
 }
