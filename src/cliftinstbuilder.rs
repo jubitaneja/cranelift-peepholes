@@ -5,12 +5,10 @@
 use parser::{self, Parser, Inst, InstKind, SouperOperand};
 
 #[derive(Clone)]
-pub struct CtonInst<'a> {
+pub struct CtonInst {
     pub valuedef: CtonValueDef,
     pub kind: CtonInstKind,
     pub opcode: CtonOpcode,
-    // FIXME: just replica of souper's lhs" do we need this?
-    pub lhs: &'a str,
     //FIXME: We have to get rid of Souper's structs here!
     //pub cops: Option<Vec<SouperOperand>>,
 }
@@ -19,6 +17,7 @@ pub struct CtonInst<'a> {
 pub enum CtonValueDef {
     Result,
     Param,
+    NoneType, //added to deal with infer inst in souper IR
 }
 
 #[derive(Clone)]
@@ -28,6 +27,7 @@ pub enum CtonInstKind {
     Binary,
     BinaryImm,
     Var,
+    NoneType, //added for infer inst in souper IR
 }
 
 #[derive(Clone)]
@@ -35,6 +35,7 @@ pub enum CtonOpcode {
     Iadd,
     IaddImm,
     Var,
+    Infer,
 }
 
 /// Helper functions
@@ -73,31 +74,36 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
         Inst{kind, lhs, ops} => {
             match kind {
                 InstKind::Add => {
-                    CtonInst{
+                    CtonInst {
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Iadd,
-                        lhs,
                         // FIXME: Deal with ops mapping in a better way later
                         // because, we have to get rid of souperoperand type completely
                         //cops: ops,
                     }
                 },
                 InstKind::Var => {
-                    CtonInst{
+                    CtonInst {
                         valuedef: CtonValueDef::Param,
                         kind: CtonInstKind::Var,
                         opcode: CtonOpcode::Var,
-                        lhs,
                         //cops: ops,
                     }
                 },
+                InstKind::Infer => {
+                    CtonInst {
+                        valuedef: CtonValueDef::NoneType,
+                        kind: CtonInstKind::NoneType,
+                        opcode: CtonOpcode::Infer,
+                        //cops = ops,
+                    }
+                },
                 _ => {
-                    CtonInst{
+                    CtonInst {
                         valuedef: CtonValueDef::Param,
                         kind: CtonInstKind::Var,
                         opcode: CtonOpcode::Var,
-                        lhs,
                         //cops: ops,
                     }
                 },
@@ -108,7 +114,6 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 valuedef: CtonValueDef::Param,
                 kind: CtonInstKind::Var,
                 opcode: CtonOpcode::Var,
-                lhs: "",
                 //cops: None,
             }
         },

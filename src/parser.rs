@@ -15,6 +15,7 @@ pub enum InstKind {
     Sub,
     Mul,
     Zext,
+    Infer,
     NoneType,
 }
 
@@ -99,6 +100,7 @@ impl<'a> Parser<'a> {
             "var" => InstKind::Var,
             "add" => InstKind::Add,
             "mul" => InstKind::Mul,
+            "infer" => InstKind::Infer,
             _ => InstKind::NoneType,
         }
     }
@@ -314,9 +316,6 @@ impl<'a> Parser<'a> {
                         self.parse_inst_types()
                     },
                     _ => {
-                        // build error "expected identifier here:Valname -> Eq -> Ident"
-                        //println!("Error: Expected valname -> Eq -> ??? Ident");
-                        // FIXME: here, either build error inst or error return by panic
                         panic!("Error: Expected a valid Identifier after ValName -> Eq token");
                     },
                 }
@@ -330,13 +329,33 @@ impl<'a> Parser<'a> {
         }
     }
 
+    // parse instructions that start with an identifier
+    // example: infer, cand, pc, blockpc inst in Souper IR
     fn parse_ident_inst(&mut self) -> Inst<'a> {
-        // extend this later
-        //println!("Ident type instructions are not yet handled, like infer, cand, result, pc, blockpc");
-        // FIXME: For now, I am simply cnsuming further tokens
-        self.consume_token();
-        // FIXME: handle ident instructions and remove this panic
-        panic!("Error: Ident instructions are not yet handled");
+        if let Some(TokKind::Ident(text)) = self.lookahead {
+            match self.get_inst_kind(text) {
+                InstKind::Infer => {
+                    self.consume_token();
+                    match self.lookahead {
+                        Some(TokKind::ValName(lhs)) => {
+                            let ops = self.parse_ops();
+                            //error checking on ops length
+                            assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
+                            println!("Build Infer instruction");
+                            self.create_inst(InstKind::Infer, lhs, ops)
+                        },
+                        _ => {
+                            panic!("unexpected infer instruction operand");
+                        }
+                    }
+                },
+                _ => {
+                    panic!("unexpected identifier instruction kind");
+                }
+            }
+        } else {
+            panic!("unexpected identifier instruction");
+        }
     }
 
     // parse each instruction

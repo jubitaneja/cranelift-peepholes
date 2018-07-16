@@ -30,7 +30,6 @@ fn main () {
     let souper_insts = parser::parse(&contents);
 
     // Codegen
-    // 1. Cranelift instruction builder
     let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
 
 ///    for c in clift_insts {
