@@ -67,6 +67,7 @@ pub fn getCtonOpCodeName(opcode: CtonOpcode) {
     match opcode {
         CtonOpcode::Iadd => println!("Cton::Opcode =Iadd"),
         CtonOpcode::Var => println!("Cton::Opcode = Var"),
+        CtonOpcode::Infer => println!("Cton::Opcode = Infer"),
         _ => println!("Cton: other type yet to be handled"),
     }
 }
@@ -75,6 +76,7 @@ pub fn getCtonValDefName(vdef: CtonValueDef) {
     match vdef {
         CtonValueDef::Result => println!("Cton::ValDef = Result"),
         CtonValueDef::Param => println!("Cton::ValDef =  Param"),
+        CtonValueDef::NoneType => println!("Cton::ValDef =  NoneType"),
         _ => println!("Cton: No such value def types"),
     }
 }
