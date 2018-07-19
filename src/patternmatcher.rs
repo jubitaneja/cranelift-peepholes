@@ -65,7 +65,7 @@ pub struct Node {
     node_type: NodeType,
     node_value: String,
     id: usize,
-    next: Option<NodeID>,
+    next: Option<Vec<NodeID>>,
 }
 
 #[derive(Clone)]
@@ -110,7 +110,9 @@ impl Arena {
     }
 
     pub fn set_next_of_prev_node(&mut self, current: Node, mut previous: Node) {
-        previous.next = Some(NodeID{ index: current.id })
+        let mut next_ids: Vec<NodeID> = Vec::new();
+        next_ids.push(NodeID{ index: current.id, });
+        previous.next = Some(next_ids);
     }
 
     pub fn build_separate_arg_node(&mut self, arg: usize) -> Node {
