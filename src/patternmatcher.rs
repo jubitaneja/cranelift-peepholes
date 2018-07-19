@@ -51,6 +51,7 @@ pub fn get_index_from_last_clift_op(infer_ops: Vec<CtonOperand>) -> usize {
 
 pub struct Arena {
     nodes: Vec<Node>,
+    clift_insts: Vec<CtonInst>,
 }
 
 #[derive(Clone)]
@@ -85,7 +86,10 @@ pub fn get_total_number_of_args(inst: &CtonInst) -> usize {
 
 impl Arena {
     pub fn new() -> Arena {
-        Arena { nodes: Vec::new() }
+        Arena {
+            nodes: Vec::new(),
+            clift_insts: Vec::new(),
+        }
     }
 
     pub fn build_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
@@ -148,15 +152,11 @@ impl Arena {
 }
 
 /// Build prefix tree with root instruction
-pub fn build_prefix_tree(root_inst: &CtonInst) {
-    /// Create Arena and initialize it
-    let mut arena = Arena::new();
-
-    /// Create a node and push it, if arena is empty
-    //if arena.nodes.is_empty() {
-        arena.build_sequence_of_nodes(root_inst);
-    //}
-}
+///pub fn build_prefix_tree(root_inst: &CtonInst) {
+///    /// Create Arena and initialize it
+///    let mut arena = Arena::new();
+///    arena.build_sequence_of_nodes(root_inst);
+///}
 
 pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) {
     let last_clift_inst = get_last_clift_inst(clift_insts.clone());
@@ -164,6 +164,8 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) {
     let index_from_last_clift_op = get_index_from_last_clift_op(last_clift_ops);
     let inst_at_last_op_idx = &clift_insts[index_from_last_clift_op];
 
-    // Start building prefix tree from here
-    build_prefix_tree(inst_at_last_op_idx);
+    /// Create Arena and initialize it
+    let mut arena = Arena::new();
+    arena.clift_insts = clift_insts.clone();
+    arena.build_sequence_of_nodes(inst_at_last_op_idx);
 }
