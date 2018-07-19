@@ -65,7 +65,6 @@ pub struct Node {
     node_type: NodeType,
     node_value: String,
     id: usize,
-    previous: Option<NodeID>,
     next: Option<NodeID>,
 }
 
@@ -91,22 +90,12 @@ impl Arena {
 
     pub fn build_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
         let instdata_val = clift_inst.kind.clone();
-        let mut prev = None;
-        let mut next = None;
-        if self.nodes.len() == 0 {
-            prev = None;
-            next = None;
-        } else {
-            prev = Some(NodeID{index: self.nodes.len() - 1});
-            next = None;
-        }
         let id = self.nodes.len();
         Node {
             node_type: NodeType::match_instdata,
             node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
             id: id,
-            previous: prev,
-            next: next,
+            next: None,
         }
     }
 
@@ -116,21 +105,12 @@ impl Arena {
             node_type: NodeType::match_opcode,
             node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
             id: self.nodes.len(),
-            previous: Some(NodeID {index: self.nodes.len() - 1}),
             next: None,
         }
     }
 
-    pub fn set_next_of_prev_node(&mut self, current: Node) {
-        let current_prev = current.previous;
-        match current_prev {
-            Some(NodeID{index}) => {
-                self.nodes[index].next = Some(NodeID{index: current.id});
-            },
-            None => {
-                panic!("Current node must have a valid previous index");
-            },
-        }
+    pub fn set_next_of_prev_node(&mut self, current: Node, mut previous: Node) {
+        previous.next = Some(NodeID{ index: current.id })
     }
 
     pub fn build_separate_arg_node(&mut self, arg: usize) -> Node {
@@ -138,7 +118,6 @@ impl Arena {
             node_type: NodeType::match_args,
             node_value: get_arg_name(arg),
             id: self.nodes.len(),
-            previous: Some(NodeID {index: self.nodes.len() - 1}),
             next: None,
         }
     }
@@ -148,7 +127,6 @@ impl Arena {
         let total_args = get_total_number_of_args(clift_inst);
         for op in 0 .. total_args {
             let plain_arg_node = self.build_separate_arg_node(op);
-            self.set_next_of_prev_node(plain_arg_node.clone());
             // repeat the prefix tree build here again!
         }
         unimplemented!();
@@ -156,10 +134,10 @@ impl Arena {
 
     pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
         let node_instdata = self.build_instdata_node(clift_inst);
-        self.nodes.push(node_instdata);
+        self.nodes.push(node_instdata.clone());
 
         let node_opcode = self.build_opcode_node(clift_inst);
-        self.set_next_of_prev_node(node_opcode.clone());
+        self.set_next_of_prev_node(node_opcode.clone(), node_instdata.clone());
         self.nodes.push(node_opcode);
 
         let node_args = self.build_args_node(clift_inst);
