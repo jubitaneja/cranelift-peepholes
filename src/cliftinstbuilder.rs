@@ -65,7 +65,7 @@ pub fn get_cton_inst_name(opcode: CtonOpcode) {
 
 pub fn getCtonOpCodeName(opcode: CtonOpcode) {
     match opcode {
-        CtonOpcode::Iadd => println!("Cton::Opcode =Iadd"),
+        CtonOpcode::Iadd => println!("Cton::Opcode = Iadd"),
         CtonOpcode::Var => println!("Cton::Opcode = Var"),
         CtonOpcode::Infer => println!("Cton::Opcode = Infer"),
         _ => println!("Cton: other type yet to be handled"),
@@ -78,6 +78,24 @@ pub fn getCtonValDefName(vdef: CtonValueDef) {
         CtonValueDef::Param => println!("Cton::ValDef =  Param"),
         CtonValueDef::NoneType => println!("Cton::ValDef =  NoneType"),
         _ => println!("Cton: No such value def types"),
+    }
+}
+
+pub fn get_clift_instdata_name(instdata: CtonInstKind) -> String {
+    match instdata {
+        CtonInstKind::Binary => "Binary".to_string(),
+        CtonInstKind::Var => "Var".to_string(),
+        _ => "".to_string(),
+    }
+}
+
+pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
+    match opcode {
+        CtonOpcode::Iadd => "Iadd".to_string(),
+        CtonOpcode::IaddImm => "IaddImm".to_string(),
+        CtonOpcode::Var => "Var".to_string(),
+        CtonOpcode::Infer => "Infer".to_string(),
+        _ => "".to_string(),
     }
 }
 

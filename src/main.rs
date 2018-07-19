@@ -32,17 +32,17 @@ fn main () {
     // Codegen
     let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
 
-    for c in clift_insts {
-        println!("======== Cton inst created =======");
-        cliftinstbuilder::getCtonValDefName(c.valuedef);
-        cliftinstbuilder::getCtonOpCodeName(c.opcode);
-        if let Some(cops) = c.cops {
-            for op in cops {
-                println!("idx_val = {:?}, const val = {:?}", op.idx_val, op.const_val);
-            }
-        }
-    }
+///    for c in clift_insts {
+///        println!("======== Cton inst created =======");
+///        cliftinstbuilder::getCtonValDefName(c.valuedef);
+///        cliftinstbuilder::getCtonOpCodeName(c.opcode);
+///        if let Some(cops) = c.cops {
+///            for op in cops {
+///                println!("idx_val = {:?}, const val = {:?}", op.idx_val, op.const_val);
+///            }
+///        }
+///    }
 
     // Codegen Phase 2: Generate pattern matcher
-//    patternmatcher::generate_patterns(clift_insts);
+    patternmatcher::generate_single_tree_patterns(clift_insts);
 }
