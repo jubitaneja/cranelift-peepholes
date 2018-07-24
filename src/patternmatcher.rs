@@ -92,6 +92,16 @@ pub fn get_total_number_of_args(inst: &CtonInst) -> usize {
     }
 }
 
+pub fn get_node_type(ty: NodeType) -> String {
+    match ty {
+        NodeType::match_instdata => "match_instdata".to_string(),
+        NodeType::match_opcode => "match_opcode".to_string(),
+        NodeType::match_args => "match_args".to_string(),
+        NodeType::match_const => "match_const".to_string(),
+        _ => panic!("Unexpected node type"),
+    }
+}
+
 impl Arena {
     pub fn new() -> Arena {
         Arena {
@@ -263,8 +273,11 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) -> Vec<Node> {
     let all_nodes = arena.build_sequence_of_nodes(inst_at_last_op_idx);
 
     // just for debugging puprose
+    println!("--------------------------------");
     for n in 0 .. all_nodes.len() {
         println!("Node id = {}", all_nodes[n].id);
+        println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
+        println!("Node value = {}", all_nodes[n].node_value);
         match all_nodes[n].clone().next {
             Some(x) => {
                 for i in 0 .. x.len() {
@@ -275,6 +288,7 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) -> Vec<Node> {
                 println!("next = None");
             }
         }
+        println!("--------------------------------");
     }
     all_nodes
 }

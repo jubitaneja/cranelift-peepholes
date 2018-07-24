@@ -33,5 +33,6 @@ fn main () {
     let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
 
     // Codegen Phase 2: Generate pattern matcher
-    let linear_tree_nodes = patternmatcher::generate_single_tree_patterns(clift_insts);
+    let pattern_tree = patternmatcher::generate_single_tree_patterns(clift_insts);
+
 }
