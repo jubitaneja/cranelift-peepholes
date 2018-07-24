@@ -75,6 +75,12 @@ pub struct NodeID {
     index: usize,
 }
 
+#[derive(Clone)]
+pub struct Node_Index {
+    node: Node,
+    index: usize,
+}
+
 pub fn get_total_number_of_args(inst: &CtonInst) -> usize {
     let ops = inst.cops.clone();
     match ops {
@@ -125,6 +131,13 @@ impl Arena {
         previous
     }
 
+    pub fn set_next_of_current_node_by_default(&mut self, mut current: Node) -> Node {
+        let mut next_ids: Vec<NodeID> = Vec::new();
+        next_ids.push(NodeID{ index: self.count.clone() });
+        current.next = Some(next_ids);
+        current
+    }
+
     pub fn build_separate_arg_node(&mut self, arg: usize) -> Node {
         Node {
             node_type: NodeType::match_args,
@@ -138,15 +151,24 @@ impl Arena {
         unimplemented!();
     }
 
+    pub fn get_node_with_id(&mut self, idx: usize) -> Option<Node_Index> {
+        let mut ret_node = None;
+        for n in 0 .. self.nodes.clone().len() {
+            let node_id = self.nodes[n].clone().id;
+            if node_id == idx {
+                ret_node = Some(Node_Index {
+                    node: self.nodes[n].clone(),
+                    index: n,
+                });
+            } else {
+                ret_node = None;
+            }
+        }
+        ret_node
+    }
+
     //pub fn build_args_node(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
     pub fn build_args_node(&mut self, clift_inst: &CtonInst) {
-        // create an arguments arena
-        let mut arg_arena = Arena::new();
-
-        // set the counter of arg arena to parent arena counter
-        // to help set id of arg nodes
-        arg_arena.count = self.count;
-
         //let mut args_nodes: Vec<Node> = Vec::new();
         let total_args = get_total_number_of_args(clift_inst);
         for op in 0 .. total_args {
@@ -155,9 +177,29 @@ impl Arena {
             println!("====");
             // build just a named argument node (wrapper node)
             println!("** op = {}", op);
-            let named_arg_node = arg_arena.build_separate_arg_node(op);
+            let named_arg_node = self.build_separate_arg_node(op);
             println!("---- named arg id = {}", named_arg_node.id);
-            arg_arena.update_count();
+            
+            //set next of last node pushed in arena
+            let c = self.count.clone();
+            let node_x = self.get_node_with_id(c-1);
+
+            match node_x {
+                Some(Node_Index { mut node, index }) => {
+                    let mut next_ids: Vec<NodeID> = Vec::new();
+                    next_ids.push(NodeID{ index: self.count });
+                    node.next = Some(next_ids);
+                    self.nodes[index] = node;
+                },
+                None => {
+                    panic!("No node with the id = {} found in arena", self.count-1);
+                }
+            }
+            
+            self.update_count();
+            // set next of named arg node because it's sure to have some nodes after this
+            let updated_named_arg_node = self.set_next_of_current_node_by_default(named_arg_node.clone());
+            self.nodes.push(updated_named_arg_node);
 
             // repeat the prefix tree build here again!
             let cops = clift_inst.cops.clone();
@@ -166,14 +208,14 @@ impl Arena {
                     let arg = &ops[op];
                     match arg.idx_val.clone() {
                         Some(idx) => {
-                            let root_inst = &self.clift_insts[idx];
+                            let root_inst = &self.clift_insts[idx].clone();
                             println!("build detailed node now\n");
-                            let detail_arg_node = arg_arena.build_sequence_of_nodes(root_inst);
+                            let detail_arg_node = self.build_sequence_of_nodes(root_inst);
                         },
                         None => {
                             match arg.const_val.clone() {
                                 Some(constant) => {
-                                    let const_arg_node = arg_arena.build_constant_node(constant);
+                                    let const_arg_node = self.build_constant_node(constant);
                                 },
                                 None => {
                                     panic!("operand of a clift inst must have either an index value or a constant value")
@@ -186,16 +228,11 @@ impl Arena {
                     panic!("The clift instruction is expected to have {} operands", total_args);
                 }
             }
-            // set the next of previous node (i.e. named_arg_node)
-            //self.set_next_of_prev_node(detail_arg_node, named_arg_node);
-            // push the named and detailed node to the args node vec
-            //args_nodes.push(named_arg_node);
-            //args_nodes.push(detail_arg_node);
         }
     }
 
-    //pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
-    pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) {
+    pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
+    //pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) {
         let node_instdata = self.build_instdata_node(clift_inst);
         println!("---- instdata id = {}", node_instdata.id);
         self.update_count();
@@ -209,7 +246,9 @@ impl Arena {
         self.nodes.push(updated_id_node.clone());
         self.nodes.push(node_opcode);
 
-        let node_args = self.build_args_node(clift_inst);
+        self.build_args_node(clift_inst);
+
+        self.nodes.clone()
     }
 }
 
@@ -222,5 +261,20 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) {
     /// Create Arena and initialize it
     let mut arena = Arena::new();
     arena.clift_insts = clift_insts.clone();
-    arena.build_sequence_of_nodes(inst_at_last_op_idx);
+    let all_nodes = arena.build_sequence_of_nodes(inst_at_last_op_idx);
+
+    // just for debugging puprose
+    for n in 0 .. all_nodes.len() {
+        println!("Node id = {}", all_nodes[n].id);
+        match all_nodes[n].clone().next {
+            Some(x) => {
+                for i in 0 .. x.len() {
+                    println!("next = {}", x[i].index);
+                }
+            },
+            None => {
+                println!("next = None");
+            }
+        }
+    }
 }
