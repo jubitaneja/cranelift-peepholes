@@ -234,13 +234,10 @@ impl Arena {
     }
 
     pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
-    //pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) {
         let node_instdata = self.build_instdata_node(clift_inst);
-        println!("---- instdata id = {}", node_instdata.id);
         self.update_count();
 
         let node_opcode = self.build_opcode_node(clift_inst);
-        println!("---- opcode id = {}", node_opcode.id);
         self.update_count();
 
         let updated_id_node = self.set_next_of_prev_node(node_opcode.clone(), node_instdata.clone());
