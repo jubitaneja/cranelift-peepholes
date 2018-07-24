@@ -252,7 +252,7 @@ impl Arena {
     }
 }
 
-pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) {
+pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) -> Vec<Node> {
     let last_clift_inst = get_last_clift_inst(clift_insts.clone());
     let last_clift_ops = get_last_clift_op(last_clift_inst);
     let index_from_last_clift_op = get_index_from_last_clift_op(last_clift_ops);
@@ -277,4 +277,5 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) {
             }
         }
     }
+    all_nodes
 }
