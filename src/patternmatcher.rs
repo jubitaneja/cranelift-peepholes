@@ -52,6 +52,7 @@ pub fn get_index_from_last_clift_op(infer_ops: Vec<CtonOperand>) -> usize {
 pub struct Arena {
     nodes: Vec<Node>,
     clift_insts: Vec<CtonInst>,
+    count: usize,
 }
 
 #[derive(Clone)]
@@ -89,16 +90,20 @@ impl Arena {
         Arena {
             nodes: Vec::new(),
             clift_insts: Vec::new(),
+            count: 0,
         }
+    }
+
+    pub fn update_count(&mut self) {
+        self.count += 1;
     }
 
     pub fn build_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
         let instdata_val = clift_inst.kind.clone();
-        let id = self.nodes.len();
         Node {
             node_type: NodeType::match_instdata,
             node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
-            id: id,
+            id: self.count,
             next: None,
         }
     }
@@ -108,55 +113,105 @@ impl Arena {
         Node {
             node_type: NodeType::match_opcode,
             node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
-            id: self.nodes.len(),
+            id: self.count,
             next: None,
         }
     }
 
-    pub fn set_next_of_prev_node(&mut self, current: Node, mut previous: Node) {
+    pub fn set_next_of_prev_node(&mut self, current: Node, mut previous: Node) -> Node {
         let mut next_ids: Vec<NodeID> = Vec::new();
         next_ids.push(NodeID{ index: current.id, });
         previous.next = Some(next_ids);
+        previous
     }
 
     pub fn build_separate_arg_node(&mut self, arg: usize) -> Node {
         Node {
             node_type: NodeType::match_args,
             node_value: get_arg_name(arg),
-            id: self.nodes.len(),
+            id: self.count,
             next: None,
         }
     }
 
-    pub fn build_args_node(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
-        let mut args_nodes: Vec<Node> = Vec::new();
-        let total_args = get_total_number_of_args(clift_inst);
-        for op in 0 .. total_args {
-            let plain_arg_node = self.build_separate_arg_node(op);
-            // repeat the prefix tree build here again!
-        }
+    pub fn build_constant_node(&mut self, constant: i64) -> Node {
         unimplemented!();
     }
 
-    pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
+    //pub fn build_args_node(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
+    pub fn build_args_node(&mut self, clift_inst: &CtonInst) {
+        // create an arguments arena
+        let mut arg_arena = Arena::new();
+
+        // set the counter of arg arena to parent arena counter
+        // to help set id of arg nodes
+        arg_arena.count = self.count;
+
+        //let mut args_nodes: Vec<Node> = Vec::new();
+        let total_args = get_total_number_of_args(clift_inst);
+        for op in 0 .. total_args {
+            println!("current inst === ");
+            cliftinstbuilder::get_cton_inst_name(clift_inst.opcode.clone());
+            println!("====");
+            // build just a named argument node (wrapper node)
+            println!("** op = {}", op);
+            let named_arg_node = arg_arena.build_separate_arg_node(op);
+            println!("---- named arg id = {}", named_arg_node.id);
+            arg_arena.update_count();
+
+            // repeat the prefix tree build here again!
+            let cops = clift_inst.cops.clone();
+            match cops {
+                Some(ops) => {
+                    let arg = &ops[op];
+                    match arg.idx_val.clone() {
+                        Some(idx) => {
+                            let root_inst = &self.clift_insts[idx];
+                            println!("build detailed node now\n");
+                            let detail_arg_node = arg_arena.build_sequence_of_nodes(root_inst);
+                        },
+                        None => {
+                            match arg.const_val.clone() {
+                                Some(constant) => {
+                                    let const_arg_node = arg_arena.build_constant_node(constant);
+                                },
+                                None => {
+                                    panic!("operand of a clift inst must have either an index value or a constant value")
+                                }
+                            }
+                        },
+                    }
+                },
+                None => {
+                    panic!("The clift instruction is expected to have {} operands", total_args);
+                }
+            }
+            // set the next of previous node (i.e. named_arg_node)
+            //self.set_next_of_prev_node(detail_arg_node, named_arg_node);
+            // push the named and detailed node to the args node vec
+            //args_nodes.push(named_arg_node);
+            //args_nodes.push(detail_arg_node);
+        }
+    }
+
+    //pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
+    pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) {
         let node_instdata = self.build_instdata_node(clift_inst);
-        self.nodes.push(node_instdata.clone());
+        println!("---- instdata id = {}", node_instdata.id);
+        self.update_count();
 
         let node_opcode = self.build_opcode_node(clift_inst);
-        self.set_next_of_prev_node(node_opcode.clone(), node_instdata.clone());
+        println!("---- opcode id = {}", node_opcode.id);
+        self.update_count();
+
+        let updated_id_node = self.set_next_of_prev_node(node_opcode.clone(), node_instdata.clone());
+
+        self.nodes.push(updated_id_node.clone());
         self.nodes.push(node_opcode);
 
         let node_args = self.build_args_node(clift_inst);
-        unimplemented!();
     }
 }
-
-/// Build prefix tree with root instruction
-///pub fn build_prefix_tree(root_inst: &CtonInst) {
-///    /// Create Arena and initialize it
-///    let mut arena = Arena::new();
-///    arena.build_sequence_of_nodes(root_inst);
-///}
 
 pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) {
     let last_clift_inst = get_last_clift_inst(clift_insts.clone());
