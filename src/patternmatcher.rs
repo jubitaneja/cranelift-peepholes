@@ -60,6 +60,7 @@ pub enum NodeType {
     match_instdata,
     match_opcode,
     match_args,
+    match_const,
 }
 
 #[derive(Clone)]
@@ -148,7 +149,12 @@ impl Arena {
     }
 
     pub fn build_constant_node(&mut self, constant: i64) -> Node {
-        unimplemented!();
+        Node {
+            node_type: NodeType::match_const,
+            node_value: constant.to_string(),
+            id: self.count,
+            next: None,
+        }
     }
 
     pub fn get_node_with_id(&mut self, idx: usize) -> Option<Node_Index> {
@@ -167,20 +173,12 @@ impl Arena {
         ret_node
     }
 
-    //pub fn build_args_node(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
     pub fn build_args_node(&mut self, clift_inst: &CtonInst) {
-        //let mut args_nodes: Vec<Node> = Vec::new();
         let total_args = get_total_number_of_args(clift_inst);
         for op in 0 .. total_args {
-            println!("current inst === ");
-            cliftinstbuilder::get_cton_inst_name(clift_inst.opcode.clone());
-            println!("====");
-            // build just a named argument node (wrapper node)
-            println!("** op = {}", op);
             let named_arg_node = self.build_separate_arg_node(op);
-            println!("---- named arg id = {}", named_arg_node.id);
             
-            //set next of last node pushed in arena
+            //set next of node before named arg node
             let c = self.count.clone();
             let node_x = self.get_node_with_id(c-1);
 
@@ -197,8 +195,11 @@ impl Arena {
             }
             
             self.update_count();
-            // set next of named arg node because it's sure to have some nodes after this
+
+            // set next of named arg node because it's 
+            // sure to have some nodes after this
             let updated_named_arg_node = self.set_next_of_current_node_by_default(named_arg_node.clone());
+
             self.nodes.push(updated_named_arg_node);
 
             // repeat the prefix tree build here again!
@@ -209,13 +210,14 @@ impl Arena {
                     match arg.idx_val.clone() {
                         Some(idx) => {
                             let root_inst = &self.clift_insts[idx].clone();
-                            println!("build detailed node now\n");
                             let detail_arg_node = self.build_sequence_of_nodes(root_inst);
                         },
                         None => {
                             match arg.const_val.clone() {
                                 Some(constant) => {
                                     let const_arg_node = self.build_constant_node(constant);
+                                    self.update_count();
+                                    self.nodes.push(const_arg_node);
                                 },
                                 None => {
                                     panic!("operand of a clift inst must have either an index value or a constant value")

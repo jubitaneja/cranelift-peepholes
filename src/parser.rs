@@ -321,9 +321,6 @@ impl<'a> Parser<'a> {
                 }
             },
             _ => {
-                // Build error "expected ="
-                //println!("Error: Expected ValName -> ???? Eq");
-                // FIXME: here, either build error inst or error return by panic
                 panic!("Error: Expected Eq token followed by Valname token");
             },
         }
