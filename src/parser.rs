@@ -106,12 +106,12 @@ impl<'a> Parser<'a> {
     }
 
     // return souper inst kind name for the given inst kind
-    fn get_kind_name(&mut self, kind: InstKind) -> &str {
+    fn get_kind_name(&mut self, kind: InstKind) -> String {
         match kind {
-            InstKind::Var => "var",
-            InstKind::Add => "add",
-            InstKind::Mul => "mul",
-            _ => "Inst Kind name is not yet handled in function: get_kind_name()",
+            InstKind::Var => "var".to_string(),
+            InstKind::Add => "add".to_string(),
+            InstKind::Mul => "mul".to_string(),
+            _ => "Inst Kind name is not yet handled in function: get_kind_name()".to_string(),
         }
     }
 
@@ -191,16 +191,16 @@ impl<'a> Parser<'a> {
                 // InstContext IC; IC.getInst()
                 // if I is None => error "%<x> is not an inst"
 
-                println!("Op: Valname");
-                println!("*************** Lookup for op in hash map **********");
+                //println!("Op: Valname");
+                //println!("*************** Lookup for op in hash map **********");
                 /// FIXME: find an efficient way to retrieve the value corresponding to the key
                 /// I can look for the key using contains_key(lhs) on hashmap, but had no idea how
                 /// to get the corresponding value
                 let mut value = None;
                 for (key, val) in &self.lhsValNames_to_Idx {
                     if key == &lhs {
-                        println!("Yes! key found = {}", key);
-                        println!("Val index at this key is: {}", val);
+                        //println!("Yes! key found = {}", key);
+                        //println!("Val index at this key is: {}", val);
                         value = Some(*val);
                     }
                 }
@@ -217,7 +217,7 @@ impl<'a> Parser<'a> {
                 // get the value of const
                 // build const inst
                 // Inst I = IC.getConst()
-                println!("Op: Int");
+                //println!("Op: Int");
                 self.consume_token();
 
                 // return I
@@ -231,7 +231,7 @@ impl<'a> Parser<'a> {
                 // get the value of const
                 // build untyped const inst
                 // Inst I = IC.getUntypedConst()
-                println!("Op: Untyped Int");
+                //println!("Op: Untyped Int");
                 self.consume_token();
 
                 // return I
@@ -260,7 +260,7 @@ impl<'a> Parser<'a> {
 
                     // create Var instruction and return that
                     // self.createVar(instValName, instWidth);
-                    println!("Build Var Instruction");
+                    //println!("Build Var Instruction");
                     // Discuss: Rust study group
                     // Error: cannot borrow `self.lhs_valname` as immutable because `*self` is also borrowed as mutable
                     //Some(self.create_var(InstKind::Var, self.lhs_valname.clone()))
@@ -276,7 +276,7 @@ impl<'a> Parser<'a> {
                     self.consume_token();
                     let ops = self.parse_ops();
 
-                    println!("Build {} instruction", text);
+                    //println!("Build {} instruction", text);
                     // TODO: return the build instruction
                     // IC.getInst(instwidth, instkind, ops)
                     //Some(self.create_inst(instKind, self.lhs_valname.clone()))
@@ -338,7 +338,7 @@ impl<'a> Parser<'a> {
                             let ops = self.parse_ops();
                             //error checking on ops length
                             assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
-                            println!("Build Infer instruction");
+                            //println!("Build Infer instruction");
                             self.create_inst(InstKind::Infer, lhs, ops)
                         },
                         _ => {
