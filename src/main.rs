@@ -23,16 +23,23 @@ fn main () {
     file.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    // Start Tokenizing
-    lexer::start_lexer(&contents);
+    let souper_delimiter = "#########";
 
-    // Start Parsing
-    let souper_insts = parser::parse(&contents);
+    let mut splitter = contents.split(souper_delimiter);
+    for s in splitter {
+        lexer::start_lexer(&s);
+    }
+//    // Lexing
+//    lexer::start_lexer(&contents);
+//
+//    // Parsing
+//    let souper_insts = parser::parse(&contents);
+//
+//    // Cranelift Instruction Building
+//    let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
+//
+//    // Pattern Matching - Single prefix tree
+//    let pattern_tree = patternmatcher::generate_single_tree_patterns(clift_insts);
 
-    // Codegen
-    let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
-
-    // Codegen Phase 2: Generate pattern matcher
-    let pattern_tree = patternmatcher::generate_single_tree_patterns(clift_insts);
-
+    println!("Done!!!");
 }

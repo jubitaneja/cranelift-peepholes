@@ -319,6 +319,12 @@ impl<'a> Lexer<'a> {
                     self.next_ch();
                     continue;
                 },
+                Some('#') => {
+                    // delimiter token for separating
+                    // the optimization patterns in input file
+                    self.next_ch();
+                    break Some(token(TokKind::Eof, loc));
+                },
                 _ => {
                     break Some(self.scan_rest());
                 },
