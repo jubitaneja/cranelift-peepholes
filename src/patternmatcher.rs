@@ -67,7 +67,7 @@ pub fn get_last_clift_op(infer_inst: CtonInst) -> Vec<CtonOperand> {
     }
 }
 
-/// Returns the index of instruction infer instruction points to
+/// Returns the index of instruction where infer instruction points to
 pub fn get_index_from_last_clift_op(infer_ops: Vec<CtonOperand>) -> usize {
     let mut idx: usize = 0;
     for op in infer_ops {
@@ -103,11 +103,11 @@ pub fn get_node_type(ty: NodeType) -> String {
 }
 
 impl Arena {
-    pub fn new() -> Arena {
+    pub fn new(global_counter: usize) -> Arena {
         Arena {
             nodes: Vec::new(),
             clift_insts: Vec::new(),
-            count: 0,
+            count: global_counter,
         }
     }
 
@@ -261,14 +261,14 @@ impl Arena {
     }
 }
 
-pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>) -> Vec<Node> {
+pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>, global_count: usize) -> Vec<Node> {
     let last_clift_inst = get_last_clift_inst(clift_insts.clone());
     let last_clift_ops = get_last_clift_op(last_clift_inst);
     let index_from_last_clift_op = get_index_from_last_clift_op(last_clift_ops);
     let inst_at_last_op_idx = &clift_insts[index_from_last_clift_op];
 
     /// Create Arena and initialize it
-    let mut arena = Arena::new();
+    let mut arena = Arena::new(global_count);
     arena.clift_insts = clift_insts.clone();
     let all_nodes = arena.build_sequence_of_nodes(inst_at_last_op_idx);
 

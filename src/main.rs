@@ -8,7 +8,7 @@ mod lexer;
 mod parser;
 mod cliftinstbuilder;
 mod patternmatcher;
-mod mergedtree;
+//mod mergedtree;
 
 fn main () {
     let args: Vec<String> = env::args().collect();
@@ -28,6 +28,7 @@ fn main () {
 
     let mut splitter = contents.split(souper_delimiter);
     //let mut full_tree;
+    let mut global_nodes_count: usize = 0;
     for s in splitter {
         // lexing
         lexer::start_lexer(&s);
@@ -39,7 +40,8 @@ fn main () {
         let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
     
         // Pattern Matching - Single prefix tree
-        let pattern_tree = patternmatcher::generate_single_tree_patterns(clift_insts);
+        let single_tree = patternmatcher::generate_single_tree_patterns(clift_insts, global_nodes_count);
+        global_nodes_count = single_tree.len();
 
         // Merged prefix tree
         //full_tree = mergedtree::generate_merged_prefix_tree(pattern_tree, full_tree);
