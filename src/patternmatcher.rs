@@ -2,6 +2,39 @@
 
 use cliftinstbuilder::{self, CtonInst, CtonValueDef, CtonInstKind, CtonOpcode, CtonOperand};
 
+pub struct Arena {
+    nodes: Vec<Node>,
+    clift_insts: Vec<CtonInst>,
+    count: usize,
+}
+
+#[derive(Clone)]
+pub enum NodeType {
+    match_instdata,
+    match_opcode,
+    match_args,
+    match_const,
+}
+
+#[derive(Clone)]
+pub struct Node {
+    node_type: NodeType,
+    node_value: String,
+    id: usize,
+    next: Option<Vec<NodeID>>,
+}
+
+#[derive(Clone)]
+pub struct NodeID {
+    index: usize,
+}
+
+#[derive(Clone)]
+pub struct Node_Index {
+    node: Node,
+    index: usize,
+}
+
 /// Helper functions
 pub fn get_arg_name(index: usize) -> String {
     let mut arg = "arg".to_string();
@@ -47,39 +80,6 @@ pub fn get_index_from_last_clift_op(infer_ops: Vec<CtonOperand>) -> usize {
         }
     }
     idx
-}
-
-pub struct Arena {
-    nodes: Vec<Node>,
-    clift_insts: Vec<CtonInst>,
-    count: usize,
-}
-
-#[derive(Clone)]
-pub enum NodeType {
-    match_instdata,
-    match_opcode,
-    match_args,
-    match_const,
-}
-
-#[derive(Clone)]
-pub struct Node {
-    node_type: NodeType,
-    node_value: String,
-    id: usize,
-    next: Option<Vec<NodeID>>,
-}
-
-#[derive(Clone)]
-pub struct NodeID {
-    index: usize,
-}
-
-#[derive(Clone)]
-pub struct Node_Index {
-    node: Node,
-    index: usize,
 }
 
 pub fn get_total_number_of_args(inst: &CtonInst) -> usize {
