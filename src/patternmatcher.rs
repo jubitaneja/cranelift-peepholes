@@ -14,19 +14,21 @@ pub enum NodeType {
     match_opcode,
     match_args,
     match_const,
+    match_root,
+    match_none,
 }
 
 #[derive(Clone)]
 pub struct Node {
-    node_type: NodeType,
-    node_value: String,
-    id: usize,
-    next: Option<Vec<NodeID>>,
+    pub node_type: NodeType,
+    pub node_value: String,
+    pub id: usize,
+    pub next: Option<Vec<NodeID>>,
 }
 
 #[derive(Clone)]
 pub struct NodeID {
-    index: usize,
+    pub index: usize,
 }
 
 #[derive(Clone)]
@@ -98,7 +100,8 @@ pub fn get_node_type(ty: NodeType) -> String {
         NodeType::match_opcode => "match_opcode".to_string(),
         NodeType::match_args => "match_args".to_string(),
         NodeType::match_const => "match_const".to_string(),
-        _ => panic!("Unexpected node type"),
+        NodeType::match_root => "match_root".to_string(),
+        NodeType::match_none | _ => panic!("Unexpected node type"),
     }
 }
 

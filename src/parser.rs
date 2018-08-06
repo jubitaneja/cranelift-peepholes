@@ -380,7 +380,6 @@ impl<'a> Parser<'a> {
     }
 }
 
-
 pub fn parse(text: &str) -> Vec<Inst> {
     let mut p = Parser::new(text);
 
