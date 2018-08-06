@@ -3,12 +3,15 @@
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
+use std::collections::HashMap;
 
 mod lexer;
 mod parser;
 mod cliftinstbuilder;
 mod patternmatcher;
-//mod mergedtree;
+mod mergedtree;
+
+use mergedtree::MergedArena;
 
 fn main () {
     let args: Vec<String> = env::args().collect();
@@ -26,8 +29,11 @@ fn main () {
 
     let souper_delimiter = "#########";
 
-    let mut splitter = contents.split(souper_delimiter);
-    //let mut full_tree;
+    let splitter = contents.split(souper_delimiter);
+    let mut merged_arena = MergedArena{
+                                       merged_tree: Vec::new(),
+                                       hmap: HashMap::new(),
+                                      };
     let mut global_nodes_count: usize = 0;
     for s in splitter {
         // lexing
@@ -40,11 +46,11 @@ fn main () {
         let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
     
         // Pattern Matching - Single prefix tree
-        let single_tree = patternmatcher::generate_single_tree_patterns(clift_insts, global_nodes_count);
+        let single_tree = patternmatcher::generate_single_tree_patterns(clift_insts, global_nodes_count+1);
         global_nodes_count = single_tree.len();
 
         // Merged prefix tree
-        //full_tree = mergedtree::generate_merged_prefix_tree(pattern_tree, full_tree);
+        merged_arena = mergedtree::generate_merged_prefix_tree(single_tree, merged_arena);
         println!("======================================================");
   }
 }
