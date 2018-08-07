@@ -41,10 +41,13 @@ impl MergedArena {
     }
 
     pub fn update_next_nodes_list(&mut self, mut node: Node, next_id: usize) -> Node {
-        let mut next_ids: Vec<NodeID> = Vec::new();
-        next_ids.push(NodeID{ index: next_id });
-        node.next = Some(next_ids);
-        node
+        if let Some(mut node_next_list) = node.next {
+            node_next_list.push(NodeID{ index: next_id });
+            node.next = Some(node_next_list);
+            node
+        } else {
+            panic!("Error: Node's next list is None, should be atleast an empty vec<NodeID>");
+        }
     }
 
     // add a new node to arena
@@ -92,6 +95,14 @@ impl MergedArena {
         }
         connections
     }
+
+    pub fn is_node_value_already_in_hash_map(&mut self, val: String) -> bool {
+        if self.hmap.contains_key(&val) {
+            true
+        } else {
+            false
+        }
+    }
 }
 
 pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: MergedArena) -> MergedArena {
@@ -105,8 +116,15 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
     let current_id = merged_arena.get_id_of_node(first_node.clone());
 
     let found_root = merged_arena.find_node_with_id_in_arena(0);
+    println!("**** found root node with value = {}", found_root.node_value);
+    if let Some(nodes_list) = found_root.next.clone() {
+        for x in  0 .. nodes_list.len() {
+            println!("root->next ====== {}", nodes_list[x].index);
+        }
+    }
 
     if !merged_arena.node_has_any_connection(found_root.clone()) {
+        // case 1
         println!("No connection of root node ------------");
         merged_arena.update_hash_map(current_val, current_id);
         let updated_root = merged_arena.update_next_nodes_list(found_root.clone(), current_id);
@@ -116,6 +134,25 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
         }
     } else {
         println!("found connection of root node ------------");
+        println!("current val for opt2 = {}", current_val);
+        if merged_arena.is_node_value_already_in_hash_map(current_val.clone()) {
+            // case 2
+            println!("Hash key found");
+            // already in hashmap
+            // find corresponding id of that hash key value = id2
+            // traverse in merged tree to find the node with the id: id2
+            // now, traverse step by step in single tree and in merged tree to compare node values
+            // wherever u find first difference, append the rest of single tree nodes there.
+            unimplemented!();
+        } else {
+            // case 3 - same as case 1
+            merged_arena.update_hash_map(current_val, current_id);
+            let updated_root = merged_arena.update_next_nodes_list(found_root.clone(), current_id);
+            merged_arena.update_node_in_arena(updated_root);
+            for n in 0 .. single_tree.len() {
+                merged_arena.add_node_to_arena(single_tree[n].clone());
+            }
+        }
     }
 
     merged_arena

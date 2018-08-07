@@ -51,9 +51,20 @@ fn main () {
 
         // Merged prefix tree
         merged_arena = mergedtree::generate_merged_prefix_tree(single_tree, merged_arena);
+        println!("----- nodes in merged_tree are -----");
         for n in 0 .. merged_arena.merged_tree.len() {
             println!("Node id = {}", merged_arena.merged_tree[n].id);
         }
+        match merged_arena.merged_tree[0].next.clone() {
+            Some(nodes_list) => {
+                for x in 0 .. nodes_list.len() {
+                    println!("root's next = {}", nodes_list[x].index);
+                }
+            },
+            None => {
+            },
+        }
+        println!("==== hashmap entries =====");
         for (val, idx) in &merged_arena.hmap {
             println!("{}: {}", val, idx);
         }
