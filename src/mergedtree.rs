@@ -47,8 +47,19 @@ impl MergedArena {
         node
     }
 
+    // add a new node to arena
     pub fn add_node_to_arena(&mut self, node: Node) {
         self.merged_tree.push(node);
+    }
+
+    // when the node exists in arena already, update it
+    pub fn update_node_in_arena(&mut self, updated_node: Node) {
+        for n in 0 .. self.merged_tree.len() {
+            if self.merged_tree[n].id == updated_node.id {
+                self.merged_tree[n].next = updated_node.next;
+                break;
+            }
+        }
     }
 
     pub fn find_node_with_id_in_arena(&mut self, node_id: usize) -> Node {
@@ -95,8 +106,14 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
 
     let found_root = merged_arena.find_node_with_id_in_arena(0);
 
-    if !merged_arena.node_has_any_connection(found_root) {
+    if !merged_arena.node_has_any_connection(found_root.clone()) {
         println!("No connection of root node ------------");
+        merged_arena.update_hash_map(current_val, current_id);
+        let updated_root = merged_arena.update_next_nodes_list(found_root.clone(), current_id);
+        merged_arena.update_node_in_arena(updated_root);
+        for n in 0 .. single_tree.len() {
+            merged_arena.add_node_to_arena(single_tree[n].clone());
+        }
     } else {
         println!("found connection of root node ------------");
     }

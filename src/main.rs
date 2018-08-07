@@ -51,6 +51,12 @@ fn main () {
 
         // Merged prefix tree
         merged_arena = mergedtree::generate_merged_prefix_tree(single_tree, merged_arena);
+        for n in 0 .. merged_arena.merged_tree.len() {
+            println!("Node id = {}", merged_arena.merged_tree[n].id);
+        }
+        for (val, idx) in &merged_arena.hmap {
+            println!("{}: {}", val, idx);
+        }
         println!("======================================================");
   }
 }
