@@ -54,6 +54,13 @@ fn main () {
         println!("----- nodes in merged_tree are -----");
         for n in 0 .. merged_arena.merged_tree.len() {
             println!("Node id = {}", merged_arena.merged_tree[n].id);
+            if let Some(sub_nodes) = merged_arena.merged_tree[n].next.clone() {
+                for sub_node in 0 .. sub_nodes.len() {
+                    println!("\t\tSub Node id: {}", sub_nodes[sub_node].index);
+                }
+            } else {
+                continue;
+            }
         }
         match merged_arena.merged_tree[0].next.clone() {
             Some(nodes_list) => {
