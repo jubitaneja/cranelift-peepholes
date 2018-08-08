@@ -82,7 +82,7 @@ impl MergedArena {
                 found_node = self.merged_tree[n].clone();
                 break;
             } else {
-                panic!("Error: node with id: {} doesn't exist in merged_arena", node_id);
+                continue;
             }
         }
         found_node
@@ -149,21 +149,6 @@ impl MergedArena {
         }
     }
 
-    // return slice of nodes starting at current node
-    pub fn get_rest_of_nodes_starting_at(&mut self, mut current: Node, tree: Vec<Node>) -> Vec<Node> {
-//        let mut sliced_tree: Vec<Node> = Vec::new();
-//        sliced_tree.push(current.clone());
-//        loop {
-//            if let Some(x) = current.next {
-//                current = self.get_next_node_of_single_tree(tree.clone(), current.clone());
-//                sliced_tree.push(current.clone());
-//            } else {
-//                break;
-//            }
-//        }
-       unimplemented!();
-    }
-
     pub fn add_node_in_arena(&mut self, node: Node) {
         self.merged_tree.push(node);
     }
@@ -188,6 +173,14 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
     let top_id = merged_arena.get_id_of_node(top_node.clone());
 
     let found_root = merged_arena.find_node_with_id_in_arena(0);
+    //FIXME: add a check here
+    if merged_arena.is_node_dummy(found_root.clone()) {
+        panic!("Error: the node is expected to be found in merged arena");
+    }
+
+    //if merged_arena.is_node_dummy(found_root) {
+    //  error "root node is expected to have an id = 0 and it is not found in arena"
+    //}
     println!("**** found root node with value = {}", found_root.node_value);
     if let Some(nodes_list) = found_root.next.clone() {
         for x in  0 .. nodes_list.len() {
@@ -217,6 +210,9 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
             // find the node with id = found_id in arena
             // set the mered tree tracking point
             let mut mtrack = merged_arena.find_node_with_id_in_arena(found_id);
+            if merged_arena.is_node_dummy(found_root.clone()) {
+                panic!("Error: the node is expected to be found in merged arena, since its also added in hashmap");
+            }
 
             // set a previous tracking point in merged tree,
             // that allows to add new connections
