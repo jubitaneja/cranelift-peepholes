@@ -1,0 +1,54 @@
+----- nodes in merged_tree are -----
+Node id = 0
+		Sub Node id: 1
+		Sub Node id: 3
+Node id = 1
+		Sub Node id: 2
+Node id = 2
+Node id = 3
+		Sub Node id: 4
+Node id = 4
+		Sub Node id: 5
+Node id = 5
+		Sub Node id: 6
+Node id = 6
+		Sub Node id: 7
+Node id = 7
+		Sub Node id: 8
+Node id = 8
+		Sub Node id: 9
+		Sub Node id: 15
+Node id = 9
+		Sub Node id: 10
+Node id = 10
+Node id = 15
+		Sub Node id: 16
+Node id = 16
+		Sub Node id: 17
+Node id = 17
+		Sub Node id: 18
+Node id = 18
+		Sub Node id: 19
+Node id = 19
+		Sub Node id: 20
+Node id = 20
+		Sub Node id: 21
+		Sub Node id: 27
+Node id = 21
+		Sub Node id: 22
+Node id = 22
+Node id = 27
+		Sub Node id: 28
+Node id = 28
+		Sub Node id: 29
+Node id = 29
+		Sub Node id: 30
+Node id = 30
+		Sub Node id: 31
+Node id = 31
+		Sub Node id: 32
+Node id = 32
+		Sub Node id: 33
+Node id = 33
+		Sub Node id: 34
+Node id = 34
