@@ -80,8 +80,8 @@ fn main () {
             println!("{}: {}", val, idx);
         }
 
-        let matcher_func = matcher::generate_matcher(merged_arena.clone());
-        println!("func = {}", matcher_func);
         println!("======================================================");
   }
+  let matcher_func = matcher::generate_matcher(merged_arena.clone());
+  println!("func ************************************= \n{}", matcher_func);
 }
