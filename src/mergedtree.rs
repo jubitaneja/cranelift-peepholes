@@ -71,6 +71,15 @@ impl MergedArena {
         }
     }
 
+    pub fn update_node_arg_flag_in_arena(&mut self, updated_node: Node) {
+        for n in 0 .. self.merged_tree.len() {
+            if self.merged_tree[n].id == updated_node.id {
+                self.merged_tree[n].arg_flag = updated_node.arg_flag;
+                break;
+            }
+        }
+    }
+
     pub fn init_dummy_node(&mut self) -> Node {
         Node {
               node_type: NodeType::match_none,
