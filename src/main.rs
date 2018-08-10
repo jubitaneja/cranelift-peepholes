@@ -10,7 +10,7 @@ mod parser;
 mod cliftinstbuilder;
 mod patternmatcher;
 mod mergedtree;
-//mod optgen;
+mod matcher;
 
 use mergedtree::MergedArena;
 
@@ -51,7 +51,7 @@ fn main () {
         global_nodes_count += single_tree.len();
 
         // Merged prefix tree
-        merged_arena = mergedtree::generate_merged_prefix_tree(single_tree, merged_arena);
+        merged_arena = mergedtree::generate_merged_prefix_tree(single_tree, merged_arena.clone());
 
         // Pretty print the merged arena
         println!("----- nodes in merged_tree are -----");
@@ -65,6 +65,7 @@ fn main () {
                 continue;
             }
         }
+
         match merged_arena.merged_tree[0].next.clone() {
             Some(nodes_list) => {
                 for x in 0 .. nodes_list.len() {
@@ -79,7 +80,8 @@ fn main () {
             println!("{}: {}", val, idx);
         }
 
-        //let optimization_func = optgen::generate_optimization_function(merged_arena);
+        let matcher_func = matcher::generate_matcher(merged_arena.clone());
+        println!("func = {}", matcher_func);
         println!("======================================================");
   }
 }
