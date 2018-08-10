@@ -23,6 +23,7 @@ pub struct Node {
     pub node_type: NodeType,
     pub node_value: String,
     pub id: usize,
+    pub arg_flag: bool,
     pub next: Option<Vec<NodeID>>,
 }
 
@@ -39,8 +40,10 @@ pub struct Node_Index {
 
 /// Helper functions
 pub fn get_arg_name(index: usize) -> String {
-    let mut arg = "arg".to_string();
+    let mut arg = "args".to_string();
+    arg.push_str("[");
     arg.push_str(&(index.to_string()));
+    arg.push_str("]");
     arg
 }
 
@@ -124,6 +127,7 @@ impl Arena {
             node_type: NodeType::match_instdata,
             node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
             id: self.count,
+            arg_flag: false,
             next: None,
         }
     }
@@ -134,6 +138,7 @@ impl Arena {
             node_type: NodeType::match_opcode,
             node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
             id: self.count,
+            arg_flag: false,
             next: None,
         }
     }
@@ -157,6 +162,7 @@ impl Arena {
             node_type: NodeType::match_args,
             node_value: get_arg_name(arg),
             id: self.count,
+            arg_flag: false,
             next: None,
         }
     }
@@ -166,6 +172,7 @@ impl Arena {
             node_type: NodeType::match_const,
             node_value: constant.to_string(),
             id: self.count,
+            arg_flag: false,
             next: None,
         }
     }
