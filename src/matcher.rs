@@ -39,9 +39,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
     for node in 0 .. arena.merged_tree.len() {
         match arena.merged_tree[node].node_type {
             NodeType::match_instdata => {
-                let mut arg_flag = false;
-                //FIXME: add this arg_flag in node struct
-                if !arg_flag {
+                if !arena.merged_tree[node].arg_flag {
                     opt_func.append(String::from("match pos.func.dfg"));
                     opt_func.append(String::from("["));
                     let mut opt_clone = opt_func.clone();
@@ -84,13 +82,15 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 println!("\n\n opcode case not yet handled");
             },
             NodeType::match_args => {
+                // create a default match string
                 opt_func.append(String::from("match pos.func.dfg.val_def"));
                 opt_func.append(String::from("("));
                 opt_func.append(arena.merged_tree[node].node_value.clone());
                 opt_func.append(String::from(")"));
-                //append "("
-                //append: (args[0])
-                //append ")"
+
+                // enter scope - match
+ 
+                // set the arg_flag to true for next nodes of match_args
                 if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
                     for n in 0 .. next_nodes.len() {
                         let id = next_nodes[n].index;
