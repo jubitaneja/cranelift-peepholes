@@ -113,6 +113,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         },
                     }
                 } else {
+                    //handle this case separately
                     opt_func.append(String::from("ValDef::"));
                     match arena.merged_tree[node].node_value.as_ref() {
                         "Var" => {
