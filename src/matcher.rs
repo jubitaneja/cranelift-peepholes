@@ -54,23 +54,32 @@ impl Opt {
                 panic!("Error: No such scope type exists");
             },
         }
+        self.scope_stack.push(scope);
     }
 
     pub fn exit_scope(&mut self, scope: ScopeType) {
         //FIXME: pop the types in scope stack
         match scope {
             ScopeType::scope_match => {
-                self.append(String::from("\n}\n"));
+                self.append(String::from("\n}"));
             },
             ScopeType::scope_func => {
-                self.append(String::from("\n}\n"));
+                self.append(String::from("\n}"));
             },
             ScopeType::scope_case => {
-                self.append(String::from("\n}\n"));
+                self.append(String::from("\n},"));
             },
             _ => {
                 panic!("Error: No such scope type exists");
             },
+        }
+    }
+
+    pub fn is_leaf_node(&mut self, node: Node) -> bool {
+        println!("check leaf node =========\n\n");
+        match node.next {
+            Some(x) => false,
+            None => true,
         }
     }
 }
@@ -114,7 +123,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                     }
                 } else {
                     //handle this case separately
-                    opt_func.append(String::from("ValDef::"));
+                    opt_func.append(String::from("\nValDef::"));
                     match arena.merged_tree[node].node_value.as_ref() {
                         "Var" => {
                             println!("\t\t\t entering valdef::param here");
@@ -201,12 +210,32 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 println!("\n\nmatch type not handled yet!\n");
             },
         }
+
+        //check if the node is leaf node
+        // pop the top of stack and exit scope with that top element
+        if opt_func.is_leaf_node(arena.merged_tree[node].clone()) {
+            match opt_func.scope_stack.pop() {
+                Some(elem_type) => {
+                    // the transformation actions will be inserted here
+                    opt_func.append(String::from("unimplemented!()"));
+                    opt_func.exit_scope(elem_type);
+                },
+                None => {},
+            }
+        } else {
+        }
     }
 
-    // the transformation actions will be inserted here
-    opt_func.append(String::from("unimplemented!()"));
-
     // exit func scope
+    for s in 0 .. opt_func.scope_stack.len() {
+        let elem_ty = opt_func.scope_stack.pop();
+        match elem_ty {
+            Some(ty) => {
+                opt_func.exit_scope(ty);
+            },
+            None => {},
+        }
+    }
 
     opt_func.func_str
 }
