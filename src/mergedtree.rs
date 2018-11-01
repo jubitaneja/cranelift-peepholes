@@ -17,6 +17,7 @@ impl MergedArena {
             node_value: "root".to_string(),
             id: 0,
             arg_flag: false,
+            level: 0,
             next: Some(Vec::new()),
         }
     }
@@ -56,6 +57,11 @@ impl MergedArena {
         node
     }
 
+    pub fn update_node_with_level(&mut self, mut node: Node, level: usize) -> Node {
+        node.level = level;
+        node
+    }
+
     // add a new node to arena
     pub fn add_node_to_arena(&mut self, node: Node) {
         self.merged_tree.push(node);
@@ -80,12 +86,22 @@ impl MergedArena {
         }
     }
 
+    pub fn update_node_level_in_arena(&mut self, updated_node: Node) {
+        for n in 0 .. self.merged_tree.len() {
+            if self.merged_tree[n].id == updated_node.id {
+                self.merged_tree[n].level = updated_node.level;
+                break;
+            }
+        }
+    }
+
     pub fn init_dummy_node(&mut self) -> Node {
         Node {
               node_type: NodeType::match_none,
               node_value: "dummy".to_string(),
               id: <usize>::max_value(),
               arg_flag: false,
+              level: 0,
               next: None,
              }
     }

@@ -24,6 +24,7 @@ pub struct Node {
     pub node_value: String,
     pub id: usize,
     pub arg_flag: bool,
+    pub level: usize,
     pub next: Option<Vec<NodeID>>,
 }
 
@@ -128,6 +129,7 @@ impl Arena {
             node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
             id: self.count,
             arg_flag: false,
+            level: 0,
             next: None,
         }
     }
@@ -139,6 +141,7 @@ impl Arena {
             node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
             id: self.count,
             arg_flag: false,
+            level: 0,
             next: None,
         }
     }
@@ -163,6 +166,7 @@ impl Arena {
             node_value: get_arg_name(arg),
             id: self.count,
             arg_flag: false,
+            level: 0,
             next: None,
         }
     }
@@ -173,6 +177,7 @@ impl Arena {
             node_value: constant.to_string(),
             id: self.count,
             arg_flag: false,
+            level: 0,
             next: None,
         }
     }
