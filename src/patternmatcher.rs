@@ -11,7 +11,9 @@ pub struct Arena {
 #[derive(Clone)]
 pub enum NodeType {
     match_instdata,
+    inst_type,
     match_opcode,
+    opcode,
     match_args,
     match_const,
     match_root,
@@ -101,7 +103,9 @@ pub fn get_total_number_of_args(inst: &CtonInst) -> usize {
 pub fn get_node_type(ty: NodeType) -> String {
     match ty {
         NodeType::match_instdata => "match_instdata".to_string(),
+        NodeType::inst_type => "inst_type".to_string(),
         NodeType::match_opcode => "match_opcode".to_string(),
+        NodeType::opcode => "opcode".to_string(),
         NodeType::match_args => "match_args".to_string(),
         NodeType::match_const => "match_const".to_string(),
         NodeType::match_root => "match_root".to_string(),
@@ -126,6 +130,19 @@ impl Arena {
         let instdata_val = clift_inst.kind.clone();
         Node {
             node_type: NodeType::match_instdata,
+            //node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
+            node_value: "instdata".to_string(),
+            id: self.count,
+            arg_flag: false,
+            level: 0,
+            next: None,
+        }
+    }
+
+    pub fn build_specific_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
+        let instdata_val = clift_inst.kind.clone();
+        Node {
+            node_type: NodeType::inst_type,
             node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
             id: self.count,
             arg_flag: false,
@@ -138,6 +155,19 @@ impl Arena {
         let opcode_val = clift_inst.opcode.clone();
         Node {
             node_type: NodeType::match_opcode,
+            //node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
+            node_value: "opcode".to_string(),
+            id: self.count,
+            arg_flag: false,
+            level: 0,
+            next: None,
+        }
+    }
+
+    pub fn build_specific_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
+        let opcode_val = clift_inst.opcode.clone();
+        Node {
+            node_type: NodeType::opcode,
             node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
             id: self.count,
             arg_flag: false,
@@ -259,16 +289,35 @@ impl Arena {
     }
 
     pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
+        // build instdata node (generic match_instdata)
         let node_instdata = self.build_instdata_node(clift_inst);
         self.update_count();
 
+        // build specific instdata node (Binary, Unary, etc.)
+        let node_specific_inst = self.build_specific_instdata_node(clift_inst);
+        self.update_count();
+
+        // set the connection b/w above two nodes
+        let updated_instdata = self.set_next_of_prev_node(node_specific_inst.clone(), node_instdata.clone());
+
+        // Build generic opcode node (match_opcode)
         let node_opcode = self.build_opcode_node(clift_inst);
         self.update_count();
 
-        let updated_id_node = self.set_next_of_prev_node(node_opcode.clone(), node_instdata.clone());
+        // set the connection b/w prev two nodes pass nodes in order:[current, prev]
+        let updated_spec_inst = self.set_next_of_prev_node(node_opcode.clone(), node_specific_inst.clone());
 
-        self.nodes.push(updated_id_node.clone());
-        self.nodes.push(node_opcode);
+        // build specific opcode node (IAdd, ISub, etc.)
+        let node_specific_opcode = self.build_specific_opcode_node(clift_inst);
+        self.update_count();
+
+        // set the connection b/w above two opcode nodes
+        let updated_opcode = self.set_next_of_prev_node(node_specific_opcode.clone(), node_opcode.clone());
+
+        self.nodes.push(updated_instdata.clone());
+        self.nodes.push(updated_spec_inst.clone());
+        self.nodes.push(updated_opcode.clone());
+        self.nodes.push(node_specific_opcode);
 
         self.build_args_node(clift_inst);
 

@@ -205,7 +205,6 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
     let top_id = merged_arena.get_id_of_node(top_node.clone());
 
     let found_root = merged_arena.find_node_with_id_in_arena(0);
-    //FIXME: add a check here
     if merged_arena.is_node_dummy(found_root.clone()) {
         panic!("Error: the node is expected to be found in merged arena");
     }
