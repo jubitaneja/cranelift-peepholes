@@ -72,12 +72,12 @@ pub fn getCtonOpCodeName(opcode: CtonOpcode) {
     }
 }
 
-pub fn getCtonValDefName(vdef: CtonValueDef) {
+pub fn get_clift_valdef_name(vdef: CtonValueDef) -> String {
     match vdef {
-        CtonValueDef::Result => println!("Cton::ValDef = Result"),
-        CtonValueDef::Param => println!("Cton::ValDef =  Param"),
-        CtonValueDef::NoneType => println!("Cton::ValDef =  NoneType"),
-        _ => println!("Cton: No such value def types"),
+        CtonValueDef::Result => "Result".to_string(),
+        CtonValueDef::Param => "Param".to_string(),
+        CtonValueDef::NoneType => "None".to_string(),
+        _ => "".to_string(),
     }
 }
 

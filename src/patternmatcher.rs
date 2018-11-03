@@ -152,7 +152,6 @@ impl Arena {
     }
 
     pub fn build_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
-        let opcode_val = clift_inst.opcode.clone();
         Node {
             node_type: NodeType::match_opcode,
             //node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
@@ -194,6 +193,18 @@ impl Arena {
         Node {
             node_type: NodeType::match_args,
             node_value: get_arg_name(arg),
+            id: self.count,
+            arg_flag: false,
+            level: 0,
+            next: None,
+        }
+    }
+
+    pub fn build_valdef_node(&mut self, clift_inst: &CtonInst) -> Node {
+        let valdef = clift_inst.valuedef.clone();
+        Node {
+            node_type: NodeType::inst_type,
+            node_value: cliftinstbuilder::get_clift_valdef_name(valdef),
             id: self.count,
             arg_flag: false,
             level: 0,
@@ -251,11 +262,19 @@ impl Arena {
             
             self.update_count();
 
-            // set next of named arg node because it's 
+            let arg_valdef_node = self.build_valdef_node(clift_inst);
+
+            // set the connection b/w above two nodes
+            let updated_named_arg_node = self.set_next_of_prev_node(arg_valdef_node.clone(), named_arg_node.clone());
+
+            // set next of valdef node because it's 
             // sure to have some nodes after this
-            let updated_named_arg_node = self.set_next_of_current_node_by_default(named_arg_node.clone());
+            let updated_valdef_node = self.set_next_of_current_node_by_default(arg_valdef_node.clone());
+
+            self.update_count();
 
             self.nodes.push(updated_named_arg_node);
+            self.nodes.push(updated_valdef_node);
 
             // repeat the prefix tree build here again!
             let cops = clift_inst.cops.clone();
