@@ -200,6 +200,12 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         arena.update_node_level_in_arena(updated_node.clone());
                     }
                 }
+                // Check if there is any child node already matched at same level
+                // If yes, pop and exit scope first, and then enter into new matching case
+                let index = opt_func.does_level_exist_in_stack(current_level);
+                if index != 0 {
+                    opt_func.pop_and_exit_scope_from(index);
+                }
                 match arena.merged_tree[node].node_value.as_ref() {
                     "Var" => {},
                     "Binary" => {
@@ -223,7 +229,8 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         arena.update_node_level_in_arena(updated_node.clone());
                     }
                 }
-
+                // Check if there is any child node already matched at same level
+                // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
@@ -279,8 +286,13 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         arena.update_node_level_in_arena(updated_node.clone());
                     }
                 }
+                // Check if there is any child node already matched at same level
+                // If yes, pop and exit scope first, and then enter into new matching case
+                let index = opt_func.does_level_exist_in_stack(current_level);
+                if index != 0 {
+                    opt_func.pop_and_exit_scope_from(index);
+                }
                 // match the actual opcode types
-                // FIXME: Later add more opcodes here
                 match arena.merged_tree[node].node_value.as_ref() {
                     "Var" => {},
                     "Iadd" => {
