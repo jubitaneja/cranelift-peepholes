@@ -15,6 +15,7 @@ pub enum NodeType {
     match_opcode,
     opcode,
     match_args,
+    match_valdef,
     match_const,
     match_root,
     match_none,
@@ -109,6 +110,7 @@ pub fn get_node_type(ty: NodeType) -> String {
         NodeType::match_args => "match_args".to_string(),
         NodeType::match_const => "match_const".to_string(),
         NodeType::match_root => "match_root".to_string(),
+        NodeType::match_valdef => "match_valdef".to_string(),
         NodeType::match_none | _ => panic!("Unexpected node type"),
     }
 }
@@ -124,6 +126,17 @@ impl Arena {
 
     pub fn update_count(&mut self) {
         self.count += 1;
+    }
+
+    pub fn build_default_node(&mut self) -> Node {
+        Node {
+            node_type: NodeType::match_none,
+            node_value: "".to_string(),
+            id: self.count,
+            arg_flag: false,
+            level: 0,
+            next: None,
+        }
     }
 
     pub fn build_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
@@ -201,9 +214,13 @@ impl Arena {
     }
 
     pub fn build_valdef_node(&mut self, clift_inst: &CtonInst) -> Node {
+        let k = cliftinstbuilder::get_clift_instdata_name(clift_inst.kind.clone());
+        let p = cliftinstbuilder::get_clift_opcode_name(clift_inst.opcode.clone());
+        println!("********** *** Jubi: instkind is: {}", k);
+        println!("********** *** Jubi: optype is: {}", p);
         let valdef = clift_inst.valuedef.clone();
         Node {
-            node_type: NodeType::inst_type,
+            node_type: NodeType::match_valdef,
             node_value: cliftinstbuilder::get_clift_valdef_name(valdef),
             id: self.count,
             arg_flag: false,
@@ -262,22 +279,47 @@ impl Arena {
             
             self.update_count();
 
-            let arg_valdef_node = self.build_valdef_node(clift_inst);
+            // FIXME: valdef node has to be constructed while traversing the ops types
+            // not the instruction types
+            // take it down to clift_inst.cops part
+            
+            let cops = clift_inst.cops.clone();
+            let mut arg_valdef_node = self.build_default_node();
+            
+            match cops.clone() {
+                Some(ops) => {
+                    let arg = &ops[op];
+                    match arg.idx_val.clone() {
+                        Some(idx) => {
+                            let root_inst = &self.clift_insts[idx].clone();
+                            arg_valdef_node = self.build_valdef_node(root_inst);
+                        },
+                        None => {
+                            // TODO: deal with constants later here if valdef is diff. for consts
+                            println!("Not dealing with none index type i.e. for const\n");
+                        },
+                    }
+                },
+                None => {
+                    println!("Expected args of an inst here\n");
+                },
+            }
+            //let arg_valdef_node = self.build_valdef_node(clift_inst);
 
             // set the connection b/w above two nodes
             let updated_named_arg_node = self.set_next_of_prev_node(arg_valdef_node.clone(), named_arg_node.clone());
 
+            self.update_count();
             // set next of valdef node because it's 
             // sure to have some nodes after this
             let updated_valdef_node = self.set_next_of_current_node_by_default(arg_valdef_node.clone());
 
-            self.update_count();
 
             self.nodes.push(updated_named_arg_node);
             self.nodes.push(updated_valdef_node);
 
             // repeat the prefix tree build here again!
-            let cops = clift_inst.cops.clone();
+            //let cops = clift_inst.cops.clone();
             match cops {
                 Some(ops) => {
                     let arg = &ops[op];

@@ -75,10 +75,10 @@ impl Opt {
         // if level is new - not found in stack - push it directly.
         // if level already exists in stack, pop the stack until that level and then
         // push the new level.
-        println!("Current stack before entering scope is: -------");
-        for x in 0 .. self.scope_stack.len() {
-           println!("stack levels pushed so far = {}", self.scope_stack[x].level);
-        }
+        //println!("Current stack before entering scope is: -------");
+        //for x in 0 .. self.scope_stack.len() {
+           //println!("stack levels pushed so far = {}", self.scope_stack[x].level);
+        //}
         println!("find the level number = {} in stack", current_level);
         let index = self.does_level_exist_in_stack(current_level);
         println!("Found index from stack == {}", index);
@@ -139,7 +139,17 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
         println!("Node ==== ============================================================");
         println!("\t\t Node Id = {}", arena.merged_tree[node].id);
         println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-        println!("\t\t Node arg flag = {}", arena.merged_tree[node].arg_flag);
+        println!("\t\t Node Level = {}", arena.merged_tree[node].node_value);
+        match arena.merged_tree[node].next.clone() {
+            Some(ids) => {
+                for i in 0 .. ids.len() {
+                    println!("\t\t Node->next = {}", ids[i].index);
+                }
+            },
+            None => {
+                println!("No next\n")
+            },
+        }
         match arena.merged_tree[node].node_type {
             NodeType::match_root => {
                 opt_func.generate_header();
@@ -167,84 +177,98 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         arena.update_node_level_in_arena(updated_node.clone());
                     }
                 }
-                if !arena.merged_tree[node].arg_flag {
-                    println!("\t\t\t Instdata node: arg_flag is NOT true\n");
+               
+                let mut opt_clone = opt_func.clone();
+                let mut ent = opt_clone.current_entity;
+                if !ent.is_empty() {
                     opt_func.append(String::from("match pos.func.dfg"));
                     opt_func.append(String::from("["));
-                    let mut opt_clone = opt_func.clone();
-                    let mut ent = opt_clone.current_entity;
                     opt_func.append(ent);
                     opt_func.append(String::from("]"));
-
                     opt_func.enter_scope(ScopeType::scope_match, current_level);
+                }
+            },
+            NodeType::inst_type => {
+                println!("\t\tSpecific instruction type node\n");
+                let current_level = arena.merged_tree[node].level;
+                //set the level of root->next nodes to 0+1
+                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
+                    for n in 0 .. next_nodes.len() {
+                        let id = next_nodes[n].index;
+                        let mut next_node = arena.find_node_with_id_in_arena(id);
+                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
+                        arena.update_node_level_in_arena(updated_node.clone());
+                    }
+                }
+                match arena.merged_tree[node].node_value.as_ref() {
+                    "Var" => {},
+                    "Binary" => {
+                        opt_func.append(String::from("InstructionData::Binary { opcode, args }"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                        opt_func.set_entity(String::from("opcode"));
+                    },
+                    _ => {
+                        panic!("Error: This instruction data type is not yet handled");
+                    },
+                }
+            },
+            NodeType::match_valdef => {
+                let current_level = arena.merged_tree[node].level;
+                //set the level of root->next nodes to 0+1
+                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
+                    for n in 0 .. next_nodes.len() {
+                        let id = next_nodes[n].index;
+                        let mut next_node = arena.find_node_with_id_in_arena(id);
+                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
+                        arena.update_node_level_in_arena(updated_node.clone());
+                    }
+                }
 
-                    match arena.merged_tree[node].node_value.as_ref() {
-                        // TODO: Add more types of instdata here
-                        // FIXME: Later make sure if Var case is handled well.
-                        // Example:
-                        // %0 = var
-                        // infer %0
-                        "Var" => {},
-                        "Binary" => {
-                            opt_func.append(String::from("InstructionData::Binary { opcode, args }"));
-                            opt_func.enter_scope(ScopeType::scope_case, current_level);
-                        },
-                        _ => {
-                            panic!("Error: This instruction data type is not yet handled");
-                        },
-                    }
-                } else {
-                    //handle this case separately
-                    println!("\t\t\t Instdata node: arg_flag is true\n");
-                    opt_func.append(String::from("\nValDef::"));
-                    match arena.merged_tree[node].node_value.as_ref() {
-                        "Var" => {
-                            println!("\t\t\t entering valdef::param here");
-                            opt_func.append(String::from("Param(_, _)"));
-                            opt_func.enter_scope(ScopeType::scope_case, current_level);
-                            opt_func.set_entity(String::from(""));
-                        },
-                        _ => {
-                            println!("\t\t\t entering valdef::result here");
-                            opt_func.append(String::from("Result(arg_ty, _)"));
-                            opt_func.enter_scope(ScopeType::scope_case, current_level);
-                            opt_func.set_entity(String::from("arg_ty"));
-                        },
-                    }
-                    match opt_func.current_entity.as_ref() {
-                        "" => {},
-                        _ => {
-                            opt_func.append(String::from("match pos.func.dfg"));
-                            opt_func.append(String::from("["));
-                            let mut opt_clone = opt_func.clone();
-                            let mut ent = opt_clone.current_entity;
-                            opt_func.append(ent);
-                            opt_func.append(String::from("]"));
-                            opt_func.enter_scope(ScopeType::scope_match, current_level);
-                            //
-                            //match node_value
-                            // TODO: InstructionData::node_value stuff
-                            // enter scope case
-                            match arena.merged_tree[node].node_value.as_ref() {
-                                // TODO: Add more types of instdata here
-                                // FIXME: Later make sure if Var case is handled well.
-                                // Example:
-                                // %0 = var
-                                // infer %0
-                                "Var" => {},
-                                "Binary" => {
-                                    opt_func.append(String::from("InstructionData::Binary { opcode, args }"));
-                                    opt_func.enter_scope(ScopeType::scope_case, current_level);
-                                },
-                                _ => {
-                                    panic!("Error: This instruction data type is not yet handled");
-                                },
-                            }
-                        },
-                    }
+                let index = opt_func.does_level_exist_in_stack(current_level);
+                if index != 0 {
+                    opt_func.pop_and_exit_scope_from(index);
+                }
+                opt_func.append(String::from("\nValDef::"));
+                match arena.merged_tree[node].node_value.as_ref() {
+                    "Param" => {
+                        println!("\t\t\t entering valdef::param here");
+                        opt_func.append(String::from("Param(_, _)"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                        opt_func.set_entity(String::from(""));
+                    },
+                    "Result" => {
+                        println!("\t\t\t entering valdef::result here");
+                        opt_func.append(String::from("Result(arg_ty, _)"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                        opt_func.set_entity(String::from("arg_ty"));
+                    },
+                    _ => {
+                        // FIXME - do we want error handling here for NoneType and ""
+                        println!("\t\t entering unknown valdef case\n");
+                    },
                 }
             },
             NodeType::match_opcode => {
+                let current_level = arena.merged_tree[node].level;
+                //set the level of root->next nodes to 0+1
+                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
+                    for n in 0 .. next_nodes.len() {
+                        let id = next_nodes[n].index;
+                        let mut next_node = arena.find_node_with_id_in_arena(id);
+                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
+                        arena.update_node_level_in_arena(updated_node.clone());
+                    }
+                }
+                
+                let mut opt_clone = opt_func.clone();
+                let mut ent = opt_clone.current_entity;
+                if !ent.is_empty() {
+                    opt_func.append(String::from("match opcode"));
+                    opt_func.enter_scope(ScopeType::scope_match, current_level);
+                }
+            },
+            NodeType::opcode => {
+                println!("\t\tIn specific opcode case in matcher\n");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
                 if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
@@ -260,8 +284,6 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 match arena.merged_tree[node].node_value.as_ref() {
                     "Var" => {},
                     "Iadd" => {
-                        opt_func.append(String::from("match_opcode"));
-                        opt_func.enter_scope(ScopeType::scope_match, current_level);
                         opt_func.append(String::from("Opcode::Iadd"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
@@ -288,16 +310,6 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 opt_func.append(String::from(")"));
 
                 opt_func.enter_scope(ScopeType::scope_match, current_level);
- 
-                // set the arg_flag to true for next nodes of match_args
-                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
-                    for n in 0 .. next_nodes.len() {
-                        let id = next_nodes[n].index;
-                        let mut next_node = arena.find_node_with_id_in_arena(id);
-                        let updated_node = arena.update_node_with_arg_flag(next_node.clone(), true);
-                        arena.update_node_arg_flag_in_arena(updated_node.clone());
-                    }
-                }
             },
             _ => {
                 panic!("\n\nmatch type not handled yet!\n");
