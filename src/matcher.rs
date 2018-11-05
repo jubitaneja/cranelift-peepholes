@@ -269,6 +269,10 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         opt_func.append(String::from("Opcode::Iadd"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
+                    "Imul" => {
+                        opt_func.append(String::from("Opcode::Imul"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
                     _ => {
                         panic!("Error: this opcode type is not yet handled");
                     },
