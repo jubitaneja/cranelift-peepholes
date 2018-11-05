@@ -35,6 +35,7 @@ pub enum CtonOpcode {
     IaddImm,
     Var,
     Imul,
+    Isub,
     Infer,
 }
 
@@ -57,6 +58,7 @@ pub fn get_cton_inst_name(opcode: CtonOpcode) {
     match opcode {
         CtonOpcode::Iadd => println!("CtonOpcode = Iadd"),
         CtonOpcode::Imul => println!("CtonOpcode = Imul"),
+        CtonOpcode::Isub => println!("CtonOpcode = Isub"),
         CtonOpcode::IaddImm => println!("CtonOpcode = IaddImm"),
         CtonOpcode::Var => println!("CtonOpcode = Var"),
         _ => {
@@ -69,6 +71,7 @@ pub fn getCtonOpCodeName(opcode: CtonOpcode) {
     match opcode {
         CtonOpcode::Iadd => println!("Cton::Opcode = Iadd"),
         CtonOpcode::Imul => println!("Cton::Opcode = Imul"),
+        CtonOpcode::Isub => println!("Cton::Opcode = Isub"),
         CtonOpcode::Var => println!("Cton::Opcode = Var"),
         CtonOpcode::Infer => println!("Cton::Opcode = Infer"),
         _ => println!("Cton: other type yet to be handled"),
@@ -96,6 +99,7 @@ pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
     match opcode {
         CtonOpcode::Iadd => "Iadd".to_string(),
         CtonOpcode::Imul => "Imul".to_string(),
+        CtonOpcode::Isub => "Isub".to_string(),
         CtonOpcode::IaddImm => "IaddImm".to_string(),
         CtonOpcode::Var => "Var".to_string(),
         CtonOpcode::Infer => "Infer".to_string(),
@@ -141,6 +145,16 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Imul,
+                        // FIXME: Deal with ops mapping in a better way later
+                        // because, we have to get rid of souperoperand type completely
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Sub => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Isub,
                         // FIXME: Deal with ops mapping in a better way later
                         // because, we have to get rid of souperoperand type completely
                         cops: build_clift_ops(ops),

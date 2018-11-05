@@ -100,6 +100,7 @@ impl<'a> Parser<'a> {
             "var" => InstKind::Var,
             "add" => InstKind::Add,
             "mul" => InstKind::Mul,
+            "sub" => InstKind::Sub,
             "infer" => InstKind::Infer,
             _ => InstKind::NoneType,
         }
@@ -111,6 +112,7 @@ impl<'a> Parser<'a> {
             InstKind::Var => "var".to_string(),
             InstKind::Add => "add".to_string(),
             InstKind::Mul => "mul".to_string(),
+            InstKind::Sub => "sub".to_string(),
             _ => "Inst Kind name is not yet handled in function: get_kind_name()".to_string(),
         }
     }
