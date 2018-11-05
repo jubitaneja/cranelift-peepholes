@@ -130,12 +130,24 @@ impl Opt {
             None => true,
         }
     }
+
+    pub fn set_level_of_all_child_nodes(&mut self, arena: &mut MergedArena, n: usize, current: usize) {
+        if let Some(next_nodes) = arena.merged_tree[n].next.clone() {
+            for n in 0 .. next_nodes.len() {
+                let id = next_nodes[n].index;
+                let mut next_node = arena.find_node_with_id_in_arena(id);
+                let updated_node = arena.update_node_with_level(next_node.clone(), current + 1);
+                arena.update_node_level_in_arena(updated_node.clone());
+            }
+        }
+    }
 }
 
 pub fn generate_matcher(mut arena: MergedArena) -> String {
     let mut opt_func = Opt::new();
 
     for node in 0 .. arena.merged_tree.len() {
+        // dump: begin
         println!("Node ==== ============================================================");
         println!("\t\t Node Id = {}", arena.merged_tree[node].id);
         println!("\t\t Node Level = {}", arena.merged_tree[node].level);
@@ -150,33 +162,20 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 println!("No next\n")
             },
         }
+        // dump: end
         match arena.merged_tree[node].node_type {
             NodeType::match_root => {
                 opt_func.generate_header();
                 let current_level = arena.merged_tree[node].level;
                 opt_func.enter_scope(ScopeType::scope_func, current_level);
                 //set the level of root->next nodes to 0+1
-                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
-                    for n in 0 .. next_nodes.len() {
-                        let id = next_nodes[n].index;
-                        let mut next_node = arena.find_node_with_id_in_arena(id);
-                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level + 1);
-                        arena.update_node_level_in_arena(updated_node.clone());
-                    }
-                }
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
             },
             NodeType::match_instdata => {
                 println!("\t\t Instdata node type");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
-                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
-                    for n in 0 .. next_nodes.len() {
-                        let id = next_nodes[n].index;
-                        let mut next_node = arena.find_node_with_id_in_arena(id);
-                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
-                        arena.update_node_level_in_arena(updated_node.clone());
-                    }
-                }
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                
                 let mut opt_clone = opt_func.clone();
                 let mut ent = opt_clone.current_entity;
@@ -192,14 +191,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 println!("\t\tSpecific instruction type node\n");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
-                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
-                    for n in 0 .. next_nodes.len() {
-                        let id = next_nodes[n].index;
-                        let mut next_node = arena.find_node_with_id_in_arena(id);
-                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
-                        arena.update_node_level_in_arena(updated_node.clone());
-                    }
-                }
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
@@ -221,14 +213,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
             NodeType::match_valdef => {
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
-                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
-                    for n in 0 .. next_nodes.len() {
-                        let id = next_nodes[n].index;
-                        let mut next_node = arena.find_node_with_id_in_arena(id);
-                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
-                        arena.update_node_level_in_arena(updated_node.clone());
-                    }
-                }
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
@@ -258,15 +243,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
             NodeType::match_opcode => {
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
-                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
-                    for n in 0 .. next_nodes.len() {
-                        let id = next_nodes[n].index;
-                        let mut next_node = arena.find_node_with_id_in_arena(id);
-                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
-                        arena.update_node_level_in_arena(updated_node.clone());
-                    }
-                }
-                
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                 let mut opt_clone = opt_func.clone();
                 let mut ent = opt_clone.current_entity;
                 if !ent.is_empty() {
@@ -278,14 +255,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 println!("\t\tIn specific opcode case in matcher\n");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
-                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
-                    for n in 0 .. next_nodes.len() {
-                        let id = next_nodes[n].index;
-                        let mut next_node = arena.find_node_with_id_in_arena(id);
-                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
-                        arena.update_node_level_in_arena(updated_node.clone());
-                    }
-                }
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
@@ -307,14 +277,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
             NodeType::match_args => {
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
-                if let Some(next_nodes) = arena.merged_tree[node].next.clone() {
-                    for n in 0 .. next_nodes.len() {
-                        let id = next_nodes[n].index;
-                        let mut next_node = arena.find_node_with_id_in_arena(id);
-                        let updated_node = arena.update_node_with_level(next_node.clone(), current_level+1);
-                        arena.update_node_level_in_arena(updated_node.clone());
-                    }
-                }
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                 // create a default match string
                 opt_func.append(String::from("match pos.func.dfg.val_def"));
                 opt_func.append(String::from("("));
