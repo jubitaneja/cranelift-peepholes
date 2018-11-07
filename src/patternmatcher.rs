@@ -216,8 +216,8 @@ impl Arena {
     pub fn build_valdef_node(&mut self, clift_inst: &CtonInst) -> Node {
         let k = cliftinstbuilder::get_clift_instdata_name(clift_inst.kind.clone());
         let p = cliftinstbuilder::get_clift_opcode_name(clift_inst.opcode.clone());
-        println!("********** *** Jubi: instkind is: {}", k);
-        println!("********** *** Jubi: optype is: {}", p);
+        //println!("********** *** Jubi: instkind is: {}", k);
+        //println!("********** *** Jubi: optype is: {}", p);
         let valdef = clift_inst.valuedef.clone();
         Node {
             node_type: NodeType::match_valdef,
@@ -398,22 +398,22 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>, global_count: u
     let all_nodes = arena.build_sequence_of_nodes(inst_at_last_op_idx);
 
     // just for debugging puprose
-    println!("--------------------------------");
-    for n in 0 .. all_nodes.len() {
-        println!("Node id = {}", all_nodes[n].id);
-        println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
-        println!("Node value = {}", all_nodes[n].node_value);
-        match all_nodes[n].clone().next {
-            Some(x) => {
-                for i in 0 .. x.len() {
-                    println!("next = {}", x[i].index);
-                }
-            },
-            None => {
-                println!("next = None");
-            }
-        }
-        println!("--------------------------------");
-    }
+    //println!("--------------------------------");
+    //for n in 0 .. all_nodes.len() {
+    //    println!("Node id = {}", all_nodes[n].id);
+    //    println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
+    //    println!("Node value = {}", all_nodes[n].node_value);
+    //    match all_nodes[n].clone().next {
+    //        Some(x) => {
+    //            for i in 0 .. x.len() {
+    //                println!("next = {}", x[i].index);
+    //            }
+    //        },
+    //        None => {
+    //            println!("next = None");
+    //        }
+    //    }
+    //    println!("--------------------------------");
+    //}
     all_nodes
 }

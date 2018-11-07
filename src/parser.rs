@@ -168,7 +168,6 @@ impl<'a> Parser<'a> {
     fn parse_ops(&mut self) -> Vec<SouperOperand> {
         let mut ops: Vec<SouperOperand> = Vec::new();
         loop {
-            //op = self.parse_op();
             let op = self.parse_op();
             ops.push(op);
 
@@ -202,7 +201,7 @@ impl<'a> Parser<'a> {
                 for (key, val) in &self.lhsValNames_to_Idx {
                     if key == &lhs {
                         //println!("Yes! key found = {}", key);
-                        //println!("Val index at this key is: {}", val);
+                        //println!("Yes! Val index at this key is: {}", val);
                         value = Some(*val);
                     }
                 }
@@ -258,16 +257,10 @@ impl<'a> Parser<'a> {
                     // instwidth == 0 => error "var inst expects atleast width=1"
 
                     self.consume_token();
-                    // Deal with dataflow facts later here!
-
-                    // create Var instruction and return that
-                    // self.createVar(instValName, instWidth);
-                    //println!("Build Var Instruction");
-                    // Discuss: Rust study group
-                    // Error: cannot borrow `self.lhs_valname` as immutable because `*self` is also borrowed as mutable
-                    //Some(self.create_var(InstKind::Var, self.lhs_valname.clone()))
+                    // TODO: Deal with dataflow facts later here!
 
                     let instname = self.lhs_valname.clone();
+                    // TODO: collect more attributes of var
 
                     self.create_var(InstKind::Var, instname)
                 },
@@ -284,6 +277,7 @@ impl<'a> Parser<'a> {
                     //Some(self.create_inst(instKind, self.lhs_valname.clone()))
                     let instname = self.lhs_valname.clone();
 
+                    // TODO: Add width to these insts
                     self.create_inst(instKind, instname, ops)
                 },
             }

@@ -212,16 +212,16 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
     //if merged_arena.is_node_dummy(found_root) {
     //  error "root node is expected to have an id = 0 and it is not found in arena"
     //}
-    println!("**** found root node with value = {}", found_root.node_value);
+    //println!("**** found root node with value = {}", found_root.node_value);
     if let Some(nodes_list) = found_root.next.clone() {
         for x in  0 .. nodes_list.len() {
-            println!("root->next ====== {}", nodes_list[x].index);
+            //println!("root->next ====== {}", nodes_list[x].index);
         }
     }
 
     if !merged_arena.node_has_any_connection(found_root.clone()) {
         // case 1
-        println!("No connection of root node ------------");
+        //println!("No connection of root node ------------");
         merged_arena.update_hash_map(top_val, top_id);
         let updated_root = merged_arena.update_next_nodes_list(found_root.clone(), top_id);
         merged_arena.update_node_in_arena(updated_root);
@@ -229,11 +229,11 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
             merged_arena.add_node_to_arena(single_tree[n].clone());
         }
     } else {
-        println!("found connection of root node ------------");
-        println!("current val for opt2 = {}", top_val);
+        //println!("found connection of root node ------------");
+        //println!("current val for opt2 = {}", top_val);
         if merged_arena.is_node_value_already_in_hash_map(top_val.clone()) {
             // case 2
-            println!("Hash key found");
+            //println!("Hash key found");
 
             // get the id of existing hashkey
             let found_id = merged_arena.hmap[&top_val];

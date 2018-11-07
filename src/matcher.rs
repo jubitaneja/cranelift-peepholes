@@ -79,9 +79,9 @@ impl Opt {
         //for x in 0 .. self.scope_stack.len() {
            //println!("stack levels pushed so far = {}", self.scope_stack[x].level);
         //}
-        println!("find the level number = {} in stack", current_level);
+        //println!("find the level number = {} in stack", current_level);
         let index = self.does_level_exist_in_stack(current_level);
-        println!("Found index from stack == {}", index);
+        //println!("Found index from stack == {}", index);
         if index != 0 {
             // index exists
             // pop first
@@ -124,7 +124,7 @@ impl Opt {
     }
 
     pub fn is_leaf_node(&mut self, node: Node) -> bool {
-        println!("check leaf node =========\n\n");
+        //println!("check leaf node =========\n\n");
         match node.next {
             Some(x) => false,
             None => true,
@@ -148,20 +148,20 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
 
     for node in 0 .. arena.merged_tree.len() {
         // dump: begin
-        println!("Node ==== ============================================================");
-        println!("\t\t Node Id = {}", arena.merged_tree[node].id);
-        println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-        println!("\t\t Node Level = {}", arena.merged_tree[node].node_value);
-        match arena.merged_tree[node].next.clone() {
-            Some(ids) => {
-                for i in 0 .. ids.len() {
-                    println!("\t\t Node->next = {}", ids[i].index);
-                }
-            },
-            None => {
-                println!("No next\n")
-            },
-        }
+        //println!("Node ==== ============================================================");
+        //println!("\t\t Node Id = {}", arena.merged_tree[node].id);
+        //println!("\t\t Node Level = {}", arena.merged_tree[node].level);
+        //println!("\t\t Node Level = {}", arena.merged_tree[node].node_value);
+        //match arena.merged_tree[node].next.clone() {
+        //    Some(ids) => {
+        //        for i in 0 .. ids.len() {
+        //            println!("\t\t Node->next = {}", ids[i].index);
+        //        }
+        //    },
+        //    None => {
+        //        println!("No next\n")
+        //    },
+        //}
         // dump: end
         match arena.merged_tree[node].node_type {
             NodeType::match_root => {
@@ -172,7 +172,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
             },
             NodeType::match_instdata => {
-                println!("\t\t Instdata node type");
+                //println!("\t\t Instdata node type");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
@@ -188,7 +188,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 }
             },
             NodeType::inst_type => {
-                println!("\t\tSpecific instruction type node\n");
+                //println!("\t\tSpecific instruction type node\n");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
@@ -223,13 +223,13 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 opt_func.append(String::from("\nValDef::"));
                 match arena.merged_tree[node].node_value.as_ref() {
                     "Param" => {
-                        println!("\t\t\t entering valdef::param here");
+                        //println!("\t\t\t entering valdef::param here");
                         opt_func.append(String::from("Param(_, _)"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from(""));
                     },
                     "Result" => {
-                        println!("\t\t\t entering valdef::result here");
+                        //println!("\t\t\t entering valdef::result here");
                         opt_func.append(String::from("Result(arg_ty, _)"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("arg_ty"));
@@ -252,7 +252,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 }
             },
             NodeType::opcode => {
-                println!("\t\tIn specific opcode case in matcher\n");
+                //println!("\t\tIn specific opcode case in matcher\n");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
