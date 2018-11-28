@@ -120,11 +120,11 @@ impl<'a> Parser<'a> {
     // print token name
     fn get_token_name(&mut self) {
         match self.lookahead {
-            Some(TokKind::ValName(lhs)) => println!("ValName "),
+            Some(TokKind::ValName(lhs, width)) => println!("ValName "),
             Some(TokKind::Ident(text)) => println!("Ident "),
             Some(TokKind::Comma) => println!("Comma "),
             Some(TokKind::Equal) => println!("Eq "),
-            Some(TokKind::Int) => println!("Int "),
+            Some(TokKind::Int(width)) => println!("Int "),
             Some(TokKind::Eof) => println!("EOF "),
             Some(TokKind::Error) => println!("Error "),
             Some(TokKind::UntypedInt) => println!("Untypedint "),
@@ -185,7 +185,7 @@ impl<'a> Parser<'a> {
 
     fn parse_op(&mut self) -> SouperOperand {
         match self.lookahead {
-            Some(TokKind::ValName(lhs)) => {
+            Some(TokKind::ValName(lhs, width)) => {
                 // error checking: self.width == 0 => error unexpected width of op
 
                 // Inst I = createInst with inst width, instvalname
@@ -214,7 +214,7 @@ impl<'a> Parser<'a> {
                     const_val: None,
                 }
             },
-            Some(TokKind::Int) => {
+            Some(TokKind::Int(width)) => {
                 // get the value of const
                 // build const inst
                 // Inst I = IC.getConst()
@@ -330,7 +330,7 @@ impl<'a> Parser<'a> {
                 InstKind::Infer => {
                     self.consume_token();
                     match self.lookahead {
-                        Some(TokKind::ValName(lhs)) => {
+                        Some(TokKind::ValName(lhs, width)) => {
                             let ops = self.parse_ops();
                             //error checking on ops length
                             assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
@@ -360,7 +360,7 @@ impl<'a> Parser<'a> {
         // pc ... , blockpc ... , 
 
         match self.lookahead {
-            Some(TokKind::ValName(lhs)) => {
+            Some(TokKind::ValName(lhs, width)) => {
                 self.lhs_valname = lhs;
                 self.parse_valname_inst()
             },
