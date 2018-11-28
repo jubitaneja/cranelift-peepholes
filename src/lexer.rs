@@ -7,10 +7,10 @@ use std::str::CharIndices;
 pub enum TokKind<'a>{
     Error,
     Ident(&'a str),
-    ValName(&'a str),
+    ValName(&'a str, u32),
     Comma,
     Equal,
-    Int,
+    Int(u32),
     UntypedInt,
     Comment(&'a str),
     Eof,
@@ -104,6 +104,56 @@ impl<'a> Lexer<'a> {
                 false
             },
          }
+    }
+
+    pub fn evaluate_width(&mut self, ch: Option<char>, width: &mut u32) {
+        match ch {
+            Some(w) => {
+                if w >= '0' && w <= '9' {
+                    let width_val = w as u32;
+                    let zero_val = '0' as u32;
+                    *width = *width * 10 + width_val - zero_val;
+                }
+            },
+            _ => {
+            },
+         }
+    }
+
+    pub fn scan_bitwidth(&mut self) -> u32 {
+        let loc = self.loc();
+        self.next_ch();
+        if self.lookahead != Some('i') {
+            error(Error::InvalidChar, "expected 'i' to specify bitwidth".to_string(), loc.clone());
+            //token(TokKind::Error, loc)
+        }
+
+        // scan the width value
+        self.next_ch();
+        let width_begin = self.pos;
+        let width = 0;
+        let mut current_ch = self.lookahead.clone();
+        let mut width_value: u32 = 0;
+        while self.is_digit(current_ch) {
+            self.evaluate_width(current_ch, &mut width_value);
+            self.next_ch();
+            current_ch = self.lookahead.clone();
+        }
+
+        // Make sure you got something in the width
+        if self.pos - width_begin == 0 {
+            error(Error::InvalidChar, "expected an integer".to_string(), loc.clone());
+            panic!("expected an integer bitwidth\n");
+            //token(TokKind::Error, loc)
+        }
+        println!("-------------- width = {} -------------\n", width_value);
+        if width_value == 0 {
+            error(Error::InvalidChar, "width must be atleast 1".to_string(), loc.clone());
+            panic!("width must be atleast 1\n");
+            //token(TokKind::Error, loc)
+        }
+
+        width_value
     }
 
     // Is the current character an alphabet?
@@ -202,39 +252,12 @@ impl<'a> Lexer<'a> {
                 let LHS_ValName = &self.source[start_pos-1..self.pos];
 
                 // Look for bitwidth specifications, if any
+                let mut width: u32 = 0;
                 if self.lookahead == Some(':') {
-                    self.next_ch();
-                    if self.lookahead != Some('i') {
-                        error(Error::InvalidChar, "expected 'i' to specify bitwidth".to_string(), loc.clone());
-                        //token(TokKind::Error, loc)
-                    }
-
-                    // scan the width
-                    self.next_ch();
-                    let mut width_begin = self.pos;
-                    let mut width = 0;
-                    current_ch = self.lookahead.clone();
-                    while self.is_digit(current_ch) {
-                        self.next_ch();
-                        current_ch = self.lookahead.clone();
-                    }
-                    //FIXME: get the sliced width string and convert
-                    //it to int value
-
-                    // Make sure you got something in the width
-                    if self.pos - width_begin == 0 {
-                        error(Error::InvalidChar, "expected an integer".to_string(), loc.clone());
-                        //token(TokKind::Error, loc)
-                    }
-                    // FIXME: enable this width = 0 check once width
-                    // is actually computed (str -> int)
-                    //if width == 0 {
-                    //    error(Error::InvalidChar, "width must be atleast 1".to_string(), loc.clone());
-                    //    //token(TokKind::Error, loc)
-                    //}
+                    width = self.scan_bitwidth();
                 }
-                //println!("Token: ValName");
-                token(TokKind::ValName(LHS_ValName), loc)
+
+                token(TokKind::ValName(LHS_ValName, width), loc)
             },
             // FIXME: modularize all these cases
             Some('a' ... 'z') | Some('A' ... 'Z') => {
@@ -255,14 +278,12 @@ impl<'a> Lexer<'a> {
                     self.next_ch();
                     current_ch = self.lookahead.clone();
                 }
-                // TODO: Scan the lookahead after the above while loop
-                // to see if it is ':'
-                // if yes, look for next_ch = 'i'
-                // look for bitwidth further
-                // FIXME: refactor scanning 'i32' part in a function (same can be
-                // used in '%' thing too)
-                //println!("Token: Int");
-                token(TokKind::Int, loc)
+
+                let mut width: u32 = 0;
+                if self.lookahead == Some(':') {
+                    width = self.scan_bitwidth();
+                }
+                token(TokKind::Int(width), loc)
             },
             _ => {
                 // FIXME: I think this is not required, do something else
