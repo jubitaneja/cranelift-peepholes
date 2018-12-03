@@ -20,6 +20,9 @@ pub enum InstKind {
     Ult,
     Sle,
     Ule,
+    And,
+    Or,
+    Xor,
     Zext,
     Infer,
     NoneType,
@@ -127,6 +130,9 @@ impl<'a> Parser<'a> {
             "ult" => InstKind::Ult,
             "sle" => InstKind::Sle,
             "ule" => InstKind::Ule,
+            "and" => InstKind::And,
+            "or" => InstKind::Or,
+            "xor" => InstKind::Xor,
             "infer" => InstKind::Infer,
             _ => InstKind::NoneType,
         }
@@ -145,6 +151,9 @@ impl<'a> Parser<'a> {
             InstKind::Ult => "ult".to_string(),
             InstKind::Sle => "sle".to_string(),
             InstKind::Ule => "ule".to_string(),
+            InstKind::And => "and".to_string(),
+            InstKind::Or => "or".to_string(),
+            InstKind::Xor => "xor".to_string(),
             _ => "Inst Kind name is not yet handled in function: get_kind_name()".to_string(),
         }
     }

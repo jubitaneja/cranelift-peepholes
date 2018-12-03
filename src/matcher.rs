@@ -301,6 +301,18 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         opt_func.append(String::from("Opcode::Ule"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
+                    "band" => {
+                        opt_func.append(String::from("Opcode::Band"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "bor" => {
+                        opt_func.append(String::from("Opcode::Bor"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "bxor" => {
+                        opt_func.append(String::from("Opcode::Bxor"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
                     _ => {
                         panic!("Error: this opcode type is not yet handled");
                     },
