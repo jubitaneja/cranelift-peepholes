@@ -277,6 +277,30 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         opt_func.append(String::from("Opcode::Isub"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
+                    "icmpeq" => {
+                        opt_func.append(String::from("Opcode::Eq"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "icmpne" => {
+                        opt_func.append(String::from("Opcode::Ne"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "icmpslt" => {
+                        opt_func.append(String::from("Opcode::Slt"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "icmpult" => {
+                        opt_func.append(String::from("Opcode::Ult"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "icmpsle" => {
+                        opt_func.append(String::from("Opcode::Sle"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "icmpule" => {
+                        opt_func.append(String::from("Opcode::Ule"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
                     _ => {
                         panic!("Error: this opcode type is not yet handled");
                     },

@@ -38,6 +38,18 @@ pub enum CtonOpcode {
     Var,
     Imul,
     Isub,
+    Eq,
+    Ne,
+    Slt,
+    Ult,
+    Sle,
+    Ule,
+    // Souper canonicalizes all 'gt' '>' operations to less than 
+    // Do we still want to add them?
+    //Sgt,
+    //Ugt,
+    //Sge,
+    //Uge,
     Infer,
 }
 
@@ -61,6 +73,12 @@ pub fn get_cton_inst_name(opcode: CtonOpcode) {
         CtonOpcode::Iadd => println!("CtonOpcode = Iadd"),
         CtonOpcode::Imul => println!("CtonOpcode = Imul"),
         CtonOpcode::Isub => println!("CtonOpcode = Isub"),
+        CtonOpcode::Eq => println!("CtonOpcode = Eq"),
+        CtonOpcode::Ne => println!("CtonOpcode = Ne"),
+        CtonOpcode::Ult => println!("CtonOpcode = Ult"),
+        CtonOpcode::Slt => println!("CtonOpcode = Slt"),
+        CtonOpcode::Ule => println!("CtonOpcode = Ule"),
+        CtonOpcode::Sle => println!("CtonOpcode = Sle"),
         CtonOpcode::IaddImm => println!("CtonOpcode = IaddImm"),
         CtonOpcode::Var => println!("CtonOpcode = Var"),
         _ => {
@@ -74,6 +92,12 @@ pub fn getCtonOpCodeName(opcode: CtonOpcode) {
         CtonOpcode::Iadd => println!("Cton::Opcode = Iadd"),
         CtonOpcode::Imul => println!("Cton::Opcode = Imul"),
         CtonOpcode::Isub => println!("Cton::Opcode = Isub"),
+        CtonOpcode::Eq => println!("Cton::Opcode = Eq"),
+        CtonOpcode::Ne => println!("Cton::Opcode = Ne"),
+        CtonOpcode::Ult => println!("Cton::Opcode = Ult"),
+        CtonOpcode::Slt => println!("Cton::Opcode = Slt"),
+        CtonOpcode::Ule => println!("Cton::Opcode = Ule"),
+        CtonOpcode::Sle => println!("Cton::Opcode = Sle"),
         CtonOpcode::Var => println!("Cton::Opcode = Var"),
         CtonOpcode::Infer => println!("Cton::Opcode = Infer"),
         _ => println!("Cton: other type yet to be handled"),
@@ -102,6 +126,12 @@ pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
         CtonOpcode::Iadd => "Iadd".to_string(),
         CtonOpcode::Imul => "Imul".to_string(),
         CtonOpcode::Isub => "Isub".to_string(),
+        CtonOpcode::Eq => "icmpeq".to_string(),
+        CtonOpcode::Ne => "icmpne".to_string(),
+        CtonOpcode::Slt => "icmpslt".to_string(),
+        CtonOpcode::Ult => "icmpult".to_string(),
+        CtonOpcode::Sle => "icmpsle".to_string(),
+        CtonOpcode::Ule => "icmpule".to_string(),
         CtonOpcode::IaddImm => "IaddImm".to_string(),
         CtonOpcode::Var => "Var".to_string(),
         CtonOpcode::Infer => "Infer".to_string(),
@@ -132,6 +162,8 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
     match souper_inst {
         Inst{kind, lhs, width, var_number, ops} => {
             match kind {
+                // FIXME: Deal with ops mapping in a better way later
+                // because, we have to get rid of souperoperand type completely
                 InstKind::Add => {
                     CtonInst {
                         valuedef: CtonValueDef::Result,
@@ -139,8 +171,6 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         opcode: CtonOpcode::Iadd,
                         width: width,
                         var_num: var_number,
-                        // FIXME: Deal with ops mapping in a better way later
-                        // because, we have to get rid of souperoperand type completely
                         cops: build_clift_ops(ops),
                     }
                 },
@@ -151,8 +181,6 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         opcode: CtonOpcode::Imul,
                         width: width,
                         var_num: var_number,
-                        // FIXME: Deal with ops mapping in a better way later
-                        // because, we have to get rid of souperoperand type completely
                         cops: build_clift_ops(ops),
                     }
                 },
@@ -163,8 +191,66 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         opcode: CtonOpcode::Isub,
                         width: width,
                         var_num: var_number,
-                        // FIXME: Deal with ops mapping in a better way later
-                        // because, we have to get rid of souperoperand type completely
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Eq => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Eq,
+                        width: 1,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Ne => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Ne,
+                        width: 1,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Slt => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Slt,
+                        width: 1,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Ult => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Ult,
+                        width: 1,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Sle => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Sle,
+                        width: 1,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Ule => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Ule,
+                        width: 1,
+                        var_num: var_number,
                         cops: build_clift_ops(ops),
                     }
                 },
