@@ -30,13 +30,14 @@ pub struct SouperOperand {
     // what should be the type of constants values?
     pub idx_val: Option<usize>,
     pub const_val: Option<i64>,
-    //pub width: u32,
+    pub width: u32,
 }
 
 pub struct Inst<'a> {
     pub kind: InstKind,
     pub lhs: &'a str,
-    //pub instWidth: u32,
+    pub width: u32,
+    pub var_number: Option<u32>,
     pub ops: Option<Vec<SouperOperand>>,
 }
 
@@ -55,6 +56,12 @@ pub struct Parser<'a> {
     /// LHS Valname
     lhs_valname: &'a str,
 
+    /// width
+    width: u32,
+
+    // inst count
+    var_count: u32,
+
     // hash map of LHS valnames to Index values
     lhsValNames_to_Idx: HashMap<&'a str, usize>,
 
@@ -69,27 +76,31 @@ impl<'a> Parser<'a> {
             loc: Location { line_num: 0 },
             lex_error: None,
             lhs_valname: "",
+            width: 0,
+            inst_count: 0,
             lhsValNames_to_Idx: HashMap::new(),
         }
     }
 
-    fn create_var(&mut self, instkind: InstKind, instname: &'a str) -> Inst<'a> {
+    fn create_var(&mut self, instkind: InstKind, instname: &'a str, instwidth: u32) -> Inst<'a> {
         // return the inst struct with details
         // FIXME: add more details later if required
         Inst {
             kind: instkind,
             lhs: instname,
+            width: instwidth,
             ops: None,
         }
     }
 
-    fn create_inst(&mut self, instkind: InstKind, instname: &'a str, ops: Vec<SouperOperand>) -> Inst<'a> {
+    fn create_inst(&mut self, instkind: InstKind, instname: &'a str, instwidth: u32, ops: Vec<SouperOperand>) -> Inst<'a> {
         // return the inst struct with details
         // FIXME: add more details later if required
         // Add Ops details too here: Major TODO
         Inst {
             kind: instkind,
             lhs: instname,
+            width: instwidth,
             ops: Some(ops),
         }
     }
@@ -186,64 +197,48 @@ impl<'a> Parser<'a> {
     fn parse_op(&mut self) -> SouperOperand {
         match self.lookahead {
             Some(TokKind::ValName(lhs, width)) => {
-                // error checking: self.width == 0 => error unexpected width of op
-
-                // Inst I = createInst with inst width, instvalname
-                // InstContext IC; IC.getInst()
-                // if I is None => error "%<x> is not an inst"
-
-                //println!("Op: Valname");
-                //println!("*************** Lookup for op in hash map **********");
-                /// FIXME: find an efficient way to retrieve the value corresponding to the key
-                /// I can look for the key using contains_key(lhs) on hashmap, but had no idea how
-                /// to get the corresponding value
                 let mut value = None;
                 for (key, val) in &self.lhsValNames_to_Idx {
                     if key == &lhs {
-                        //println!("Yes! key found = {}", key);
-                        //println!("Yes! Val index at this key is: {}", val);
                         value = Some(*val);
                     }
                 }
                 self.consume_token();
 
-                //return I
                 SouperOperand {
                     kind: SouperOpType::Index,
                     idx_val: value,
                     const_val: None,
+                    width: width,
                 }
             },
             Some(TokKind::Int(width)) => {
                 // get the value of const
                 // build const inst
                 // Inst I = IC.getConst()
-                //println!("Op: Int");
                 self.consume_token();
 
-                // return I
                 SouperOperand {
                     kind: SouperOpType::Constant,
                     idx_val: None,
                     const_val: Some(0),
+                    width: width,
                 }
             },
             Some(TokKind::UntypedInt) => {
                 // get the value of const
                 // build untyped const inst
                 // Inst I = IC.getUntypedConst()
-                //println!("Op: Untyped Int");
                 self.consume_token();
 
-                // return I
                 SouperOperand {
                     kind: SouperOpType::Constant,
                     idx_val: None,
                     const_val: Some(0),
+                    width: 0,
                 }
             },
             _ => {
-                // build error
                 panic!("unexpected token type of Op");
             },
         }
@@ -261,8 +256,9 @@ impl<'a> Parser<'a> {
 
                     let instname = self.lhs_valname.clone();
                     // TODO: collect more attributes of var
+                    let instwidth = self.width.clone();
 
-                    self.create_var(InstKind::Var, instname)
+                    self.create_var(InstKind::Var, instname, instwidth)
                 },
                 _ => {
                     let instKind = self.get_inst_kind(text);
@@ -276,9 +272,10 @@ impl<'a> Parser<'a> {
                     // IC.getInst(instwidth, instkind, ops)
                     //Some(self.create_inst(instKind, self.lhs_valname.clone()))
                     let instname = self.lhs_valname.clone();
+                    let instwidth = self.width.clone();
 
                     // TODO: Add width to these insts
-                    self.create_inst(instKind, instname, ops)
+                    self.create_inst(instKind, instname, instwidth, ops)
                 },
             }
         } else {
@@ -305,10 +302,6 @@ impl<'a> Parser<'a> {
                 // Look for ident tokens like, var; add; phi; etc.
                 match self.lookahead {
                     Some(TokKind::Ident(text)) => {
-                        // Deal with actual part of inst, like:
-                        // var
-                        // add %0, %1
-                        // phi %0, 1, 2
                         self.parse_inst_types()
                     },
                     _ => {
@@ -335,7 +328,7 @@ impl<'a> Parser<'a> {
                             //error checking on ops length
                             assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
                             //println!("Build Infer instruction");
-                            self.create_inst(InstKind::Infer, lhs, ops)
+                            self.create_inst(InstKind::Infer, lhs, width, ops)
                         },
                         _ => {
                             panic!("unexpected infer instruction operand");
@@ -362,6 +355,7 @@ impl<'a> Parser<'a> {
         match self.lookahead {
             Some(TokKind::ValName(lhs, width)) => {
                 self.lhs_valname = lhs;
+                self.width = width;
                 self.parse_valname_inst()
             },
             Some(TokKind::Ident(text)) => {
@@ -392,7 +386,7 @@ pub fn parse(text: &str) -> Vec<Inst> {
                 let inst = p.parse_inst();
                 let LHS = inst.lhs;
                 insts.push(inst);
-
+                p.inst_count = insts.len();
                 // create hashmap and keep inserting valnames + index pair
                 p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
 
