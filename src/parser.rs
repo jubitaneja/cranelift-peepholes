@@ -77,7 +77,7 @@ impl<'a> Parser<'a> {
             lex_error: None,
             lhs_valname: "",
             width: 0,
-            inst_count: 0,
+            var_count: 0,
             lhsValNames_to_Idx: HashMap::new(),
         }
     }
@@ -85,10 +85,12 @@ impl<'a> Parser<'a> {
     fn create_var(&mut self, instkind: InstKind, instname: &'a str, instwidth: u32) -> Inst<'a> {
         // return the inst struct with details
         // FIXME: add more details later if required
+        self.var_count += 1;
         Inst {
             kind: instkind,
             lhs: instname,
             width: instwidth,
+            var_number: Some(self.var_count),
             ops: None,
         }
     }
@@ -101,6 +103,7 @@ impl<'a> Parser<'a> {
             kind: instkind,
             lhs: instname,
             width: instwidth,
+            var_number: None,
             ops: Some(ops),
         }
     }
@@ -386,7 +389,6 @@ pub fn parse(text: &str) -> Vec<Inst> {
                 let inst = p.parse_inst();
                 let LHS = inst.lhs;
                 insts.push(inst);
-                p.inst_count = insts.len();
                 // create hashmap and keep inserting valnames + index pair
                 p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
 

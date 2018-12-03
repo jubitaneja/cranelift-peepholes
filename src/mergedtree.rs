@@ -15,7 +15,9 @@ impl MergedArena {
         Node {
             node_type: NodeType::match_root,
             node_value: "root".to_string(),
+            width: 0,
             id: 0,
+            var_id: None,
             arg_flag: false,
             level: 0,
             next: Some(Vec::new()),
@@ -99,7 +101,9 @@ impl MergedArena {
         Node {
               node_type: NodeType::match_none,
               node_value: "dummy".to_string(),
+              width: 0,
               id: <usize>::max_value(),
+              var_id: None,
               arg_flag: false,
               level: 0,
               next: None,
@@ -187,7 +191,24 @@ impl MergedArena {
 
     pub fn are_node_values_same(&mut self, node1: Node, node2: Node) -> bool {
         if node1.node_value == node2.node_value {
-            true
+            // specific case for Var type nodes
+            // compare the width of vars first
+            // then, compare the var_id (b/c all vars are given var_number while parsing)
+            if node1.node_value == "Var".to_string() {
+                if node1.width == node2.width {
+                    if node1.var_id == node2.var_id {
+                        println!("************Yayy!! Matched the variables here ************\n");
+                        true
+                    } else {
+                        println!("************Noo!! Didn't Match the variables here ************\n");
+                        false
+                    }
+                } else {
+                    false
+                }
+            } else {
+                true
+            }
         } else {
             false
         }
