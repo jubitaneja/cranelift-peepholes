@@ -1,0 +1,70 @@
+1. Instructions to be added:
+
+    ####### INTEGER OPERATIONS ###########
+    ------- Cranelift --------------------
+    1. sgt, ugt, sge, uge - souper canonicalizes all greater-than operations
+       to less-than. Do we still add these?
+    2. icmp_imm<cond> op1, op2 - https://cranelift.readthedocs.io/en/latest/ir.html#inst-icmp_imm
+    3. ifcmp - https://cranelift.readthedocs.io/en/latest/ir.html#inst-ifcmp
+    4. icmp_imm - https://cranelift.readthedocs.io/en/latest/ir.html#inst-ifcmp_imm
+    5. iadd_imm, isub_imm, imul_imm
+    6. iadd_cin, iadd_cout, iadd_carry (what are the equivalent souper instructions here?)
+       https://cranelift.readthedocs.io/en/latest/ir.html#inst-iadd_cin
+    7. isub_bin, isub_bout, isub_borrow - (what are the equivalent souper ISA?)
+       Subtract with borrow in, borrow out and borrow
+       https://cranelift.readthedocs.io/en/latest/ir.html#inst-isub_borrow
+    8. sdiv, udiv
+    9. sdim_imm, udiv_imm
+    10. srem, urem
+    11. srem_imm, urem_imm
+    
+    ------- Souper ISA --------------------
+    1. UB insts: addnuw, addnsw, addnw, subnuw, subnsw, subnw, mulnsw, mulnuw, mulnw
+    2. udiv, sdiv
+    3. udivexact, sdivexact -- corresponding Cranelift ISA?
+    4. srem, urem
+    5. sadd.with.overflow, uadd.with.overflow
+    6. extract value
+    7. trunc - no cranelift insts
+    8. zext, sext - no cranelift insts
+    
+
+    ########### BITWISE OPERATIONS ###########
+    ----------- Cranelift ISA ----------------
+    1. band, bor, bxor, 
+    2. band_imm, bor_imm, bxor_imm
+    3. bnot, band_not, bor_not, bxor_not -- no souper ISA for this? Do we add these insts in Souper temporarily?
+       https://cranelift.readthedocs.io/en/latest/ir.html#inst-bnot
+    4. rotl, rotr - rotate instruction -- add in souper??
+       https://cranelift.readthedocs.io/en/latest/ir.html#inst-rotl
+    5. rotl_imm, rotr_imm
+    6. Integer shift left instruction:
+       ishl -- souper has shl only and other UB insts like, shlnsw, shlnuw, shlnw => what to do here?
+    7. ishl_imm
+    8. Signed.unsigned shift right
+       ushr, sshr -- souper has lshr, ashr (to map easily)
+    9. sshr_imm, ushr_imm
+    
+
+    ------- Souper ISA --------------------
+    1. and, or, xor
+    2. shl, lshr, ashr
+    3. UB -> shlnuw, shlnsw, shlnw
+    4. LShrExact, AShrExact -- no Cranelift insts here? what to do?
+
+
+
+    ########### INRINSICS ###########
+    ----------- Cranelift ISA ----------------
+    1. clz - count leading zeros - https://cranelift.readthedocs.io/en/latest/ir.html#inst-clz
+    2. ctz - trailing zeros
+    3. popcnt
+    
+    ------- Souper ISA --------------------
+    1. cttz, ctlz, ctpop
+    2. bswap -- no cranelift inst for this
+
+
+2. handle widths in matcher?
+
+3. handle diff. parameters in matcher?
