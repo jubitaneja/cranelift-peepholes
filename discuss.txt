@@ -14,7 +14,7 @@
        Subtract with borrow in, borrow out and borrow
        https://cranelift.readthedocs.io/en/latest/ir.html#inst-isub_borrow
     8. sdiv, udiv
-    9. sdim_imm, udiv_imm
+    9. sdiv_imm, udiv_imm
     10. srem, urem
     11. srem_imm, urem_imm
     
@@ -31,7 +31,7 @@
 
     ########### BITWISE OPERATIONS ###########
     ----------- Cranelift ISA ----------------
-    1. band, bor, bxor, 
+    1. band, bor, bxor - DONE 
     2. band_imm, bor_imm, bxor_imm
     3. bnot, band_not, bor_not, bxor_not -- no souper ISA for this? Do we add these insts in Souper temporarily?
        https://cranelift.readthedocs.io/en/latest/ir.html#inst-bnot
@@ -47,7 +47,7 @@
     
 
     ------- Souper ISA --------------------
-    1. and, or, xor
+    1. and, or, xor - DONE
     2. shl, lshr, ashr
     3. UB -> shlnuw, shlnsw, shlnw
     4. LShrExact, AShrExact -- no Cranelift insts here? what to do?
