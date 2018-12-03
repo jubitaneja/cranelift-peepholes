@@ -25,6 +25,7 @@ pub enum NodeType {
 pub struct Node {
     pub node_type: NodeType,
     pub node_value: String,
+    pub width: u32,
     pub id: usize,
     pub arg_flag: bool,
     pub level: usize,
@@ -132,6 +133,7 @@ impl Arena {
         Node {
             node_type: NodeType::match_none,
             node_value: "".to_string(),
+            width: 0,
             id: self.count,
             arg_flag: false,
             level: 0,
@@ -145,6 +147,7 @@ impl Arena {
             node_type: NodeType::match_instdata,
             //node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
             node_value: "instdata".to_string(),
+            width: 0,
             id: self.count,
             arg_flag: false,
             level: 0,
@@ -157,6 +160,7 @@ impl Arena {
         Node {
             node_type: NodeType::inst_type,
             node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
+            width: 0,
             id: self.count,
             arg_flag: false,
             level: 0,
@@ -169,6 +173,7 @@ impl Arena {
             node_type: NodeType::match_opcode,
             //node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
             node_value: "opcode".to_string(),
+            width: 0,
             id: self.count,
             arg_flag: false,
             level: 0,
@@ -178,9 +183,11 @@ impl Arena {
 
     pub fn build_specific_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
         let opcode_val = clift_inst.opcode.clone();
+        let width_val = clift_inst.width.clone();
         Node {
             node_type: NodeType::opcode,
             node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
+            width: width_val,
             id: self.count,
             arg_flag: false,
             level: 0,
@@ -206,6 +213,7 @@ impl Arena {
         Node {
             node_type: NodeType::match_args,
             node_value: get_arg_name(arg),
+            width: 0,
             id: self.count,
             arg_flag: false,
             level: 0,

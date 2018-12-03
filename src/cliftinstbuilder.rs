@@ -9,6 +9,7 @@ pub struct CtonInst {
     pub valuedef: CtonValueDef,
     pub kind: CtonInstKind,
     pub opcode: CtonOpcode,
+    pub width: u32,
     pub cops: Option<Vec<CtonOperand>>,
 }
 
@@ -128,13 +129,14 @@ pub fn build_clift_ops(souper_ops: Option<Vec<SouperOperand>>) -> Option<Vec<Cto
 /// Codegen Phase #1
 pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
     match souper_inst {
-        Inst{kind, lhs, ops} => {
+        Inst{kind, lhs, width, ops} => {
             match kind {
                 InstKind::Add => {
                     CtonInst {
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Iadd,
+                        width: width,
                         // FIXME: Deal with ops mapping in a better way later
                         // because, we have to get rid of souperoperand type completely
                         cops: build_clift_ops(ops),
@@ -145,6 +147,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Imul,
+                        width: width,
                         // FIXME: Deal with ops mapping in a better way later
                         // because, we have to get rid of souperoperand type completely
                         cops: build_clift_ops(ops),
@@ -155,6 +158,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Isub,
+                        width: width,
                         // FIXME: Deal with ops mapping in a better way later
                         // because, we have to get rid of souperoperand type completely
                         cops: build_clift_ops(ops),
@@ -165,6 +169,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Param,
                         kind: CtonInstKind::Var,
                         opcode: CtonOpcode::Var,
+                        width: width,
                         cops: build_clift_ops(ops),
                     }
                 },
@@ -173,6 +178,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::NoneType,
                         kind: CtonInstKind::NoneType,
                         opcode: CtonOpcode::Infer,
+                        width: width,
                         cops: build_clift_ops(ops),
                     }
                 },
@@ -181,16 +187,18 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Param,
                         kind: CtonInstKind::Var,
                         opcode: CtonOpcode::Var,
+                        width: width,
                         cops: build_clift_ops(ops),
                     }
                 },
             }
         },
         _ => {
-            CtonInst{
+            CtonInst {
                 valuedef: CtonValueDef::Param,
                 kind: CtonInstKind::Var,
                 opcode: CtonOpcode::Var,
+                width: width,
                 cops: None,
             }
         },
