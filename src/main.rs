@@ -52,35 +52,36 @@ fn main () {
 
         // Merged prefix tree
         merged_arena = mergedtree::generate_merged_prefix_tree(single_tree, merged_arena.clone());
-
+        
         // Pretty print the merged arena
-        //println!("----- nodes in merged_tree are -----");
-        //for n in 0 .. merged_arena.merged_tree.len() {
-        //    println!("Node id = {}", merged_arena.merged_tree[n].id);
-        //    if let Some(sub_nodes) = merged_arena.merged_tree[n].next.clone() {
-        //        for sub_node in 0 .. sub_nodes.len() {
-        //            println!("\t\tSub Node id: {}", sub_nodes[sub_node].index);
-        //        }
-        //    } else {
-        //        continue;
-        //    }
-        //}
+        println!("----- nodes in merged_tree are -----");
+        for n in 0 .. merged_arena.merged_tree.len() {
+            println!("Node id = {}", merged_arena.merged_tree[n].id);
+            if let Some(sub_nodes) = merged_arena.merged_tree[n].next.clone() {
+                for sub_node in 0 .. sub_nodes.len() {
+                    println!("\t\tSub Node id: {}", sub_nodes[sub_node].index);
+                }
+            } else {
+                continue;
+            }
+        }
 
-        //match merged_arena.merged_tree[0].next.clone() {
-        //    Some(nodes_list) => {
-        //        for x in 0 .. nodes_list.len() {
-        //            println!("root's next = {}", nodes_list[x].index);
-        //        }
-        //    },
-        //    None => {
-        //    },
-        //}
-        //println!("==== hashmap entries =====");
-        //for (val, idx) in &merged_arena.hmap {
-        //    println!("{}: {}", val, idx);
-        //}
+        match merged_arena.merged_tree[0].next.clone() {
+            Some(nodes_list) => {
+                for x in 0 .. nodes_list.len() {
+                    println!("root's next = {}", nodes_list[x].index);
+                }
+            },
+            None => {
+            },
+        }
+        println!("==== hashmap entries =====");
+        for (val, idx) in &merged_arena.hmap {
+            println!("{}: {}", val, idx);
+        }
 
-        //println!("======================================================");
+        println!("======================================================");
+
   }
   let matcher_func = matcher::generate_matcher(merged_arena.clone());
   println!("{}", matcher_func);
