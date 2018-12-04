@@ -39,16 +39,16 @@
        https://cranelift.readthedocs.io/en/latest/ir.html#inst-rotl
     5. rotl_imm, rotr_imm
     6. Integer shift left instruction:
-       ishl -- souper has shl only and other UB insts like, shlnsw, shlnuw, shlnw => what to do here?
+       ishl -- DONE - souper has shl only and other UB insts like, shlnsw, shlnuw, shlnw => what to do here?
     7. ishl_imm
     8. Signed.unsigned shift right
-       ushr, sshr -- souper has lshr, ashr (to map easily)
+       ushr, sshr -- DONE - souper has lshr, ashr (to map easily)
     9. sshr_imm, ushr_imm
     
 
     ------- Souper ISA --------------------
     1. and, or, xor - DONE
-    2. shl, lshr, ashr
+    2. shl, lshr, ashr - DONE
     3. UB -> shlnuw, shlnsw, shlnw
     4. LShrExact, AShrExact -- no Cranelift insts here? what to do?
 
@@ -59,6 +59,8 @@
     1. clz - count leading zeros - https://cranelift.readthedocs.io/en/latest/ir.html#inst-clz
     2. ctz - trailing zeros
     3. popcnt
+    4. cls - count leading sign bits -- same as sign bits dfa -- do we add new inst in souper or wait for this inst to
+    map to 
     
     ------- Souper ISA --------------------
     1. cttz, ctlz, ctpop
