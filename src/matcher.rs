@@ -205,6 +205,11 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("opcode"));
                     },
+                    "Unary" => {
+                        opt_func.append(String::from("InstructionData::Unary { opcode, arg }"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                        opt_func.set_entity(String::from("opcode"));
+                    },
                     _ => {
                         panic!("Error: This instruction data type is not yet handled");
                     },
@@ -323,6 +328,18 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                     },
                     "ushr" => {
                         opt_func.append(String::from("Opcode::Ushr"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "popcnt" => {
+                        opt_func.append(String::from("Opcode::Popcnt"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "clz" => {
+                        opt_func.append(String::from("Opcode::Clz"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "ctz" => {
+                        opt_func.append(String::from("Opcode::Ctz"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
                     _ => {

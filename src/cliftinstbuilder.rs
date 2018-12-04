@@ -50,6 +50,9 @@ pub enum CtonOpcode {
     Ishl,
     Sshr,
     Ushr,
+    Popcnt,
+    Clz,
+    Ctz,
     Infer,
 }
 
@@ -85,6 +88,9 @@ pub fn get_cton_inst_name(opcode: CtonOpcode) {
         CtonOpcode::Ishl => println!("CtonOpcode = Ishl"),
         CtonOpcode::Sshr => println!("CtonOpcode = Sshr"),
         CtonOpcode::Ushr => println!("CtonOpcode = Ushr"),
+        CtonOpcode::Popcnt => println!("CtonOpcode = Popcnt"),
+        CtonOpcode::Clz => println!("CtonOpcode = Clz"),
+        CtonOpcode::Ctz => println!("CtonOpcode = Ctz"),
         CtonOpcode::IaddImm => println!("CtonOpcode = IaddImm"),
         CtonOpcode::Var => println!("CtonOpcode = Var"),
         _ => {
@@ -110,6 +116,9 @@ pub fn getCtonOpCodeName(opcode: CtonOpcode) {
         CtonOpcode::Ishl => println!("Cton::Opcode = Ishl"),
         CtonOpcode::Sshr => println!("Cton::Opcode = Sshr"),
         CtonOpcode::Ushr => println!("Cton::Opcode = Ushr"),
+        CtonOpcode::Popcnt => println!("Cton::Opcode = Popcnt"),
+        CtonOpcode::Clz => println!("Cton::Opcode = Clz"),
+        CtonOpcode::Ctz => println!("Cton::Opcode = Ctz"),
         CtonOpcode::Var => println!("Cton::Opcode = Var"),
         CtonOpcode::Infer => println!("Cton::Opcode = Infer"),
         _ => println!("Cton: other type yet to be handled"),
@@ -128,6 +137,7 @@ pub fn get_clift_valdef_name(vdef: CtonValueDef) -> String {
 pub fn get_clift_instdata_name(instdata: CtonInstKind) -> String {
     match instdata {
         CtonInstKind::Binary => "Binary".to_string(),
+        CtonInstKind::Unary => "Unary".to_string(),
         CtonInstKind::Var => "Var".to_string(),
         _ => "".to_string(),
     }
@@ -150,6 +160,9 @@ pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
         CtonOpcode::Ishl => "ishl".to_string(),
         CtonOpcode::Sshr => "sshr".to_string(),
         CtonOpcode::Ushr => "ushr".to_string(),
+        CtonOpcode::Popcnt => "popcnt".to_string(),
+        CtonOpcode::Clz => "clz".to_string(),
+        CtonOpcode::Ctz => "ctz".to_string(),
         CtonOpcode::IaddImm => "IaddImm".to_string(),
         CtonOpcode::Var => "Var".to_string(),
         CtonOpcode::Infer => "Infer".to_string(),
@@ -327,6 +340,36 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Sshr,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Ctpop => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Unary,
+                        opcode: CtonOpcode::Popcnt,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Ctlz => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Unary,
+                        opcode: CtonOpcode::Clz,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Cttz => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Unary,
+                        opcode: CtonOpcode::Ctz,
                         width: width,
                         var_num: var_number,
                         cops: build_clift_ops(ops),

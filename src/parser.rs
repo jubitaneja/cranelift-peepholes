@@ -26,6 +26,9 @@ pub enum InstKind {
     Shl,
     Lshr,
     Ashr,
+    Ctpop,
+    Ctlz,
+    Cttz,
     Zext,
     Infer,
     NoneType,
@@ -139,6 +142,9 @@ impl<'a> Parser<'a> {
             "shl" => InstKind::Shl,
             "lshr" => InstKind::Lshr,
             "ashr" => InstKind::Ashr,
+            "ctpop" => InstKind::Ctpop,
+            "ctlz" => InstKind::Ctlz,
+            "cttz" => InstKind::Cttz,
             "infer" => InstKind::Infer,
             _ => InstKind::NoneType,
         }
@@ -163,6 +169,9 @@ impl<'a> Parser<'a> {
             InstKind::Shl => "shl".to_string(),
             InstKind::Lshr => "lshr".to_string(),
             InstKind::Ashr => "ashr".to_string(),
+            InstKind::Ctpop => "ctpop".to_string(),
+            InstKind::Ctlz => "ctlz".to_string(),
+            InstKind::Cttz => "cttz".to_string(),
             _ => "Inst Kind name is not yet handled in function: get_kind_name()".to_string(),
         }
     }
