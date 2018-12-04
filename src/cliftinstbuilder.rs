@@ -44,15 +44,12 @@ pub enum CtonOpcode {
     Ult,
     Sle,
     Ule,
-    // Souper canonicalizes all 'gt' '>' operations to less than 
-    // Do we still want to add them?
-    //Sgt,
-    //Ugt,
-    //Sge,
-    //Uge,
     Band,
     Bor,
     Bxor,
+    Ishl,
+    Sshr,
+    Ushr,
     Infer,
 }
 
@@ -85,6 +82,9 @@ pub fn get_cton_inst_name(opcode: CtonOpcode) {
         CtonOpcode::Band => println!("CtonOpcode = Band"),
         CtonOpcode::Bor => println!("CtonOpcode = Bor"),
         CtonOpcode::Bxor => println!("CtonOpcode = Bxor"),
+        CtonOpcode::Ishl => println!("CtonOpcode = Ishl"),
+        CtonOpcode::Sshr => println!("CtonOpcode = Sshr"),
+        CtonOpcode::Ushr => println!("CtonOpcode = Ushr"),
         CtonOpcode::IaddImm => println!("CtonOpcode = IaddImm"),
         CtonOpcode::Var => println!("CtonOpcode = Var"),
         _ => {
@@ -107,6 +107,9 @@ pub fn getCtonOpCodeName(opcode: CtonOpcode) {
         CtonOpcode::Band => println!("Cton::Opcode = Band"),
         CtonOpcode::Bor => println!("Cton::Opcode = Bor"),
         CtonOpcode::Bxor => println!("Cton::Opcode = Bxor"),
+        CtonOpcode::Ishl => println!("Cton::Opcode = Ishl"),
+        CtonOpcode::Sshr => println!("Cton::Opcode = Sshr"),
+        CtonOpcode::Ushr => println!("Cton::Opcode = Ushr"),
         CtonOpcode::Var => println!("Cton::Opcode = Var"),
         CtonOpcode::Infer => println!("Cton::Opcode = Infer"),
         _ => println!("Cton: other type yet to be handled"),
@@ -144,6 +147,9 @@ pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
         CtonOpcode::Band => "band".to_string(),
         CtonOpcode::Bor => "bor".to_string(),
         CtonOpcode::Bxor => "bxor".to_string(),
+        CtonOpcode::Ishl => "ishl".to_string(),
+        CtonOpcode::Sshr => "sshr".to_string(),
+        CtonOpcode::Ushr => "ushr".to_string(),
         CtonOpcode::IaddImm => "IaddImm".to_string(),
         CtonOpcode::Var => "Var".to_string(),
         CtonOpcode::Infer => "Infer".to_string(),
@@ -291,6 +297,36 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
                         opcode: CtonOpcode::Bxor,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Shl => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Ishl,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Lshr => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Ushr,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::Ashr => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::Sshr,
                         width: width,
                         var_num: var_number,
                         cops: build_clift_ops(ops),
