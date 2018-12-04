@@ -56,14 +56,14 @@
 
     ########### INRINSICS ###########
     ----------- Cranelift ISA ----------------
-    1. clz - count leading zeros - https://cranelift.readthedocs.io/en/latest/ir.html#inst-clz
-    2. ctz - trailing zeros
-    3. popcnt
+    1. clz - DONE - count leading zeros - https://cranelift.readthedocs.io/en/latest/ir.html#inst-clz
+    2. ctz - - DONE - trailing zeros
+    3. popcnt - DONE
     4. cls - count leading sign bits -- same as sign bits dfa -- do we add new inst in souper or wait for this inst to
     map to 
     
     ------- Souper ISA --------------------
-    1. cttz, ctlz, ctpop
+    1. cttz, ctlz, ctpop - DONE
     2. bswap -- no cranelift inst for this
 
 
