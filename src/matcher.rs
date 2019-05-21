@@ -145,6 +145,7 @@ impl Opt {
 
 pub fn generate_matcher(mut arena: MergedArena) -> String {
     let mut opt_func = Opt::new();
+    let mut arg_str = String::from("");
 
     for node in 0 .. arena.merged_tree.len() {
         // dump: begin
@@ -225,16 +226,20 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
                 }
-                opt_func.append(String::from("\nValDef::"));
                 match arena.merged_tree[node].node_value.as_ref() {
                     "Param" => {
-                        //println!("\t\t\t entering valdef::param here");
-                        opt_func.append(String::from("Param(_, _)"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                        // Reset the argument match string to empty str
+                        // so that for further args, it's not appended.
+                        arg_str = String::from("");
                         opt_func.set_entity(String::from(""));
                     },
                     "Result" => {
-                        //println!("\t\t\t entering valdef::result here");
+                        // for Result type, we want to generate arg match part,
+                        // so, append it.
+                        opt_func.append(arg_str.clone());
+                        arg_str = String::from("");
+                        opt_func.enter_scope(ScopeType::scope_match, current_level-1);
+                        opt_func.append(String::from("\nValDef::"));
                         opt_func.append(String::from("Result(arg_ty, _)"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("arg_ty"));
@@ -351,13 +356,14 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
-                // create a default match string
-                opt_func.append(String::from("match pos.func.dfg.val_def"));
-                opt_func.append(String::from("("));
-                opt_func.append(arena.merged_tree[node].node_value.clone());
-                opt_func.append(String::from(")"));
-
-                opt_func.enter_scope(ScopeType::scope_match, current_level);
+                // Create an optional argument matching string here
+                // we will decide later whether we need this match on args or not
+                // depending on if the argument type is Result or Param. Param
+                // type does not need this match part at all.
+                arg_str.push_str(&(String::from("match pos.func.dfg.value_def")));
+                arg_str.push_str(&(String::from("(")));
+                arg_str.push_str(&(arena.merged_tree[node].node_value.clone()));
+                arg_str.push_str(&(String::from(")")));
             },
             _ => {
                 panic!("\n\nmatch type not handled yet!\n");
