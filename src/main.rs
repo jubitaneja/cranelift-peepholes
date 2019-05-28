@@ -8,7 +8,8 @@ use std::collections::HashMap;
 mod lexer;
 mod parser;
 mod cliftinstbuilder;
-mod patternmatcher;
+mod lhspatternmatcher;
+mod rhspatternmatcher;
 mod mergedtree;
 mod matcher;
 
@@ -47,11 +48,13 @@ fn main () {
         let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
     
         // Pattern Matching - Single prefix tree
-        let single_tree = patternmatcher::generate_single_tree_patterns(clift_insts, global_nodes_count+1);
-        global_nodes_count += single_tree.len();
+        let lhs_single_tree = lhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
+        // build prefix tree for RHS
+        let rhs_single_tree = rhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
+        global_nodes_count += lhs_single_tree.len();
 
         // Merged prefix tree
-        merged_arena = mergedtree::generate_merged_prefix_tree(single_tree, merged_arena.clone());
+        merged_arena = mergedtree::generate_merged_prefix_tree(lhs_single_tree, merged_arena.clone());
         
         // Pretty print the merged arena
         println!("----- nodes in merged_tree are -----");
