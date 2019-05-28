@@ -54,6 +54,8 @@ pub enum CtonOpcode {
     Clz,
     Ctz,
     Infer,
+    ResultInst,
+    NoneType,
 }
 
 #[derive(Clone)]
@@ -121,6 +123,7 @@ pub fn getCtonOpCodeName(opcode: CtonOpcode) {
         CtonOpcode::Ctz => println!("Cton::Opcode = Ctz"),
         CtonOpcode::Var => println!("Cton::Opcode = Var"),
         CtonOpcode::Infer => println!("Cton::Opcode = Infer"),
+        CtonOpcode::ResultInst => println!("Cton::Opcode = Result"),
         _ => println!("Cton: other type yet to be handled"),
     }
 }
@@ -166,6 +169,7 @@ pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
         CtonOpcode::IaddImm => "IaddImm".to_string(),
         CtonOpcode::Var => "Var".to_string(),
         CtonOpcode::Infer => "Infer".to_string(),
+        CtonOpcode::ResultInst => "Result".to_string(),
         _ => "".to_string(),
     }
 }
@@ -386,10 +390,22 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     }
                 },
                 InstKind::Infer => {
+                    println!("CtonBuilder: Infer\n");
                     CtonInst {
                         valuedef: CtonValueDef::NoneType,
                         kind: CtonInstKind::NoneType,
                         opcode: CtonOpcode::Infer,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                    }
+                },
+                InstKind::ResultInst => {
+                    println!("CtonBuilder: Result\n");
+                    CtonInst {
+                        valuedef: CtonValueDef::NoneType,
+                        kind: CtonInstKind::NoneType,
+                        opcode: CtonOpcode::ResultInst,
                         width: width,
                         var_num: var_number,
                         cops: build_clift_ops(ops),
