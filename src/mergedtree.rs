@@ -1,7 +1,7 @@
 // Merged prefix tree
 
 use std::collections::HashMap;
-use patternmatcher::{self, Arena, Node, NodeType, NodeID, Node_Index};
+use lhspatternmatcher::{self, Arena, Node, NodeType, NodeID, Node_Index};
 
 
 #[derive(Clone)]
