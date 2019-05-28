@@ -1,7 +1,7 @@
 // Matcher
 
 use mergedtree::{self, MergedArena};
-use patternmatcher::{self, Node, NodeType, NodeID};
+use lhspatternmatcher::{self, Node, NodeType, NodeID};
 
 #[derive(Clone)]
 pub struct Opt {
