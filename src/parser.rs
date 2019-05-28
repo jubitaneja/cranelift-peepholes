@@ -31,6 +31,8 @@ pub enum InstKind {
     Cttz,
     Zext,
     Infer,
+    ResultInst,
+    Implies,
     NoneType,
 }
 
@@ -146,6 +148,8 @@ impl<'a> Parser<'a> {
             "ctlz" => InstKind::Ctlz,
             "cttz" => InstKind::Cttz,
             "infer" => InstKind::Infer,
+            "result" => InstKind::ResultInst,
+            "->" => InstKind::Implies,
             _ => InstKind::NoneType,
         }
     }
@@ -172,6 +176,8 @@ impl<'a> Parser<'a> {
             InstKind::Ctpop => "ctpop".to_string(),
             InstKind::Ctlz => "ctlz".to_string(),
             InstKind::Cttz => "cttz".to_string(),
+            InstKind::ResultInst => "result".to_string(),
+            InstKind::Implies => "->".to_string(),
             _ => "Inst Kind name is not yet handled in function: get_kind_name()".to_string(),
         }
     }
@@ -374,12 +380,28 @@ impl<'a> Parser<'a> {
                         Some(TokKind::ValName(lhs, width)) => {
                             let ops = self.parse_ops();
                             //error checking on ops length
-                            assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
-                            //println!("Build Infer instruction");
+                            assert!(ops.len() == 1,
+                                    "expected one operand for infer instruction, but found {}", ops.len());
+                            //println!("Parser Build Infer instruction");
                             self.create_inst(InstKind::Infer, lhs, width, ops)
                         },
                         _ => {
                             panic!("unexpected infer instruction operand");
+                        }
+                    }
+                },
+                InstKind::ResultInst => {
+                    self.consume_token();
+                    match self.lookahead {
+                        Some(TokKind::ValName(lhs, width)) => {
+                            let ops = self.parse_ops();
+                            //error checking on ops length
+                            assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
+                            println!("Parsing build Result Inst\n");
+                            self.create_inst(InstKind::ResultInst, lhs, width, ops)
+                        },
+                        _ => {
+                            panic!("unexpected result instruction operand");
                         }
                     }
                 },
@@ -389,6 +411,18 @@ impl<'a> Parser<'a> {
             }
         } else {
             panic!("unexpected identifier instruction");
+        }
+    }
+
+    // parse dummy inst for implies symbol
+    fn parse_implies_dummy_inst(&mut self) -> Inst<'a> {
+        self.consume_token();
+        Inst {
+            kind: InstKind::Implies,
+            lhs: "",
+            width: 0,
+            var_number: Some(0),
+            ops: None,
         }
     }
 
@@ -409,8 +443,10 @@ impl<'a> Parser<'a> {
             Some(TokKind::Ident(text)) => {
                 self.parse_ident_inst()
             },
+            Some(TokKind::Implies) => {
+                self.parse_implies_dummy_inst()
+            },
             _ => {
-                //println!("Error: Instruction either start with ValName token or Ident token");
                 // FIXME: Jubi: Build an error
                 panic!("Error: Either instruction should start with valname or identifier");
             },
@@ -432,11 +468,18 @@ pub fn parse(text: &str) -> Vec<Inst> {
             Some(TokKind::Eof) => break,
             _ => {
                 let inst = p.parse_inst();
-                let LHS = inst.lhs;
-                insts.push(inst);
-                // create hashmap and keep inserting valnames + index pair
-                p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
-
+                match inst.kind {
+                    InstKind::Implies => {
+                        continue;
+                    },
+                    _ => {
+                        //
+                        let LHS = inst.lhs;
+                        insts.push(inst);
+                        // create hashmap and keep inserting valnames + index pair
+                        p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
+                    },
+                }
             },
         }
     }

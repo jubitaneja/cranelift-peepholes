@@ -10,6 +10,7 @@ pub enum TokKind<'a>{
     ValName(&'a str, u32),
     Comma,
     Equal,
+    Implies,
     Int(u32),
     UntypedInt,
     Comment(&'a str),
@@ -202,6 +203,22 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    //scan implies symbol in (LHS -> RHS)
+    fn scan_implies(&mut self) -> Result<LocatedToken<'a>, LocatedError> {
+        let loc = self.loc();
+        let current_ch = self.lookahead;
+        match  current_ch {
+            Some('>') => {
+                println!("lexer: implies second char '>'\n");
+                self.next_ch();
+                token(TokKind::Implies, loc)
+            },
+            _ => {
+                token(TokKind::Error, loc)
+            },
+        }
+    }
+
     // Scan a comment extending to the end of the current line.
     fn scan_comment(&mut self) -> Result<LocatedToken<'a>, LocatedError> {
         let loc = self.loc();
@@ -345,6 +362,11 @@ impl<'a> Lexer<'a> {
                     // the optimization patterns in input file
                     self.next_ch();
                     break Some(token(TokKind::Eof, loc));
+                },
+                Some('-') => {
+                    println!("lexer: found implies starting char '-'\n");
+                    self.next_ch();
+                    break Some(self.scan_implies());
                 },
                 _ => {
                     break Some(self.scan_rest());
