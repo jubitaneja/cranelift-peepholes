@@ -10,6 +10,7 @@ mod parser;
 mod cliftinstbuilder;
 mod lhspatternmatcher;
 mod rhspatternmatcher;
+mod tablerhs;
 mod mergedtree;
 mod matcher;
 
@@ -36,6 +37,7 @@ fn main () {
                                        merged_tree: Vec::new(),
                                        hmap: HashMap::new(),
                                       };
+    let mut rhs_table = HashMap::new();
     let mut global_nodes_count: usize = 0;
     for s in splitter {
         // lexing
@@ -49,9 +51,20 @@ fn main () {
     
         // Pattern Matching - Single prefix tree
         let lhs_single_tree = lhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
+
         // build prefix tree for RHS
+        // TODO: FIXME: No need of global count in RHS, fix this module
         let rhs_single_tree = rhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
         global_nodes_count += lhs_single_tree.len();
+
+        // create a hashMap <leaf_node_of_each_LHS, RHS_tree>
+        let hash_id = lhs_single_tree[lhs_single_tree.len()-1].id;
+        println!("hash id for LHS is: {}\n", hash_id);
+        rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_single_tree, rhs_table.clone());
+
+        //for (x, y) in rhs_table.clone() {
+        //    println!("******* For LHS ID = {}, RHS is == \n", x);
+        //}
 
         // Merged prefix tree
         merged_arena = mergedtree::generate_merged_prefix_tree(lhs_single_tree, merged_arena.clone());
