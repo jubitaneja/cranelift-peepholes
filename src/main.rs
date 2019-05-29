@@ -62,9 +62,12 @@ fn main () {
         println!("hash id for LHS is: {}\n", hash_id);
         rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_single_tree, rhs_table.clone());
 
-        //for (x, y) in rhs_table.clone() {
-        //    println!("******* For LHS ID = {}, RHS is == \n", x);
-        //}
+        for (x, y) in rhs_table.clone() {
+            println!("******* For LHS ID = {}, RHS is == \n", x);
+            for n in 0 .. y.len() {
+                println!("RHS tree Node id = {}, ", y[n].id);
+            }
+        }
 
         // Merged prefix tree
         merged_arena = mergedtree::generate_merged_prefix_tree(lhs_single_tree, merged_arena.clone());
