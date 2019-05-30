@@ -9,7 +9,8 @@ mod lexer;
 mod parser;
 mod cliftinstbuilder;
 mod lhspatternmatcher;
-mod rhspatternmatcher;
+//mod rhspatternmatcher;
+mod rhscliftinsts;
 mod tablerhs;
 mod mergedtree;
 mod matcher;
@@ -48,24 +49,41 @@ fn main () {
     
         // Cranelift Instruction Building
         let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
-    
+        println!("====================================\n");
+        for ci in clift_insts.clone() {
+            // print the details of each inst
+            println!("Clift Inst = {}\n", cliftinstbuilder::get_clift_opcode_name(ci.opcode));
+        }
+        println!("====================================\n");
+
         // Pattern Matching - Single prefix tree
         let lhs_single_tree = lhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
 
         // build prefix tree for RHS
         // TODO: FIXME: No need of global count in RHS, fix this module
-        let rhs_single_tree = rhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
+        // let rhs_single_tree = rhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
         global_nodes_count += lhs_single_tree.len();
+
+        let rhs_clift_insts = rhscliftinsts::get_result_clift_insts_only(clift_insts.clone());
+
+        println!("- - - - - - - - - - - - - - - - - - - - - -\n");
+        for ri in rhs_clift_insts.clone() {
+            println!("rhs inst = {}\n", cliftinstbuilder::get_clift_opcode_name(ri.opcode));
+        }
+        println!("- - - - - - - - - - - - - - - - - - - - - -\n");
 
         // create a hashMap <leaf_node_of_each_LHS, RHS_tree>
         let hash_id = lhs_single_tree[lhs_single_tree.len()-1].id;
         println!("hash id for LHS is: {}\n", hash_id);
-        rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_single_tree, rhs_table.clone());
+        
+        //rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_single_tree, rhs_table.clone());
+        rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_clift_insts, rhs_table.clone());
 
         for (x, y) in rhs_table.clone() {
             println!("******* For LHS ID = {}, RHS is == \n", x);
-            for n in 0 .. y.len() {
-                println!("RHS tree Node id = {}, ", y[n].id);
+            for n in y {
+                println!("RHS inst in hash table = {}, ",
+                         cliftinstbuilder::get_clift_opcode_name(n.opcode));
             }
         }
 
