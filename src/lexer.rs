@@ -147,7 +147,7 @@ impl<'a> Lexer<'a> {
             panic!("expected an integer bitwidth\n");
             //token(TokKind::Error, loc)
         }
-        println!("-------------- width = {} -------------\n", width_value);
+        //println!("-------------- width = {} -------------\n", width_value);
         if width_value == 0 {
             error(Error::InvalidChar, "width must be atleast 1".to_string(), loc.clone());
             panic!("width must be atleast 1\n");
@@ -209,7 +209,7 @@ impl<'a> Lexer<'a> {
         let current_ch = self.lookahead;
         match  current_ch {
             Some('>') => {
-                println!("lexer: implies second char '>'\n");
+                //println!("lexer: implies second char '>'\n");
                 self.next_ch();
                 token(TokKind::Implies, loc)
             },
@@ -364,7 +364,7 @@ impl<'a> Lexer<'a> {
                     break Some(token(TokKind::Eof, loc));
                 },
                 Some('-') => {
-                    println!("lexer: found implies starting char '-'\n");
+                    //println!("lexer: found implies starting char '-'\n");
                     self.next_ch();
                     break Some(self.scan_implies());
                 },

@@ -397,7 +397,7 @@ impl<'a> Parser<'a> {
                             let ops = self.parse_ops();
                             //error checking on ops length
                             assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
-                            println!("Parsing build Result Inst\n");
+                            //println!("Parsing build Result Inst\n");
                             self.create_inst(InstKind::ResultInst, lhs, width, ops)
                         },
                         _ => {

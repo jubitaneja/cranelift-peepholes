@@ -145,7 +145,6 @@ impl Opt {
     }
 
     pub fn take_action(&mut self, rhs: Vec<CtonInst>) {
-        self.func_str.push_str("ACTION ACTION ACTION;\n");
         let mut insert_inst_str = "".to_string();
         for inst in 0 .. rhs.len()-2 {
             let each_inst = rhs[inst].clone();
@@ -193,25 +192,22 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
 
     for node in 0 .. arena.merged_tree.len() {
         action_flag = is_node_actionable(arena.merged_tree[node].id, rhs.clone());
-        if action_flag {
-            println!("ACTION for node id = {}\n", arena.merged_tree[node].id);
-        }
-        // dump: begin
-        println!("Node ==== ============================================================");
-        println!("\t\t Node Id = {}", arena.merged_tree[node].id);
-        println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-        println!("\t\t Node Level = {}", arena.merged_tree[node].node_value);
-        match arena.merged_tree[node].next.clone() {
-            Some(ids) => {
-                for i in 0 .. ids.len() {
-                    println!("\t\t Node->next = {}", ids[i].index);
-                }
-            },
-            None => {
-                println!("No next\n")
-            },
-        }
-        // dump: end
+//        // dump: begin
+//        println!("Node ==== ============================================================");
+//        println!("\t\t Node Id = {}", arena.merged_tree[node].id);
+//        println!("\t\t Node Level = {}", arena.merged_tree[node].level);
+//        println!("\t\t Node Level = {}", arena.merged_tree[node].node_value);
+//        match arena.merged_tree[node].next.clone() {
+//            Some(ids) => {
+//                for i in 0 .. ids.len() {
+//                    println!("\t\t Node->next = {}", ids[i].index);
+//                }
+//            },
+//            None => {
+//                println!("No next\n")
+//            },
+//        }
+//        // dump: end
         match arena.merged_tree[node].node_type {
             NodeType::match_root => {
                 opt_func.generate_header();

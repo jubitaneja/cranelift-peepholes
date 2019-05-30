@@ -197,10 +197,10 @@ impl MergedArena {
             if node1.node_value == "Var".to_string() {
                 if node1.width == node2.width {
                     if node1.var_id == node2.var_id {
-                        println!("************Yayy!! Matched the variables here ************\n");
+                        //println!("************Yayy!! Matched the variables here ************\n");
                         true
                     } else {
-                        println!("************Noo!! Didn't Match the variables here ************\n");
+                        //println!("************Noo!! Didn't Match the variables here ************\n");
                         false
                     }
                 } else {

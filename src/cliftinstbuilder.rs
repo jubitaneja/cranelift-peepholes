@@ -390,7 +390,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     }
                 },
                 InstKind::Infer => {
-                    println!("CtonBuilder: Infer\n");
+                    //println!("CtonBuilder: Infer\n");
                     CtonInst {
                         valuedef: CtonValueDef::NoneType,
                         kind: CtonInstKind::NoneType,
@@ -401,7 +401,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     }
                 },
                 InstKind::ResultInst => {
-                    println!("CtonBuilder: Result\n");
+                    //println!("CtonBuilder: Result\n");
                     CtonInst {
                         valuedef: CtonValueDef::NoneType,
                         kind: CtonInstKind::NoneType,
