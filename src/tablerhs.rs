@@ -1,7 +1,6 @@
 // Hash Map for LHS to RHS
 
 use std::collections::HashMap;
-//use rhspatternmatcher::{self, Arena, Node, NodeType, NodeID, Node_Index};
 use cliftinstbuilder::{self, CtonInst, CtonValueDef, CtonInstKind, CtonOpcode, CtonOperand};
 
 pub fn map_lhs_to_rhs(id: usize, rhs: Vec<CtonInst>, mut table: HashMap<usize, Vec<CtonInst>>) ->
