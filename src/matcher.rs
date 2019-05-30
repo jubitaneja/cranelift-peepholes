@@ -144,14 +144,40 @@ impl Opt {
         }
     }
 
-    pub fn take_action(&mut self) {
+    pub fn take_action(&mut self, rhs: Vec<CtonInst>) {
         self.func_str.push_str("ACTION ACTION ACTION;\n");
+        let mut insert_inst_str = "".to_string();
+        for inst in 0 .. rhs.len()-2 {
+            let each_inst = rhs[inst].clone();
+            insert_inst_str = "let inst".to_owned();
+            insert_inst_str += &inst.to_string();
+            insert_inst_str += &" = pos.ins().".to_owned();
+            insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
+            insert_inst_str += &"(".to_owned();
+            // FIXME: fix the args names and count of args here
+            insert_inst_str += &"args[0], args[1]".to_owned();
+            insert_inst_str += &");\n".to_owned();
+            self.func_str.push_str(&insert_inst_str);
+        }
+        let mut replace_inst_str = "".to_owned();
+        for inst in rhs.len()-2 .. rhs.len()-1 {
+            let each_inst = rhs[inst].clone();
+            replace_inst_str = "pos.func.dfg.replace(".to_owned();
+            // FIXME: fix the inst name here
+            replace_inst_str += &"inst".to_owned();
+            replace_inst_str += &").".to_owned();
+            replace_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
+            replace_inst_str += &"(".to_owned();
+            // FIXME: fix the args names and count of args here
+            replace_inst_str += &"args[0], args[1]".to_owned();
+            replace_inst_str += &");\n".to_owned();
+            self.func_str.push_str(&replace_inst_str);
+        }
     }
 
 }
 
 pub fn is_node_actionable(node_id: usize, table: HashMap<usize, Vec<CtonInst>>) -> bool {
-    // if id is found in hash map ret true, else false
     if table.contains_key(&node_id) {
         true
     } else {
@@ -195,7 +221,8 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                 if action_flag {
                     action_flag = false;
-                    opt_func.take_action();
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
                 }
             },
             NodeType::match_instdata => {
@@ -215,7 +242,9 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    opt_func.take_action();
+                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
                 }
             },
             NodeType::inst_type => {
@@ -247,7 +276,9 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    opt_func.take_action();
+                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
                 }
             },
             NodeType::match_valdef => {
@@ -285,7 +316,9 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    opt_func.take_action();
+                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
                 }
             },
             NodeType::match_opcode => {
@@ -300,7 +333,9 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    opt_func.take_action();
+                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
                 }
             },
             NodeType::opcode => {
@@ -395,7 +430,9 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    opt_func.take_action();
+                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
                 }
             },
             NodeType::match_args => {
