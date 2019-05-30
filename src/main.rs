@@ -9,7 +9,6 @@ mod lexer;
 mod parser;
 mod cliftinstbuilder;
 mod lhspatternmatcher;
-//mod rhspatternmatcher;
 mod rhscliftinsts;
 mod tablerhs;
 mod mergedtree;
@@ -59,11 +58,9 @@ fn main () {
         // Pattern Matching - Single prefix tree
         let lhs_single_tree = lhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
 
-        // build prefix tree for RHS
-        // TODO: FIXME: No need of global count in RHS, fix this module
-        // let rhs_single_tree = rhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
         global_nodes_count += lhs_single_tree.len();
 
+        // Separate out only RHS cranelift insts
         let rhs_clift_insts = rhscliftinsts::get_result_clift_insts_only(clift_insts.clone());
 
         println!("- - - - - - - - - - - - - - - - - - - - - -\n");
@@ -120,6 +117,6 @@ fn main () {
         println!("======================================================");
 
   }
-  let matcher_func = matcher::generate_matcher(merged_arena.clone());
+  let matcher_func = matcher::generate_matcher(merged_arena.clone(), rhs_table.clone());
   println!("{}", matcher_func);
 }

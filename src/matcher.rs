@@ -1,7 +1,9 @@
 // Matcher
 
+use std::collections::HashMap;
 use mergedtree::{self, MergedArena};
 use lhspatternmatcher::{self, Node, NodeType, NodeID};
+use cliftinstbuilder::{self, CtonInst, CtonValueDef, CtonInstKind, CtonOpcode, CtonOperand};
 
 #[derive(Clone)]
 pub struct Opt {
@@ -141,13 +143,33 @@ impl Opt {
             }
         }
     }
+
+    pub fn take_action(&mut self) {
+        self.func_str.push_str("ACTION ACTION ACTION;\n");
+    }
+
 }
 
-pub fn generate_matcher(mut arena: MergedArena) -> String {
+pub fn is_node_actionable(node_id: usize, table: HashMap<usize, Vec<CtonInst>>) -> bool {
+    // if id is found in hash map ret true, else false
+    if table.contains_key(&node_id) {
+        true
+    } else {
+        false
+    }
+}
+
+pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<CtonInst>>) ->
+                        String {
     let mut opt_func = Opt::new();
     let mut arg_str = String::from("");
+    let mut action_flag = false;
 
     for node in 0 .. arena.merged_tree.len() {
+        action_flag = is_node_actionable(arena.merged_tree[node].id, rhs.clone());
+        if action_flag {
+            println!("ACTION for node id = {}\n", arena.merged_tree[node].id);
+        }
         // dump: begin
         println!("Node ==== ============================================================");
         println!("\t\t Node Id = {}", arena.merged_tree[node].id);
@@ -171,6 +193,10 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 opt_func.enter_scope(ScopeType::scope_func, current_level);
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
+                if action_flag {
+                    action_flag = false;
+                    opt_func.take_action();
+                }
             },
             NodeType::match_instdata => {
                 //println!("\t\t Instdata node type");
@@ -186,6 +212,10 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                     opt_func.append(ent);
                     opt_func.append(String::from("]"));
                     opt_func.enter_scope(ScopeType::scope_match, current_level);
+                }
+                if action_flag {
+                    action_flag = false;
+                    opt_func.take_action();
                 }
             },
             NodeType::inst_type => {
@@ -215,6 +245,10 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         panic!("Error: This instruction data type is not yet handled");
                     },
                 }
+                if action_flag {
+                    action_flag = false;
+                    opt_func.take_action();
+                }
             },
             NodeType::match_valdef => {
                 let current_level = arena.merged_tree[node].level;
@@ -239,7 +273,7 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         opt_func.append(arg_str.clone());
                         arg_str = String::from("");
                         opt_func.enter_scope(ScopeType::scope_match, current_level-1);
-                        opt_func.append(String::from("\nValDef::"));
+                        opt_func.append(String::from("\nValueDef::"));
                         opt_func.append(String::from("Result(arg_ty, _)"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("arg_ty"));
@@ -248,6 +282,10 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         // FIXME - do we want error handling here for NoneType and ""
                         println!("\t\t entering unknown valdef case\n");
                     },
+                }
+                if action_flag {
+                    action_flag = false;
+                    opt_func.take_action();
                 }
             },
             NodeType::match_opcode => {
@@ -259,6 +297,10 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 if !ent.is_empty() {
                     opt_func.append(String::from("match opcode"));
                     opt_func.enter_scope(ScopeType::scope_match, current_level);
+                }
+                if action_flag {
+                    action_flag = false;
+                    opt_func.take_action();
                 }
             },
             NodeType::opcode => {
@@ -351,6 +393,10 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                         panic!("Error: this opcode type is not yet handled");
                     },
                 }
+                if action_flag {
+                    action_flag = false;
+                    opt_func.take_action();
+                }
             },
             NodeType::match_args => {
                 let current_level = arena.merged_tree[node].level;
@@ -364,6 +410,8 @@ pub fn generate_matcher(mut arena: MergedArena) -> String {
                 arg_str.push_str(&(String::from("(")));
                 arg_str.push_str(&(arena.merged_tree[node].node_value.clone()));
                 arg_str.push_str(&(String::from(")")));
+                // FIXME: Do we want to take action here and should we
+                // append to arg_str, or opt_func?
             },
             _ => {
                 panic!("\n\nmatch type not handled yet!\n");
