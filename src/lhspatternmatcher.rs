@@ -269,11 +269,27 @@ impl Arena {
         }
     }
 
-    pub fn build_constant_node(&mut self, constant: i64) -> Node {
+    // FIXME: fix constant width to i64, maybe? depending on const value
+    // width in SouperOperand and CtonOperand
+    pub fn build_constant_node(&mut self, constant: u32) -> Node {
         // FIXME: Fix the width of constant
         Node {
             node_type: NodeType::match_const,
             node_value: constant.to_string(),
+            id: self.count,
+            width: 0,
+            var_id: None,
+            arg_flag: false,
+            level: 0,
+            next: None,
+        }
+    }
+
+    pub fn build_plain_constant_node(&mut self) -> Node {
+        // FIXME: Fix the width of constant
+        Node {
+            node_type: NodeType::match_const,
+            node_value: "constant".to_string(),
             id: self.count,
             width: 0,
             var_id: None,
@@ -339,7 +355,16 @@ impl Arena {
                         },
                         None => {
                             // TODO: deal with constants later here if valdef is diff. for consts
-                            println!("Not dealing with none index type i.e. for const\n");
+                            match arg.const_val.clone() {
+                                Some(c) => {
+                                    // Build just a named "constant" node, later
+                                    // build a const node with const value in it.
+                                    arg_valdef_node = self.build_plain_constant_node();
+                                },
+                                None => {
+                                    panic!("clift inst op must have either an idx or const value")
+                                },
+                            }
                         },
                     }
                 },
@@ -441,22 +466,22 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>, global_count: u
     let all_nodes = arena.build_sequence_of_nodes(inst_at_infer_op_idx);
 
     // just for debugging puprose
-    //println!("--------------------------------");
-    //for n in 0 .. all_nodes.len() {
-    //    println!("Node id = {}", all_nodes[n].id);
-    //    println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
-    //    println!("Node value = {}", all_nodes[n].node_value);
-    //    match all_nodes[n].clone().next {
-    //        Some(x) => {
-    //            for i in 0 .. x.len() {
-    //                println!("next = {}", x[i].index);
-    //            }
-    //        },
-    //        None => {
-    //            println!("next = None");
-    //        }
-    //    }
-    //    println!("--------------------------------");
-    //}
+//    println!("--------------------------------");
+//    for n in 0 .. all_nodes.len() {
+//        println!("Node id = {}", all_nodes[n].id);
+//        println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
+//        println!("Node value = {}", all_nodes[n].node_value);
+//        match all_nodes[n].clone().next {
+//            Some(x) => {
+//                for i in 0 .. x.len() {
+//                    println!("next = {}", x[i].index);
+//                }
+//            },
+//            None => {
+//                println!("next = None");
+//            }
+//        }
+//        println!("--------------------------------");
+//    }
     all_nodes
 }

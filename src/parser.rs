@@ -46,7 +46,7 @@ pub struct SouperOperand {
     pub kind: SouperOpType,
     // what should be the type of constants values?
     pub idx_val: Option<usize>,
-    pub const_val: Option<i64>,
+    pub const_val: Option<u32>,//FIXME: fix this width of const value to i64 or something else?
     pub width: u32,
 }
 
@@ -189,7 +189,7 @@ impl<'a> Parser<'a> {
             Some(TokKind::Ident(text)) => println!("Ident "),
             Some(TokKind::Comma) => println!("Comma "),
             Some(TokKind::Equal) => println!("Eq "),
-            Some(TokKind::Int(width)) => println!("Int "),
+            Some(TokKind::Int(width, constVal)) => println!("Int "),
             Some(TokKind::Eof) => println!("EOF "),
             Some(TokKind::Error) => println!("Error "),
             Some(TokKind::UntypedInt) => println!("Untypedint "),
@@ -266,7 +266,7 @@ impl<'a> Parser<'a> {
                     width: width,
                 }
             },
-            Some(TokKind::Int(width)) => {
+            Some(TokKind::Int(width, constVal)) => {
                 // get the value of const
                 // build const inst
                 // Inst I = IC.getConst()
@@ -275,7 +275,7 @@ impl<'a> Parser<'a> {
                 SouperOperand {
                     kind: SouperOpType::Constant,
                     idx_val: None,
-                    const_val: Some(0),
+                    const_val: Some(constVal),
                     width: width,
                 }
             },
@@ -288,7 +288,7 @@ impl<'a> Parser<'a> {
                 SouperOperand {
                     kind: SouperOpType::Constant,
                     idx_val: None,
-                    const_val: Some(0),
+                    const_val: Some(0),//FIXME: should it be None? verify again
                     width: 0,
                 }
             },

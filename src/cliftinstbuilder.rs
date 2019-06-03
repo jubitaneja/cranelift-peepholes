@@ -67,7 +67,7 @@ pub enum CtonOpType {
 #[derive(Clone)]
 pub struct CtonOperand {
     pub idx_val: Option<usize>,
-    pub const_val: Option<i64>,
+    pub const_val: Option<u32>,//FIXME: maybe set constant operand width to i64?
 }
 
 /// Helper functions

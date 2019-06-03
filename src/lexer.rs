@@ -11,7 +11,7 @@ pub enum TokKind<'a>{
     Comma,
     Equal,
     Implies,
-    Int(u32),
+    Int(u32, u32),
     UntypedInt,
     Comment(&'a str),
     Eof,
@@ -103,6 +103,20 @@ impl<'a> Lexer<'a> {
             },
             _ => {
                 false
+            },
+         }
+    }
+
+    pub fn evaluate_const_value(&mut self, ch: Option<char>, const_val: &mut u32) {
+        match ch {
+            Some(c) => {
+                if c >= '0' && c <= '9' {
+                    let cons = c as u32;
+                    let zero_val = '0' as u32;
+                    *const_val = *const_val * 10 + cons - zero_val;
+                }
+            },
+            _ => {
             },
          }
     }
@@ -291,16 +305,26 @@ impl<'a> Lexer<'a> {
             // FIXME: Take care of negative int too
             Some('0' ... '9') => {
                 let mut current_ch = self.lookahead.clone();
+                let const_begin = self.pos;
+                let mut const_val: u32 = 0;
                 while self.is_digit(current_ch) {
                     self.next_ch();
+                    self.evaluate_const_value(current_ch, &mut const_val);
                     current_ch = self.lookahead.clone();
+                }
+                let const_end = self.pos;
+
+                if const_end - const_begin == 0 {
+                    error(Error::InvalidChar, "expected an integer".to_string(), loc.clone());
+                    panic!("expected an integer constant value\n");
+                    //token(TokKind::Error, loc)
                 }
 
                 let mut width: u32 = 0;
                 if self.lookahead == Some(':') {
                     width = self.scan_bitwidth();
                 }
-                token(TokKind::Int(width), loc)
+                token(TokKind::Int(width, const_val), loc)
             },
             _ => {
                 // FIXME: I think this is not required, do something else
