@@ -48,13 +48,13 @@ fn main () {
     
         // Cranelift Instruction Building
         let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
-//        // Debug
-//        println!("====================================\n");
-//        for ci in clift_insts.clone() {
-//            // print the details of each inst
-//            println!("Clift Inst = {}\n", cliftinstbuilder::get_clift_opcode_name(ci.opcode));
-//        }
-//        println!("====================================\n");
+        // Debug
+        //println!("====================================\n");
+        //for ci in clift_insts.clone() {
+        //    // print the details of each inst
+        //    println!("Clift Inst = {}\n", cliftinstbuilder::get_clift_opcode_name(ci.opcode));
+        //}
+        //println!("====================================\n");
 
         // Pattern Matching - Single prefix tree
         let lhs_single_tree = lhspatternmatcher::generate_single_tree_patterns(clift_insts.clone(), global_nodes_count+1);
@@ -64,12 +64,12 @@ fn main () {
         // Separate out only RHS cranelift insts
         let rhs_clift_insts = rhscliftinsts::get_result_clift_insts_only(clift_insts.clone());
 
-//        // Debug
-//        println!("- - - - - - - - - - - - - - - - - - - - - -\n");
-//        for ri in rhs_clift_insts.clone() {
-//            println!("rhs inst = {}\n", cliftinstbuilder::get_clift_opcode_name(ri.opcode));
-//        }
-//        println!("- - - - - - - - - - - - - - - - - - - - - -\n");
+        // Debug
+        //println!("- - - - - - - - - - - - - - - - - - - - - -\n");
+        //for ri in rhs_clift_insts.clone() {
+        //    println!("rhs inst = {}\n", cliftinstbuilder::get_clift_opcode_name(ri.opcode));
+        //}
+        //println!("- - - - - - - - - - - - - - - - - - - - - -\n");
 
         // create a hashMap <leaf_node_of_each_LHS, RHS_tree>
         let hash_id = lhs_single_tree[lhs_single_tree.len()-1].id;
