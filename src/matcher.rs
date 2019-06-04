@@ -196,7 +196,7 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
 //        println!("Node ==== ============================================================");
 //        println!("\t\t Node Id = {}", arena.merged_tree[node].id);
 //        println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-//        println!("\t\t Node Level = {}", arena.merged_tree[node].node_value);
+//        println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
 //        match arena.merged_tree[node].next.clone() {
 //            Some(ids) => {
 //                for i in 0 .. ids.len() {
@@ -238,7 +238,6 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
                     let found_rhs = &rhs[&arena.merged_tree[node].id];
                     opt_func.take_action(found_rhs.to_vec());
                 }
@@ -272,7 +271,6 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
                     let found_rhs = &rhs[&arena.merged_tree[node].id];
                     opt_func.take_action(found_rhs.to_vec());
                 }
@@ -312,7 +310,6 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
                     let found_rhs = &rhs[&arena.merged_tree[node].id];
                     opt_func.take_action(found_rhs.to_vec());
                 }
@@ -426,7 +423,6 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
                 if action_flag {
                     action_flag = false;
-                    let found_rhs = rhs.get(&arena.merged_tree[node].id);
                     let found_rhs = &rhs[&arena.merged_tree[node].id];
                     opt_func.take_action(found_rhs.to_vec());
                 }
@@ -445,6 +441,32 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 arg_str.push_str(&(String::from(")")));
                 // FIXME: Do we want to take action here and should we
                 // append to arg_str, or opt_func?
+            },
+            NodeType::match_plain_const => {
+                let current_level = arena.merged_tree[node].level;
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
+                if action_flag {
+                    action_flag = false;
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
+                }
+            },
+            NodeType::match_const => {
+                let current_level = arena.merged_tree[node].level;
+                let index = opt_func.does_level_exist_in_stack(current_level);
+                if index != 0 {
+                    opt_func.pop_and_exit_scope_from(index);
+                }
+                let const_value = &arena.merged_tree[node].node_value;
+                opt_func.append(String::from("let rhs: i64 = imm.into();"));
+                opt_func.append(String::from("if rhs == "));
+                opt_func.append(const_value.to_string());
+                opt_func.enter_scope(ScopeType::scope_func, current_level);
+                if action_flag {
+                    action_flag = false;
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
+                }
             },
             _ => {
                 panic!("\n\nmatch type not handled yet!\n");
