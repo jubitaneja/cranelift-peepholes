@@ -17,6 +17,7 @@ pub enum NodeType {
     match_args,
     match_valdef,
     match_const,
+    match_plain_const,
     match_root,
     match_none,
 }
@@ -134,6 +135,7 @@ pub fn get_node_type(ty: NodeType) -> String {
         NodeType::opcode => "opcode".to_string(),
         NodeType::match_args => "match_args".to_string(),
         NodeType::match_const => "match_const".to_string(),
+        NodeType::match_plain_const => "match_plain_const".to_string(),
         NodeType::match_root => "match_root".to_string(),
         NodeType::match_valdef => "match_valdef".to_string(),
         NodeType::match_none | _ => panic!("Unexpected node type"),
@@ -288,7 +290,7 @@ impl Arena {
     pub fn build_plain_constant_node(&mut self) -> Node {
         // FIXME: Fix the width of constant
         Node {
-            node_type: NodeType::match_const,
+            node_type: NodeType::match_plain_const,
             node_value: "constant".to_string(),
             id: self.count,
             width: 0,
@@ -465,7 +467,7 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>, global_count: u
     arena.clift_insts = clift_insts.clone();
     let all_nodes = arena.build_sequence_of_nodes(inst_at_infer_op_idx);
 
-    // just for debugging puprose
+//    // just for debugging puprose
 //    println!("--------------------------------");
 //    for n in 0 .. all_nodes.len() {
 //        println!("Node id = {}", all_nodes[n].id);
