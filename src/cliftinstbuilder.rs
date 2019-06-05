@@ -200,13 +200,31 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 // FIXME: Deal with ops mapping in a better way later
                 // because, we have to get rid of souperoperand type completely
                 InstKind::Add => {
+                    let clift_ops = build_clift_ops(ops);
+                    let mut inst_opcode = CtonOpcode::Iadd;
+                    match clift_ops.clone() {
+                        Some(cops) => {
+                            for cop in cops {
+                                match cop.const_val {
+                                    Some(c) => {
+                                        inst_opcode = CtonOpcode::IaddImm;
+                                    },
+                                    None => {
+                                        inst_opcode = CtonOpcode::Iadd;
+                                    },
+                                }
+                            }
+                        },
+                        None => {
+                            panic!("Cranelift add inst must have operands\n");},
+                    }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
                         kind: CtonInstKind::Binary,
-                        opcode: CtonOpcode::Iadd,
+                        opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
-                        cops: build_clift_ops(ops),
+                        cops: clift_ops,
                     }
                 },
                 InstKind::Mul => {

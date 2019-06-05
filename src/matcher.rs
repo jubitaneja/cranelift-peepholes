@@ -349,6 +349,10 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                         opt_func.append(String::from("Opcode::Iadd"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
+                    "IaddImm" => {
+                        opt_func.append(String::from("Opcode::IaddImm"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
                     "Imul" => {
                         opt_func.append(String::from("Opcode::Imul"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
@@ -458,7 +462,7 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                     opt_func.pop_and_exit_scope_from(index);
                 }
                 let const_value = &arena.merged_tree[node].node_value;
-                opt_func.append(String::from("let rhs: i64 = imm.into();"));
+                opt_func.append(String::from("let rhs: i32 = imm.into();\n"));
                 opt_func.append(String::from("if rhs == "));
                 opt_func.append(const_value.to_string());
                 opt_func.enter_scope(ScopeType::scope_func, current_level);
