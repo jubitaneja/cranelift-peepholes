@@ -345,20 +345,28 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 // match the actual opcode types
                 match arena.merged_tree[node].node_value.as_ref() {
                     "Var" => {},
-                    "Iadd" => {
+                    "iadd" => {
                         opt_func.append(String::from("Opcode::Iadd"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
-                    "IaddImm" => {
+                    "iadd_imm" => {
                         opt_func.append(String::from("Opcode::IaddImm"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
-                    "Imul" => {
+                    "imul" => {
                         opt_func.append(String::from("Opcode::Imul"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
-                    "Isub" => {
+                    "imul_imm" => {
+                        opt_func.append(String::from("Opcode::ImulImm"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "isub" => {
                         opt_func.append(String::from("Opcode::Isub"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "irsub_imm" => {
+                        opt_func.append(String::from("Opcode::IsubImm"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
                     "icmpeq" => {
@@ -389,24 +397,48 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                         opt_func.append(String::from("Opcode::Band"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
+                    "band_imm" => {
+                        opt_func.append(String::from("Opcode::BandImm"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
                     "bor" => {
                         opt_func.append(String::from("Opcode::Bor"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "bor_imm" => {
+                        opt_func.append(String::from("Opcode::BorImm"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
                     "bxor" => {
                         opt_func.append(String::from("Opcode::Bxor"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
+                    "bxor_imm" => {
+                        opt_func.append(String::from("Opcode::BxorImm"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
                     "ishl" => {
                         opt_func.append(String::from("Opcode::Ishl"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "ishl_imm" => {
+                        opt_func.append(String::from("Opcode::IshlImm"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
                     "sshr" => {
                         opt_func.append(String::from("Opcode::Sshr"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
+                    "sshr_imm" => {
+                        opt_func.append(String::from("Opcode::SshrImm"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
                     "ushr" => {
                         opt_func.append(String::from("Opcode::Ushr"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    "ushr_imm" => {
+                        opt_func.append(String::from("Opcode::UshrImm"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
                     "popcnt" => {
