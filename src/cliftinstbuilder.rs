@@ -164,7 +164,9 @@ pub fn get_clift_valdef_name(vdef: CtonValueDef) -> String {
 pub fn get_clift_instdata_name(instdata: CtonInstKind) -> String {
     match instdata {
         CtonInstKind::Binary => "Binary".to_string(),
+        CtonInstKind::BinaryImm => "BinaryImm".to_string(),
         CtonInstKind::Unary => "Unary".to_string(),
+        CtonInstKind::UnaryImm => "UnaryImm".to_string(),
         CtonInstKind::Var => "Var".to_string(),
         _ => "".to_string(),
     }
@@ -256,12 +258,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::Add => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Iadd;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::IaddImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
@@ -271,12 +275,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::Mul => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Imul;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::ImulImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
@@ -286,12 +292,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::Sub => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Isub;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::IsubImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
@@ -361,12 +369,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::And => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Band;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::BandImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
@@ -376,12 +386,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::Or => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Bor;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::BorImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
@@ -391,12 +403,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::Xor => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Bxor;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::BxorImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
@@ -406,12 +420,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::Shl => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Ishl;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::IshlImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
@@ -421,12 +437,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::Lshr => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Ushr;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::UshrImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
@@ -436,12 +454,14 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                 InstKind::Ashr => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Sshr;
+                    let mut kind = CtonInstKind::Binary;
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::SshrImm;
+                        kind = CtonInstKind::BinaryImm;
                     }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
+                        kind: kind,
                         opcode: inst_opcode,
                         width: width,
                         var_num: var_number,
