@@ -174,6 +174,17 @@ impl Opt {
         }
     }
 
+    pub fn get_argument_counter(&mut self, mut count: u32) -> u32{
+        count = count + 1;
+        self.append(String::from(count.to_string()));
+        count
+    }
+
+    pub fn get_const_counter(&mut self, mut count: u32) -> u32{
+        count = count + 1;
+        count
+    }
+
 }
 
 pub fn is_node_actionable(node_id: usize, table: HashMap<usize, Vec<CtonInst>>) -> bool {
@@ -189,25 +200,27 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
     let mut opt_func = Opt::new();
     let mut arg_str = String::from("");
     let mut action_flag = false;
+    let mut arg_counter : u32 = 0;
+    let mut const_counter: u32 = 0;
 
     for node in 0 .. arena.merged_tree.len() {
         action_flag = is_node_actionable(arena.merged_tree[node].id, rhs.clone());
-//        // dump: begin
-//        println!("Node ==== ============================================================");
-//        println!("\t\t Node Id = {}", arena.merged_tree[node].id);
-//        println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-//        println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
-//        match arena.merged_tree[node].next.clone() {
-//            Some(ids) => {
-//                for i in 0 .. ids.len() {
-//                    println!("\t\t Node->next = {}", ids[i].index);
-//                }
-//            },
-//            None => {
-//                println!("No next\n")
-//            },
-//        }
-//        // dump: end
+        // dump: begin
+        // println!("Node ==== ============================================================");
+        // println!("\t\t Node Id = {}", arena.merged_tree[node].id);
+        // println!("\t\t Node Level = {}", arena.merged_tree[node].level);
+        // println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
+        // match arena.merged_tree[node].next.clone() {
+        //     Some(ids) => {
+        //         for i in 0 .. ids.len() {
+        //             println!("\t\t Node->next = {}", ids[i].index);
+        //         }
+        //     },
+        //     None => {
+        //         println!("No next\n")
+        //     },
+        // }
+        // dump: end
         match arena.merged_tree[node].node_type {
             NodeType::match_root => {
                 opt_func.generate_header();
@@ -222,7 +235,6 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
             },
             NodeType::match_instdata => {
-                //println!("\t\t Instdata node type");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
@@ -232,6 +244,7 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 if !ent.is_empty() {
                     opt_func.append(String::from("match pos.func.dfg"));
                     opt_func.append(String::from("["));
+                    // FIXME: Connect this ent string with RHS replacement part
                     opt_func.append(ent);
                     opt_func.append(String::from("]"));
                     opt_func.enter_scope(ScopeType::scope_match, current_level);
@@ -243,7 +256,6 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 }
             },
             NodeType::inst_type => {
-                //println!("\t\tSpecific instruction type node\n");
                 let current_level = arena.merged_tree[node].level;
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
@@ -256,14 +268,24 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 match arena.merged_tree[node].node_value.as_ref() {
                     "Var" => {},
                     "Binary" => {
+                        // FIXME: "args" part, make a connection between actual args and string
                         opt_func.append(String::from("InstructionData::Binary { opcode, args }"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("opcode"));
+                       // FIXED: Generate: "let args_<counter> = args;"
+                       opt_func.append(String::from("let args_"));
+                       arg_counter = opt_func.get_argument_counter(arg_counter);
+                       opt_func.append(String::from(" = args;\n"));
                     },
                     "Unary" => {
+                        // FIXME: "arg" part, make a connection b/w actual args and string
                         opt_func.append(String::from("InstructionData::Unary { opcode, arg }"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("opcode"));
+                       // FIXED: Generate: "let args_<counter> = arg;"
+                       opt_func.append(String::from("let args_"));
+                       arg_counter = opt_func.get_argument_counter(arg_counter);
+                       opt_func.append(String::from(" = arg;\n"));
                     },
                     _ => {
                         panic!("Error: This instruction data type is not yet handled");
@@ -320,6 +342,7 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                 let mut opt_clone = opt_func.clone();
                 let mut ent = opt_clone.current_entity;
+                // FIXME: Any purpose of ent here?
                 if !ent.is_empty() {
                     opt_func.append(String::from("match opcode"));
                     opt_func.enter_scope(ScopeType::scope_match, current_level);
@@ -473,7 +496,11 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 // type does not need this match part at all.
                 arg_str.push_str(&(String::from("match pos.func.dfg.value_def")));
                 arg_str.push_str(&(String::from("(")));
-                arg_str.push_str(&(arena.merged_tree[node].node_value.clone()));
+                // make string like: args_2[0]
+                arg_str.push_str(&(arena.merged_tree[node].node_value.clone())[0..3]);
+                arg_str.push_str(&(String::from("_")));
+                arg_str.push_str(&(String::from(arg_counter.to_string())));
+                arg_str.push_str(&(arena.merged_tree[node].node_value.clone())[4..]);
                 arg_str.push_str(&(String::from(")")));
                 // FIXME: Do we want to take action here and should we
                 // append to arg_str, or opt_func?
@@ -494,8 +521,17 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                     opt_func.pop_and_exit_scope_from(index);
                 }
                 let const_value = &arena.merged_tree[node].node_value;
-                opt_func.append(String::from("let rhs: i32 = imm.into();\n"));
-                opt_func.append(String::from("if rhs == "));
+                // FIXME: fix width of the constant in rhs part
+                // Check Cranelift's instructions specifications
+                const_counter = opt_func.get_const_counter(const_counter);
+                opt_func.append(String::from("let rhs_"));
+                opt_func.append(String::from(const_counter.to_string()));
+                opt_func.append(String::from(" : i32 = imm.info();\n"));
+                opt_func.append(String::from("if rhs_"));
+                opt_func.append(String::from(const_counter.to_string()));
+                opt_func.append(String::from(" == "));
+                //opt_func.append(String::from("let rhs: i32 = imm.into();\n"));
+                //opt_func.append(String::from("if rhs == "));
                 opt_func.append(const_value.to_string());
                 opt_func.enter_scope(ScopeType::scope_func, current_level);
                 if action_flag {
