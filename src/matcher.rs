@@ -507,11 +507,13 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 // type does not need this match part at all.
                 arg_str.push_str(&(String::from("match pos.func.dfg.value_def")));
                 arg_str.push_str(&(String::from("(")));
-                // make string like: args_2[0]
-                arg_str.push_str(&(arena.merged_tree[node].node_value.clone())[0..4]);
-                arg_str.push_str(&(String::from("_")));
+                // make string like: args_2 or args_2[0] depending on binaryImm or binary
+                let arg_node_val = arena.merged_tree[node].node_value.clone();
+                arg_str.push_str(&(String::from("args_")));
                 arg_str.push_str(&(String::from(arg_counter.to_string())));
-                arg_str.push_str(&(arena.merged_tree[node].node_value.clone())[4..]);
+                if let Some(i) = arg_node_val.find('[') {
+                    arg_str.push_str(&(arena.merged_tree[node].node_value.clone())[i..]);
+                }
                 arg_str.push_str(&(String::from(")")));
                 // FIXME: Do we want to take action here and should we
                 // append to arg_str, or opt_func?

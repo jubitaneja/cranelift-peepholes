@@ -46,6 +46,22 @@ pub struct Node_Index {
 }
 
 /// Helper functions
+pub fn get_arg_name_for_binaryImm(index: usize) -> String {
+    let mut arg = "".to_string();
+    match index {
+        //
+        0 => {
+            arg = "arg".to_string();
+            arg
+        },
+        1 => {
+            arg = "imm".to_string();
+            arg
+        },
+        _ => panic!("BinaryImm inst can only have operands index 0|1\n"),
+    }
+}
+
 pub fn get_arg_name(index: usize) -> String {
     let mut arg = "args".to_string();
     arg.push_str("[");
@@ -172,7 +188,6 @@ impl Arena {
         let instdata_val = clift_inst.kind.clone();
         Node {
             node_type: NodeType::match_instdata,
-            //node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
             node_value: "instdata".to_string(),
             width: 0,
             id: self.count,
@@ -240,10 +255,20 @@ impl Arena {
         current
     }
 
-    pub fn build_separate_arg_node(&mut self, arg: usize) -> Node {
+    pub fn build_separate_arg_node(&mut self, arg: usize, parent_instdata: String) -> Node {
+        let mut node_val = "".to_string();
+        match parent_instdata.as_ref() {
+            "BinaryImm" => {
+                node_val = get_arg_name_for_binaryImm(arg);
+            },
+            _ => {
+                // Binary, Var, Unary
+                node_val = get_arg_name(arg);
+            },
+        }
         Node {
             node_type: NodeType::match_args,
-            node_value: get_arg_name(arg),
+            node_value: node_val,
             width: 0,
             id: self.count,
             var_id: None,
@@ -317,10 +342,10 @@ impl Arena {
         ret_node
     }
 
-    pub fn build_args_node(&mut self, clift_inst: &CtonInst) {
+    pub fn build_args_node(&mut self, clift_inst: &CtonInst, parent_instdata: String) {
         let total_args = get_total_number_of_args(clift_inst);
         for op in 0 .. total_args {
-            let named_arg_node = self.build_separate_arg_node(op);
+            let named_arg_node = self.build_separate_arg_node(op, parent_instdata.clone());
             
             //set next of node before named arg node
             let c = self.count.clone();
@@ -424,7 +449,7 @@ impl Arena {
         let node_instdata = self.build_instdata_node(clift_inst);
         self.update_count();
 
-        // build specific instdata node (Binary, Unary, etc.)
+        // build specific instdata node (Binary, Unary, binaryImm, etc.)
         let node_specific_inst = self.build_specific_instdata_node(clift_inst);
         self.update_count();
 
@@ -450,7 +475,8 @@ impl Arena {
         self.nodes.push(updated_opcode.clone());
         self.nodes.push(node_specific_opcode);
 
-        self.build_args_node(clift_inst);
+        //self.build_args_node(clift_inst);
+        self.build_args_node(clift_inst, node_specific_inst.clone().node_value);
 
         self.nodes.clone()
     }
