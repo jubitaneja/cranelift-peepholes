@@ -206,20 +206,20 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
     for node in 0 .. arena.merged_tree.len() {
         action_flag = is_node_actionable(arena.merged_tree[node].id, rhs.clone());
         // dump: begin
-        // println!("Node ==== ============================================================");
-        // println!("\t\t Node Id = {}", arena.merged_tree[node].id);
-        // println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-        // println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
-        // match arena.merged_tree[node].next.clone() {
-        //     Some(ids) => {
-        //         for i in 0 .. ids.len() {
-        //             println!("\t\t Node->next = {}", ids[i].index);
-        //         }
-        //     },
-        //     None => {
-        //         println!("No next\n")
-        //     },
-        // }
+        println!("Node ==== ============================================================");
+        println!("\t\t Node Id = {}", arena.merged_tree[node].id);
+        println!("\t\t Node Level = {}", arena.merged_tree[node].level);
+        println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
+        match arena.merged_tree[node].next.clone() {
+            Some(ids) => {
+                for i in 0 .. ids.len() {
+                    println!("\t\t Node->next = {}", ids[i].index);
+                }
+            },
+            None => {
+                println!("No next\n")
+            },
+        }
         // dump: end
         match arena.merged_tree[node].node_type {
             NodeType::match_root => {
@@ -286,6 +286,17 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                        opt_func.append(String::from("let args_"));
                        arg_counter = opt_func.get_argument_counter(arg_counter);
                        opt_func.append(String::from(" = arg;\n"));
+                    },
+                    "BinaryImm" => {
+                        // FIXME: "args" part, make a connection between actual args and string
+                        opt_func.append(String::from("InstructionData::BinaryImm { opcode, arg, imm }"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                        opt_func.set_entity(String::from("opcode"));
+                       // FIXED: Generate: "let args_<counter> = args;"
+                       opt_func.append(String::from("let args_"));
+                       arg_counter = opt_func.get_argument_counter(arg_counter);
+                       opt_func.append(String::from(" = arg;\n"));
+                       // FIXME: Add support for 'imm' part.
                     },
                     _ => {
                         panic!("Error: This instruction data type is not yet handled");
@@ -497,7 +508,7 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 arg_str.push_str(&(String::from("match pos.func.dfg.value_def")));
                 arg_str.push_str(&(String::from("(")));
                 // make string like: args_2[0]
-                arg_str.push_str(&(arena.merged_tree[node].node_value.clone())[0..3]);
+                arg_str.push_str(&(arena.merged_tree[node].node_value.clone())[0..4]);
                 arg_str.push_str(&(String::from("_")));
                 arg_str.push_str(&(String::from(arg_counter.to_string())));
                 arg_str.push_str(&(arena.merged_tree[node].node_value.clone())[4..]);
@@ -526,7 +537,7 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 const_counter = opt_func.get_const_counter(const_counter);
                 opt_func.append(String::from("let rhs_"));
                 opt_func.append(String::from(const_counter.to_string()));
-                opt_func.append(String::from(" : i32 = imm.info();\n"));
+                opt_func.append(String::from(" : i32 = imm.into();\n"));
                 opt_func.append(String::from("if rhs_"));
                 opt_func.append(String::from(const_counter.to_string()));
                 opt_func.append(String::from(" == "));
