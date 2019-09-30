@@ -231,8 +231,6 @@ impl Arena {
     pub fn build_valdef_node(&mut self, clift_inst: &CtonInst) -> Node {
         let k = cliftinstbuilder::get_clift_instdata_name(clift_inst.kind.clone());
         let p = cliftinstbuilder::get_clift_opcode_name(clift_inst.opcode.clone());
-        //println!("********** *** Jubi: instkind is: {}", k);
-        //println!("********** *** Jubi: optype is: {}", p);
         let valdef = clift_inst.valuedef.clone();
         Node {
             node_type: NodeType::match_valdef,
