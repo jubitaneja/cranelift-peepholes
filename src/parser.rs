@@ -178,6 +178,7 @@ impl<'a> Parser<'a> {
             InstKind::Cttz => "cttz".to_string(),
             InstKind::ResultInst => "result".to_string(),
             InstKind::Implies => "->".to_string(),
+            InstKind::Infer => "infer".to_string(),
             _ => "Inst Kind name is not yet handled in function: get_kind_name()".to_string(),
         }
     }
@@ -383,7 +384,9 @@ impl<'a> Parser<'a> {
                             assert!(ops.len() == 1,
                                     "expected one operand for infer instruction, but found {}", ops.len());
                             //println!("Parser Build Infer instruction");
-                            self.create_inst(InstKind::Infer, lhs, width, ops)
+                            //self.create_inst(InstKind::Infer, lhs, width, ops)
+                            //FIXED
+                            self.create_inst(InstKind::Infer, "infer", width, ops)
                         },
                         _ => {
                             panic!("unexpected infer instruction operand");
@@ -398,7 +401,9 @@ impl<'a> Parser<'a> {
                             //error checking on ops length
                             assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
                             //println!("Parsing build Result Inst\n");
-                            self.create_inst(InstKind::ResultInst, lhs, width, ops)
+                            //self.create_inst(InstKind::ResultInst, lhs, width, ops)
+                            //FIXED
+                            self.create_inst(InstKind::ResultInst, "result", width, ops)
                         },
                         _ => {
                             panic!("unexpected result instruction operand");
@@ -473,15 +478,25 @@ pub fn parse(text: &str) -> Vec<Inst> {
                         continue;
                     },
                     _ => {
-                        //
                         let LHS = inst.lhs;
+                        // Debug
+                        //println!("Inserting into hashMap ==============>>>>\n");
+                        //println!("Inst = {}\n", p.get_kind_name(inst.kind.clone()));
                         insts.push(inst);
                         // create hashmap and keep inserting valnames + index pair
+                        // Debug
+                        //println!("LHS = {} : Idx = {}\n", LHS, insts.len()-1);
                         p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
                     },
                 }
             },
         }
     }
+    // Debug
+    //println!("\n******* Debugging the hashtable for LHS name to Index ***\n");
+    //for (key, val) in p.lhsValNames_to_Idx {
+    //    println!("LHS = {}, Idx = {}\n", key, val);
+    //}
+    //println!("\n*********************************************************\n");
     insts
 }
