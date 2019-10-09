@@ -234,11 +234,12 @@ pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: Mer
     //  error "root node is expected to have an id = 0 and it is not found in arena"
     //}
     //println!("**** found root node with value = {}", found_root.node_value);
-    if let Some(nodes_list) = found_root.next.clone() {
-        for x in  0 .. nodes_list.len() {
-            //println!("root->next ====== {}", nodes_list[x].index);
-        }
-    }
+    // Debug
+    //if let Some(nodes_list) = found_root.next.clone() {
+    //    for x in  0 .. nodes_list.len() {
+    //        println!("root->next ====== {}", nodes_list[x].index);
+    //    }
+    //}
 
     if !merged_arena.node_has_any_connection(found_root.clone()) {
         // case 1

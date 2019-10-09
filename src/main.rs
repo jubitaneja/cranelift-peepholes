@@ -141,7 +141,6 @@ fn main () {
 //            println!("======================================================");
         }
         if (mode == "baseline") {
-            println!("================================== BASELINE >>>>>>>>>>>>>>>\n");
             let base_matcher = baseline_matcher::generate_baseline_matcher(lhs_single_tree.clone(), rhs_table.clone());
             println!("{}", base_matcher);
         }
