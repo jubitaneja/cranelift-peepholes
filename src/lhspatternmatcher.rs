@@ -79,10 +79,6 @@ pub fn get_infer_clift_inst(clift_insts: Vec<CtonInst>) -> CtonInst {
         width: 0,
         var_num: Some(0),
         cops: None,
-//        Some(CtonOperand {
-//            idx_val: Some(0),
-//            const_val: Some(0),
-//        }),
     };
     for inst in clift_insts {
         match inst.opcode {
@@ -96,14 +92,6 @@ pub fn get_infer_clift_inst(clift_insts: Vec<CtonInst>) -> CtonInst {
         }
     }
     infer_inst
-//    match last_inst {
-//        Some(last_inst) => {
-//            last_inst.clone()
-//        },
-//        None => {
-//            panic!("No cranelift instruction found");
-//        }
-//    }
 }
 
 /// Returns the operands of infer instruction
@@ -185,7 +173,6 @@ impl Arena {
     }
 
     pub fn build_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
-        let instdata_val = clift_inst.kind.clone();
         Node {
             node_type: NodeType::match_instdata,
             node_value: "instdata".to_string(),
@@ -215,7 +202,6 @@ impl Arena {
     pub fn build_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
         Node {
             node_type: NodeType::match_opcode,
-            //node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
             node_value: "opcode".to_string(),
             id: self.count,
             width: 0,
