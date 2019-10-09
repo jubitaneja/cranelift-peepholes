@@ -206,20 +206,20 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
     for node in 0 .. arena.merged_tree.len() {
         action_flag = is_node_actionable(arena.merged_tree[node].id, rhs.clone());
         // dump: begin
-        println!("Node ==== ============================================================");
-        println!("\t\t Node Id = {}", arena.merged_tree[node].id);
-        println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-        println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
-        match arena.merged_tree[node].next.clone() {
-            Some(ids) => {
-                for i in 0 .. ids.len() {
-                    println!("\t\t Node->next = {}", ids[i].index);
-                }
-            },
-            None => {
-                println!("No next\n")
-            },
-        }
+        //println!("Node ==== ============================================================");
+        //println!("\t\t Node Id = {}", arena.merged_tree[node].id);
+        //println!("\t\t Node Level = {}", arena.merged_tree[node].level);
+        //println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
+        //match arena.merged_tree[node].next.clone() {
+        //    Some(ids) => {
+        //        for i in 0 .. ids.len() {
+        //            println!("\t\t Node->next = {}", ids[i].index);
+        //        }
+        //    },
+        //    None => {
+        //        println!("No next\n")
+        //    },
+        //}
         // dump: end
         match arena.merged_tree[node].node_type {
             NodeType::match_root => {
