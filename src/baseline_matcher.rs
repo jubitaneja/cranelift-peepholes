@@ -187,6 +187,19 @@ impl Opt {
             }
         }
     }
+    
+    pub fn build_root_node(&mut self) -> Node {
+        Node {
+            node_type: NodeType::match_root,
+            node_value: "root".to_string(),
+            width: 0,
+            id: 0,
+            var_id: None,
+            arg_flag: false,
+            level: 0,
+            next: Some(Vec::new()),
+        }
+    }
 
     pub fn take_action(&mut self, rhs: Vec<CtonInst>) {
         let mut insert_inst_str = "".to_string();
@@ -247,27 +260,37 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
     let mut arg_counter : u32 = 0;
     let mut const_counter: u32 = 0;
 
+    // Create and insert root node at the beginning of
+    // vector of LHS single tree nodes
+    nodes.insert(0, opt_func.build_root_node());
+
     for node in 0 .. nodes.len() {
         action_flag = is_node_actionable(nodes[node].id, rhs.clone());
         // dump: begin
-        //println!("Node ==== ============================================================");
-        //println!("\t\t Node Id = {}", arena.merged_tree[node].id);
-        //println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-        //println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
-        //match arena.merged_tree[node].next.clone() {
-        //    Some(ids) => {
-        //        for i in 0 .. ids.len() {
-        //            println!("\t\t Node->next = {}", ids[i].index);
-        //        }
-        //    },
-        //    None => {
-        //        println!("No next\n")
-        //    },
-        //}
+        println!("Node ==== ============================================================");
+        println!("\t\t Node Id = {}", nodes[node].id);
+        println!("\t\t Node Level = {}", nodes[node].level);
+        println!("\t\t Node Value = {}", nodes[node].node_value);
+        match nodes[node].next.clone() {
+            Some(ids) => {
+                for i in 0 .. ids.len() {
+                    println!("\t\t Node->next = {}", ids[i].index);
+                }
+            },
+            None => {
+                println!("No next\n")
+            },
+        }
         // dump: end
         match nodes[node].node_type {
             NodeType::match_root => {
                 // FIXME: Generate a unique header for each LHS tree 
+                // Issue: there is no match_root node in single tree nodes.
+                // So, we are not able to generate the header at all.
+                // Solution: Either generate match_root node first, and append
+                // it at the beginning of Vec<Node>
+                // Or, call generate header function despite of match_root node
+                // at the beginning.
                 opt_func.generate_header();
                 let current_level = nodes[node].level;
                 opt_func.enter_scope(ScopeType::scope_func, current_level);
