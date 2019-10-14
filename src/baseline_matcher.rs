@@ -34,8 +34,10 @@ impl Opt {
         }
     }
 
-    pub fn generate_header(&mut self) {
-        self.func_str.push_str("fn matcher(pos: &mut FuncCursor, inst: Inst)");
+    pub fn generate_header(&mut self, mut count: u32) {
+        self.func_str.push_str("fn superopt_");
+        self.func_str.push_str(&count.to_string());
+        self.func_str.push_str("(pos: &mut FuncCursor, inst: Inst)");
     }
 
     pub fn append(&mut self, input: String) {
@@ -252,8 +254,8 @@ pub fn is_node_actionable(node_id: usize, table: HashMap<usize, Vec<CtonInst>>) 
     }
 }
 
-pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, Vec<CtonInst>>) ->
-                        String {
+pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, Vec<CtonInst>>,
+                                 mut count: u32) -> String {
     let mut opt_func = Opt::new();
     let mut arg_str = String::from("");
     let mut action_flag = false;
@@ -291,7 +293,8 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                 // it at the beginning of Vec<Node>
                 // Or, call generate header function despite of match_root node
                 // at the beginning.
-                opt_func.generate_header();
+                // FIXME: GENERATE UNIQUE HEADERS NOW
+                opt_func.generate_header(count);
                 let current_level = nodes[node].level;
                 opt_func.enter_scope(ScopeType::scope_func, current_level);
                 //set the level of root->next nodes to 0+1

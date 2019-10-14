@@ -41,6 +41,7 @@ fn main () {
                                       };
     let mut rhs_table = HashMap::new();
     let mut global_nodes_count: usize = 0;
+    let mut lhs_count = 1;
     for s in splitter {
         // lexing
         //lexer::start_lexer(&s);
@@ -141,7 +142,10 @@ fn main () {
 //            println!("======================================================");
         }
         if (mode == "baseline") {
-            let base_matcher = baseline_matcher::generate_baseline_matcher(lhs_single_tree.clone(), rhs_table.clone());
+            let base_matcher = baseline_matcher::generate_baseline_matcher(
+                               lhs_single_tree.clone(), rhs_table.clone(),
+                               lhs_count);
+            lhs_count += 1;
             println!("{}", base_matcher);
         }
   }
