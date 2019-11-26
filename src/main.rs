@@ -26,9 +26,16 @@ fn main () {
 
     let filename = &args[1];
     let mode = &args[2];
-    if (mode != "fast" || mode != "baseline") {
-        panic!("ERROR: Expecting mode 'fast' or 'baseline'")
+    match mode.as_ref() {
+        "fast" => {}
+        "baseline" => {}
+        _ => {
+            panic!("ERROR: Expected mode 'fast' or 'baseline'");
+        }
     }
+    //if ((mode != "fast") || (mode != "baseline")) {
+    //    panic!("ERROR: Expecting mode 'fast' or 'baseline'")
+    //}
 
     let mut file = File::open(filename).expect("file not found");
 
