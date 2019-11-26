@@ -21,11 +21,15 @@ fn main () {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 3 {
-        println!("Expecting arguments list '<file_name> <mode>'. mode can be 'baseline' or 'fast'");
+        panic!("ERROR: Expecting arguments list '<file_name> <mode>'. mode can be 'baseline' or 'fast'");
     }
 
     let filename = &args[1];
     let mode = &args[2];
+    if (mode != "fast" || mode != "baseline") {
+        panic!("ERROR: Expecting mode 'fast' or 'baseline'")
+    }
+
     let mut file = File::open(filename).expect("file not found");
 
     let mut contents = String::new();
