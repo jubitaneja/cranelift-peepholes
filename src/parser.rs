@@ -405,6 +405,15 @@ impl<'a> Parser<'a> {
                             //FIXED
                             self.create_inst(InstKind::ResultInst, "result", width, ops)
                         },
+                        // Result inst can have a typed int as an operand as well.
+                        // We will make it a rule that Souper's result inst *DOES NOT*
+                        // have any untyped constant operand.
+                        Some(TokKind::Int(width, val)) => {
+                            let ops = self.parse_ops();
+                            //error checking on ops length
+                            assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
+                            self.create_inst(InstKind::ResultInst, "result", width, ops)
+                        },
                         _ => {
                             panic!("unexpected result instruction operand");
                         }
