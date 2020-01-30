@@ -269,20 +269,20 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
     for node in 0 .. nodes.len() {
         action_flag = is_node_actionable(nodes[node].id, rhs.clone());
         // dump: begin
-        println!("Node ==== ============================================================");
-        println!("\t\t Node Id = {}", nodes[node].id);
-        println!("\t\t Node Level = {}", nodes[node].level);
-        println!("\t\t Node Value = {}", nodes[node].node_value);
-        match nodes[node].next.clone() {
-            Some(ids) => {
-                for i in 0 .. ids.len() {
-                    println!("\t\t Node->next = {}", ids[i].index);
-                }
-            },
-            None => {
-                println!("No next\n")
-            },
-        }
+        //println!("Node ==== ============================================================");
+        //println!("\t\t Node Id = {}", nodes[node].id);
+        //println!("\t\t Node Level = {}", nodes[node].level);
+        //println!("\t\t Node Value = {}", nodes[node].node_value);
+        //match nodes[node].next.clone() {
+        //    Some(ids) => {
+        //        for i in 0 .. ids.len() {
+        //            println!("\t\t Node->next = {}", ids[i].index);
+        //        }
+        //    },
+        //    None => {
+        //        println!("No next\n")
+        //    },
+        //}
         // dump: end
         match nodes[node].node_type {
             NodeType::match_root => {
