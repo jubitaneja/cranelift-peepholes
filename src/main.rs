@@ -54,6 +54,7 @@ fn main () {
     let mut global_nodes_count: usize = 0;
     let mut lhs_count = 1;
     for s in splitter {
+        println!("*******   Test Case   *******\n{}\n", s);
         // lexing
         //lexer::start_lexer(&s);
 
