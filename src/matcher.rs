@@ -146,31 +146,88 @@ impl Opt {
 
     pub fn take_action(&mut self, rhs: Vec<CtonInst>) {
         let mut insert_inst_str = "".to_string();
-        for inst in 0 .. rhs.len()-2 {
-            let each_inst = rhs[inst].clone();
-            insert_inst_str = "let inst".to_owned();
-            insert_inst_str += &inst.to_string();
-            insert_inst_str += &" = pos.ins().".to_owned();
-            insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
-            insert_inst_str += &"(".to_owned();
-            // FIXME: fix the args names and count of args here
-            insert_inst_str += &"args[0], args[1]".to_owned();
-            insert_inst_str += &");\n".to_owned();
-            self.func_str.push_str(&insert_inst_str);
-        }
-        let mut replace_inst_str = "".to_owned();
-        for inst in rhs.len()-2 .. rhs.len()-1 {
-            let each_inst = rhs[inst].clone();
+        // Debug logs for RHS
+        // println! ("========   RHS insts  =======\n");
+        // for i in 0 .. rhs.len() {
+        //     let isa = rhs[i].clone();
+        //     println!("inst = {}\n", cliftinstbuilder::get_clift_opcode_name(isa.opcode));
+        //     match isa.cops {
+        //         Some(ops) => {
+        //             for op in ops {
+        //                 match op.const_val {
+        //                     Some(c) => {
+        //                         println!("Result const op ==== {}\n", c);
+        //                     },
+        //                     None => {},
+        //                 }
+        //             }
+        //         },
+        //         None => {},
+        //     }
+        // }
+        // Special Case: what to do for RHS with 1 inst only?
+        // For example: result 20:i32 (it simply returns a constant)
+        if rhs.len() == 1 {
+            let each_inst = rhs[0].clone();
+            let mut rhs_const : u32 = 0;
+
+            match each_inst.cops {
+                Some(ops) => {
+                    for op in ops {
+                        match op.const_val {
+                            Some(c) => {
+                                rhs_const = c;
+                            },
+                            None => {},
+                        }
+                    }
+                },
+                None => {},
+            }
+
+            let mut replace_inst_str = "".to_owned();
             replace_inst_str = "pos.func.dfg.replace(".to_owned();
             // FIXME: fix the inst name here
             replace_inst_str += &"inst".to_owned();
             replace_inst_str += &").".to_owned();
-            replace_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
-            replace_inst_str += &"(".to_owned();
-            // FIXME: fix the args names and count of args here
-            replace_inst_str += &"args[0], args[1]".to_owned();
-            replace_inst_str += &");\n".to_owned();
+            replace_inst_str += &"iconst(".to_owned();
+            // FIXME: fix the width part
+            // Note: Width is not set in CliftInst operands
+            // for constant type, only const_val exists. 
+            // Only parser has the correct width for constant, see
+            // how you pass that information further to CliftInst struct
+            replace_inst_str += &"width".to_owned();
+            replace_inst_str += &", ".to_owned();
+            replace_inst_str += &rhs_const.to_string();
+            replace_inst_str += &"); ".to_owned();
             self.func_str.push_str(&replace_inst_str);
+        } else {
+            for inst in 0 .. rhs.len()-2 {
+                let each_inst = rhs[inst].clone();
+                insert_inst_str = "let inst".to_owned();
+                insert_inst_str += &inst.to_string();
+                insert_inst_str += &" = pos.ins().".to_owned();
+                insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
+                insert_inst_str += &"(".to_owned();
+                // FIXME: fix the args names and count of args here
+                insert_inst_str += &"args[0], args[1]".to_owned();
+                insert_inst_str += &");\n".to_owned();
+                self.func_str.push_str(&insert_inst_str);
+            }
+            let mut replace_inst_str = "".to_owned();
+            for inst in rhs.len()-2 .. rhs.len()-1 {
+                let each_inst = rhs[inst].clone();
+                replace_inst_str = "pos.func.dfg.replace(".to_owned();
+                // FIXME: fix the inst name here
+                replace_inst_str += &"inst".to_owned();
+                replace_inst_str += &").".to_owned();
+                replace_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
+                replace_inst_str += &"(".to_owned();
+                // FIXME: fix the args names and count of args here
+                replace_inst_str += &"args[0], args[1]".to_owned();
+                replace_inst_str += &");\n".to_owned();
+                self.func_str.push_str(&replace_inst_str);
+            }
         }
     }
 
