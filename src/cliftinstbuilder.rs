@@ -233,7 +233,8 @@ pub fn inst_has_const_operand(clift_ops: Option<Vec<CtonOperand>>) -> bool {
             for cop in cops {
                 match cop.const_val {
                     Some(c) => {
-                        found = true
+                        found = true;
+                        break
                     },
                     None => {
                         found = false
