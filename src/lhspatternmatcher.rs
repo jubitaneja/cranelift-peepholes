@@ -46,15 +46,15 @@ pub struct Node_Index {
 }
 
 /// Helper functions
-pub fn get_arg_name_for_binaryImm(index: usize) -> String {
+pub fn get_arg_name_for_binaryImm(index: usize, argtype: String) -> String {
     let mut arg = "".to_string();
-    match index {
+    match argtype.as_ref() {
         //
-        0 => {
+        "index" => {
             arg = "arg".to_string();
             arg
         },
-        1 => {
+        "const" => {
             arg = "imm".to_string();
             arg
         },
@@ -241,11 +241,11 @@ impl Arena {
         current
     }
 
-    pub fn build_separate_arg_node(&mut self, arg: usize, parent_instdata: String) -> Node {
+    pub fn build_separate_arg_node(&mut self, argtype: String, arg: usize, parent_instdata: String) -> Node {
         let mut node_val = "".to_string();
         match parent_instdata.as_ref() {
             "BinaryImm" => {
-                node_val = get_arg_name_for_binaryImm(arg);
+                node_val = get_arg_name_for_binaryImm(arg, argtype);
             },
             _ => {
                 // Binary, Var, Unary
@@ -326,10 +326,36 @@ impl Arena {
         ret_node
     }
 
+    pub fn get_clift_op_type_from_arg_num(&mut self, clift_inst: &CtonInst, arg_num: usize) -> String {
+        let mut list_ops = Vec::new();
+        let cops = &clift_inst.cops;
+        match cops {
+            Some(ops) => {
+                for op in ops {
+                    match op.idx_val {
+                        Some(idx) => {
+                            list_ops.push("index");
+                        },
+                        None => {},
+                    }
+                    match op.const_val {
+                        Some(c) => {
+                            list_ops.push("const");
+                        },
+                        None => {},
+                    }
+                }
+            },
+            None => {},
+        }
+        list_ops[arg_num].to_string()
+    }
+
     pub fn build_args_node(&mut self, clift_inst: &CtonInst, parent_instdata: String) {
         let total_args = get_total_number_of_args(clift_inst);
         for op in 0 .. total_args {
-            let named_arg_node = self.build_separate_arg_node(op, parent_instdata.clone());
+            let op_type = self.get_clift_op_type_from_arg_num(clift_inst, op);;
+            let named_arg_node = self.build_separate_arg_node(op_type, op, parent_instdata.clone());
             
             //set next of node before named arg node
             let c = self.count.clone();
@@ -353,8 +379,8 @@ impl Arena {
             // not the instruction types
             // take it down to clift_inst.cops part
             
-            let cops = clift_inst.cops.clone();
             let mut arg_valdef_node = self.build_default_node();
+            let cops = clift_inst.cops.clone();
             
             match cops.clone() {
                 Some(ops) => {
