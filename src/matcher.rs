@@ -586,6 +586,7 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
             },
             NodeType::match_const => {
                 let current_level = arena.merged_tree[node].level;
+                opt_func.set_level_of_all_child_nodes(&mut arena, node, current_level);
                 let index = opt_func.does_level_exist_in_stack(current_level);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
