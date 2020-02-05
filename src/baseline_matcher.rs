@@ -306,31 +306,25 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
     for node in 0 .. nodes.len() {
         action_flag = is_node_actionable(nodes[node].id, rhs.clone());
         // dump: begin
-        //println!("Node ==== ============================================================");
-        //println!("\t\t Node Id = {}", nodes[node].id);
-        //println!("\t\t Node Level = {}", nodes[node].level);
-        //println!("\t\t Node Value = {}", nodes[node].node_value);
-        //match nodes[node].next.clone() {
-        //    Some(ids) => {
-        //        for i in 0 .. ids.len() {
-        //            println!("\t\t Node->next = {}", ids[i].index);
-        //        }
-        //    },
-        //    None => {
-        //        println!("No next\n")
-        //    },
-        //}
+        println!("Node ==== ============================================================");
+        println!("Actionable? = {}", action_flag);
+        println!("\t\t Node Type = {}", lhspatternmatcher::get_node_type(nodes[node].clone().node_type));
+        println!("\t\t Node Id = {}", nodes[node].id);
+        println!("\t\t Node Level = {}", nodes[node].level);
+        println!("\t\t Node Value = {}", nodes[node].node_value);
+        match nodes[node].next.clone() {
+            Some(ids) => {
+                for i in 0 .. ids.len() {
+                    println!("\t\t Node->next = {}", ids[i].index);
+                }
+            },
+            None => {
+                println!("No next\n")
+            },
+        }
         // dump: end
         match nodes[node].node_type {
             NodeType::match_root => {
-                // FIXME: Generate a unique header for each LHS tree 
-                // Issue: there is no match_root node in single tree nodes.
-                // So, we are not able to generate the header at all.
-                // Solution: Either generate match_root node first, and append
-                // it at the beginning of Vec<Node>
-                // Or, call generate header function despite of match_root node
-                // at the beginning.
-                // FIXME: GENERATE UNIQUE HEADERS NOW
                 opt_func.generate_header(count);
                 let current_level = nodes[node].level;
                 opt_func.enter_scope(ScopeType::scope_func, current_level);
@@ -400,11 +394,12 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                         opt_func.append(String::from("InstructionData::BinaryImm { opcode, arg, imm }"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("opcode"));
-                       // FIXED: Generate: "let args_<counter> = args;"
-                       opt_func.append(String::from("let args_"));
-                       arg_counter = opt_func.get_argument_counter(arg_counter);
-                       opt_func.append(String::from(" = arg;\n"));
-                       // FIXME: Add support for 'imm' part.
+                        // FIXED: Generate: "let args_<counter> = args;"
+                        opt_func.append(String::from("let args_"));
+                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        opt_func.append(String::from(" = arg;\n"));
+                        opt_func.append(String::from("*****************"));
+                        // FIXME: Add support for 'imm' part.
                     },
                     _ => {
                         panic!("Error: This instruction data type is not yet handled");
@@ -637,6 +632,14 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
             },
             NodeType::match_const => {
                 let current_level = nodes[node].level;
+                // FIXED: Earlier, I assumed that constant node will
+                // mark an end of the instruction i.e. it will always be
+                // second operand of immediate instruction, and hence there
+                // were no setting of levels for next nodes.
+                // But, const node can be the first operand as well, so
+                // no matter what, we should always look up for next nodes
+                // and set their levels.
+                opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 let index = opt_func.does_level_exist_in_stack(current_level);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
