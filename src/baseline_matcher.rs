@@ -119,6 +119,10 @@ impl Opt {
             },
             ScopeType::scope_case => {
                 self.append(String::from("\n},"));
+                // For baseline matcher, there will be always
+                // one node at one level. So, we will end
+                // up with one if case and else case.
+                self.append(String::from("\n_ => {},"));
             },
             _ => {
                 panic!("Error: No such scope type exists");
@@ -364,6 +368,8 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
+                println!("Current Level inst_type node = {}\n", current_level);
+                println!("Index: inst_type node = {}\n", index);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
                 }
@@ -413,11 +419,13 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
             },
             NodeType::match_valdef => {
                 let current_level = nodes[node].level;
+                println!("Current level in valdef node: {}\n", current_level);
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
+                println!("match_valdef case: index = {}\n", index);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
                 }
@@ -476,6 +484,8 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
+                println!("Current level: match_opcode = {}\n", current_level);
+                println!("Index : match_opcode = {}\n", index);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
                 }
@@ -671,6 +681,26 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
     }
 
     // exit func scope
+    // FIXME: Debug this part now.
+    // debug scope stack info
+    println!("********* Scope Stack ***********");
+    for x in 0 .. opt_func.scope_stack.len() {
+        let elem = opt_func.scope_stack[x].clone();
+        println!("Level of scope elem = {}", elem.level);
+        match elem.scope_type {
+            ScopeType::scope_func => {
+                println!("scope func");
+            },
+            ScopeType::scope_match => {
+                println!("scope match");
+            },
+            ScopeType::scope_case => {
+                println!("scope case");
+            },
+            _ => {},
+        }
+    }
+    println!("********* Scope Stack End ***********");
     for s in 0 .. opt_func.scope_stack.len() {
         match opt_func.scope_stack.pop() {
             Some(elem) => {
