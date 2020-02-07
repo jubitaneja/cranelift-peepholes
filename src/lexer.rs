@@ -107,13 +107,22 @@ impl<'a> Lexer<'a> {
          }
     }
 
-    pub fn evaluate_const_value(&mut self, ch: Option<char>, const_val: &mut i32) {
+    pub fn evaluate_const_value(&mut self, ch: Option<char>, neg: bool, const_val: &mut i32) {
         match ch {
             Some(c) => {
+                println!("current ch = {}", c);
                 if c >= '0' && c <= '9' {
                     let cons = c as i32;
                     let zero_val = '0' as i32;
-                    *const_val = *const_val * 10 + cons - zero_val;
+                    // split the addition to avoid add with overflow
+                    // issues for INT_MAX values.
+                    let mut x = *const_val * 10;
+                    let mut y = cons - zero_val;
+                    if (neg) {
+                        *const_val = x - y;
+                    } else {
+                        *const_val = x + y;
+                    }
                 }
             },
             _ => {
@@ -318,7 +327,7 @@ impl<'a> Lexer<'a> {
                 let mut const_val: i32 = 0;
                 while self.is_digit(current_ch) {
                     self.next_ch();
-                    self.evaluate_const_value(current_ch, &mut const_val);
+                    self.evaluate_const_value(current_ch, negative, &mut const_val);
                     current_ch = self.lookahead.clone();
                 }
                 let const_end = self.pos;
@@ -326,41 +335,14 @@ impl<'a> Lexer<'a> {
                 if const_end - const_begin == 0 {
                     error(Error::InvalidChar, "expected an integer".to_string(), loc.clone());
                     panic!("expected an integer constant value\n");
-                    //token(TokKind::Error, loc)
                 }
 
                 let mut width: u32 = 0;
                 if self.lookahead == Some(':') {
                     width = self.scan_bitwidth();
                 }
-                if negative {
-                    const_val = -1 * const_val;
-                }
                 token(TokKind::Int(width, const_val), loc)
             },
-            //Some('0' ... '9') => {
-            //    let mut current_ch = self.lookahead.clone();
-            //    let const_begin = self.pos;
-            //    let mut const_val: i32 = 0;
-            //    while self.is_digit(current_ch) {
-            //        self.next_ch();
-            //        self.evaluate_const_value(current_ch, &mut const_val);
-            //        current_ch = self.lookahead.clone();
-            //    }
-            //    let const_end = self.pos;
-
-            //    if const_end - const_begin == 0 {
-            //        error(Error::InvalidChar, "expected an integer".to_string(), loc.clone());
-            //        panic!("expected an integer constant value\n");
-            //        //token(TokKind::Error, loc)
-            //    }
-
-            //    let mut width: u32 = 0;
-            //    if self.lookahead == Some(':') {
-            //        width = self.scan_bitwidth();
-            //    }
-            //    token(TokKind::Int(width, const_val), loc)
-            //},
             _ => {
                 // FIXME: I think this is not required, do something else
                 // with this case.
@@ -422,7 +404,7 @@ impl<'a> Lexer<'a> {
                     self.next_ch();
                     break Some(token(TokKind::Eof, loc));
                 },
-                Some('-') => {
+                Some('~') => {
                     //println!("lexer: found implies starting char '-'\n");
                     self.next_ch();
                     break Some(self.scan_implies());
