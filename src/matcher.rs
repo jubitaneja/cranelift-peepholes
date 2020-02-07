@@ -169,7 +169,7 @@ impl Opt {
         // For example: result 20:i32 (it simply returns a constant)
         if rhs.len() == 1 {
             let each_inst = rhs[0].clone();
-            let mut rhs_const : u32 = 0;
+            let mut rhs_const : i32 = 0;
 
             match each_inst.cops {
                 Some(ops) => {

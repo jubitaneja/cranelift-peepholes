@@ -282,7 +282,7 @@ impl Arena {
 
     // FIXME: fix constant width to i64, maybe? depending on const value
     // width in SouperOperand and CtonOperand
-    pub fn build_constant_node(&mut self, constant: u32) -> Node {
+    pub fn build_constant_node(&mut self, constant: i32) -> Node {
         // FIXME: Fix the width of constant
         Node {
             node_type: NodeType::match_const,
