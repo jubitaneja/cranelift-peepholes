@@ -194,9 +194,9 @@ pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
         CtonOpcode::Ishl => "ishl".to_string(),
         CtonOpcode::IshlImm => "ishl_imm".to_string(),
         CtonOpcode::Sshr => "sshr".to_string(),
-        CtonOpcode::Sshr => "sshr_imm".to_string(),
+        CtonOpcode::SshrImm => "sshr_imm".to_string(),
         CtonOpcode::Ushr => "ushr".to_string(),
-        CtonOpcode::Ushr => "ushr_imm".to_string(),
+        CtonOpcode::UshrImm => "ushr_imm".to_string(),
         CtonOpcode::Popcnt => "popcnt".to_string(),
         CtonOpcode::Clz => "clz".to_string(),
         CtonOpcode::Ctz => "ctz".to_string(),
@@ -544,6 +544,11 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
             }
         },
         _ => {
+            // Earlier, it was silently making Var node for all
+            // instructions that are not supported
+            // in this project.
+            // FIXME: it should returns an error if any instkind is not
+            // handled, or maybe like a NOP ctonInst.
             CtonInst {
                 valuedef: CtonValueDef::Param,
                 kind: CtonInstKind::Var,
