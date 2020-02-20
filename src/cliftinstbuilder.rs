@@ -28,6 +28,8 @@ pub enum CtonInstKind {
     Binary,
     BinaryImm,
     Var,
+    IntCompare,
+    IntCompareImm,
     NoneType, //added for infer inst in souper IR
 }
 
@@ -41,11 +43,17 @@ pub enum CtonOpcode {
     Isub,
     IsubImm,
     Eq,
+    EqImm,
     Ne,
+    NeImm,
     Slt,
+    SltImm,
     Ult,
+    UltImm,
     Sle,
+    SleImm,
     Ule,
+    UleImm,
     Band,
     BandImm,
     Bor,
@@ -167,6 +175,8 @@ pub fn get_clift_instdata_name(instdata: CtonInstKind) -> String {
         CtonInstKind::BinaryImm => "BinaryImm".to_string(),
         CtonInstKind::Unary => "Unary".to_string(),
         CtonInstKind::UnaryImm => "UnaryImm".to_string(),
+        CtonInstKind::IntCompare => "IntCompare".to_string(),
+        CtonInstKind::IntCompareImm => "IntCompareImm".to_string(),
         CtonInstKind::Var => "Var".to_string(),
         _ => "".to_string(),
     }
@@ -179,12 +189,18 @@ pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
         CtonOpcode::ImulImm => "imul_imm".to_string(),
         CtonOpcode::Isub => "isub".to_string(),
         CtonOpcode::IsubImm => "irsub_imm".to_string(),
-        CtonOpcode::Eq => "icmpeq".to_string(),
-        CtonOpcode::Ne => "icmpne".to_string(),
-        CtonOpcode::Slt => "icmpslt".to_string(),
-        CtonOpcode::Ult => "icmpult".to_string(),
-        CtonOpcode::Sle => "icmpsle".to_string(),
-        CtonOpcode::Ule => "icmpule".to_string(),
+        CtonOpcode::Eq => "icmp eq".to_string(),
+        CtonOpcode::EqImm => "icmp_imm eqi".to_string(),
+        CtonOpcode::Ne => "icmp ne".to_string(),
+        CtonOpcode::NeImm => "icmp_imm ne".to_string(),
+        CtonOpcode::Slt => "icmp slt".to_string(),
+        CtonOpcode::SltImm => "icmp_imm slt".to_string(),
+        CtonOpcode::Ult => "icmp ult".to_string(),
+        CtonOpcode::UltImm => "icmp_imm ult".to_string(),
+        CtonOpcode::Sle => "icmp sle".to_string(),
+        CtonOpcode::SleImm => "icmp_imm sle".to_string(),
+        CtonOpcode::Ule => "icmp ule".to_string(),
+        CtonOpcode::UleImm => "icmp_imm ule".to_string(),
         CtonOpcode::Band => "band".to_string(),
         CtonOpcode::BandImm => "band_imm".to_string(),
         CtonOpcode::Bor => "bor".to_string(),
@@ -308,63 +324,105 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     }
                 },
                 InstKind::Eq => {
+                    let clift_ops = build_clift_ops(ops);
+                    let mut inst_opcode = CtonOpcode::Eq;
+                    let mut kind = CtonInstKind::IntCompare;
+                    if inst_has_const_operand(clift_ops.clone()) {
+                        inst_opcode = CtonOpcode::EqImm;
+                        kind = CtonInstKind::IntCompareImm;
+                    }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
-                        opcode: CtonOpcode::Eq,
+                        kind: kind,
+                        opcode: inst_opcode,
                         width: 1,
                         var_num: var_number,
-                        cops: build_clift_ops(ops),
+                        cops: clift_ops,
                     }
                 },
                 InstKind::Ne => {
+                    let clift_ops = build_clift_ops(ops);
+                    let mut inst_opcode = CtonOpcode::Ne;
+                    let mut kind = CtonInstKind::IntCompare;
+                    if inst_has_const_operand(clift_ops.clone()) {
+                        inst_opcode = CtonOpcode::NeImm;
+                        kind = CtonInstKind::IntCompareImm;
+                    }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
-                        opcode: CtonOpcode::Ne,
+                        kind: kind,
+                        opcode: inst_opcode,
                         width: 1,
                         var_num: var_number,
-                        cops: build_clift_ops(ops),
+                        cops: clift_ops,
                     }
                 },
                 InstKind::Slt => {
+                    let clift_ops = build_clift_ops(ops);
+                    let mut inst_opcode = CtonOpcode::Slt;
+                    let mut kind = CtonInstKind::IntCompare;
+                    if inst_has_const_operand(clift_ops.clone()) {
+                        inst_opcode = CtonOpcode::SltImm;
+                        kind = CtonInstKind::IntCompareImm;
+                    }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
-                        opcode: CtonOpcode::Slt,
+                        kind: kind,
+                        opcode: inst_opcode,
                         width: 1,
                         var_num: var_number,
-                        cops: build_clift_ops(ops),
+                        cops: clift_ops,
                     }
                 },
                 InstKind::Ult => {
+                    let clift_ops = build_clift_ops(ops);
+                    let mut inst_opcode = CtonOpcode::Ult;
+                    let mut kind = CtonInstKind::IntCompare;
+                    if inst_has_const_operand(clift_ops.clone()) {
+                        inst_opcode = CtonOpcode::UltImm;
+                        kind = CtonInstKind::IntCompareImm;
+                    }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
-                        opcode: CtonOpcode::Ult,
+                        kind: kind,
+                        opcode: inst_opcode,
                         width: 1,
                         var_num: var_number,
-                        cops: build_clift_ops(ops),
+                        cops: clift_ops,
                     }
                 },
                 InstKind::Sle => {
+                    let clift_ops = build_clift_ops(ops);
+                    let mut inst_opcode = CtonOpcode::Sle;
+                    let mut kind = CtonInstKind::IntCompare;
+                    if inst_has_const_operand(clift_ops.clone()) {
+                        inst_opcode = CtonOpcode::SleImm;
+                        kind = CtonInstKind::IntCompareImm;
+                    }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
-                        opcode: CtonOpcode::Sle,
+                        kind: kind,
+                        opcode: inst_opcode,
                         width: 1,
                         var_num: var_number,
-                        cops: build_clift_ops(ops),
+                        cops: clift_ops,
                     }
                 },
                 InstKind::Ule => {
+                    let clift_ops = build_clift_ops(ops);
+                    let mut inst_opcode = CtonOpcode::Ule;
+                    let mut kind = CtonInstKind::IntCompare;
+                    if inst_has_const_operand(clift_ops.clone()) {
+                        inst_opcode = CtonOpcode::UleImm;
+                        kind = CtonInstKind::IntCompareImm;
+                    }
                     CtonInst {
                         valuedef: CtonValueDef::Result,
-                        kind: CtonInstKind::Binary,
-                        opcode: CtonOpcode::Ule,
+                        kind: kind,
+                        opcode: inst_opcode,
                         width: 1,
                         var_num: var_number,
-                        cops: build_clift_ops(ops),
+                        cops: clift_ops,
                     }
                 },
                 InstKind::And => {
