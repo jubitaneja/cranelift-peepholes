@@ -295,6 +295,36 @@ pub fn is_node_actionable(node_id: usize, table: HashMap<usize, Vec<CtonInst>>) 
     }
 }
 
+pub enum IntCC {
+    Equal,
+    NotEqual,
+    SignedLessThan,
+    SignedGreaterThanOrEqual,
+    SignedGreaterThan,
+    SignedLessThanOrEqual,
+    UnsignedLessThan,
+    UnsignedGreaterThanOrEqual,
+    UnsignedGreaterThan,
+    UnsignedLessThanOrEqual,
+    Overflow,
+    NotOverflow,
+}
+
+pub fn get_cond_name(cmp: String) -> String {
+    let cond = match cmp.as_ref() {
+        "eq" => "IntCC::Equal".to_string(),
+        "ne" => "IntCC::NotEqual".to_string(),
+        "slt" => "IntCC::SignedLessThan".to_string(),
+        "ult" => "IntCC::UnsignedLessThan".to_string(),
+        "sle" => "IntCC::SignedLessThanOrEqual".to_string(),
+        "ule" => "IntCC::UnsignedLessThanOrEqual".to_string(),
+        // Souper does not generated ygt, sgt, sge, uge,
+        // overflow, not overflow - conditions
+        _ => "".to_string(),
+    };
+    cond
+}
+
 pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, Vec<CtonInst>>,
                                  mut count: u32) -> String {
     let mut opt_func = Opt::new();
@@ -311,7 +341,7 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
         action_flag = is_node_actionable(nodes[node].id, rhs.clone());
         // dump: begin
         println!("Node ==== ============================================================");
-        println!("Actionable? = {}", action_flag);
+        println!("\t\t Actionable? = {}", action_flag);
         println!("\t\t Node Type = {}", lhspatternmatcher::get_node_type(nodes[node].clone().node_type));
         println!("\t\t Node Id = {}", nodes[node].id);
         println!("\t\t Node Level = {}", nodes[node].level);
@@ -368,8 +398,6 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
-                println!("Current Level inst_type node = {}\n", current_level);
-                println!("Index: inst_type node = {}\n", index);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
                 }
@@ -378,6 +406,16 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                     "Binary" => {
                         // FIXME: "args" part, make a connection between actual args and string
                         opt_func.append(String::from("InstructionData::Binary { opcode, args }"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                        opt_func.set_entity(String::from("opcode"));
+                       // FIXED: Generate: "let args_<counter> = args;"
+                       opt_func.append(String::from("let args_"));
+                       arg_counter = opt_func.get_argument_counter(arg_counter);
+                       opt_func.append(String::from(" = args;\n"));
+                    },
+                    "IntCompare" => {
+                        // FIXME: "args" part, make a connection between actual args and string
+                        opt_func.append(String::from("InstructionData::IntCompare { opcode, cond, args }"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("opcode"));
                        // FIXED: Generate: "let args_<counter> = args;"
@@ -404,7 +442,17 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                         opt_func.append(String::from("let args_"));
                         arg_counter = opt_func.get_argument_counter(arg_counter);
                         opt_func.append(String::from(" = arg;\n"));
-                        opt_func.append(String::from("*****************"));
+                        // FIXME: Add support for 'imm' part.
+                    },
+                    "IntCompareImm" => {
+                        // FIXME: "args" part, make a connection between actual args and string
+                        opt_func.append(String::from("InstructionData::IntCompareImm { opcode, cond, arg, imm }"));
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                        opt_func.set_entity(String::from("opcode"));
+                        // FIXED: Generate: "let args_<counter> = args;"
+                        opt_func.append(String::from("let args_"));
+                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        opt_func.append(String::from(" = arg;\n"));
                         // FIXME: Add support for 'imm' part.
                     },
                     _ => {
@@ -419,13 +467,11 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
             },
             NodeType::match_valdef => {
                 let current_level = nodes[node].level;
-                println!("Current level in valdef node: {}\n", current_level);
                 //set the level of root->next nodes to 0+1
                 opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
-                println!("match_valdef case: index = {}\n", index);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
                 }
@@ -439,8 +485,10 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                     "Result" => {
                         // for Result type, we want to generate arg match part,
                         // so, append it.
+                        //println!("******* Arg str == \n{}\n", arg_str);
                         opt_func.append(arg_str.clone());
                         arg_str = String::from("");
+                        //println!("******* Reset Arg str == \n{}\n", arg_str);
                         opt_func.enter_scope(ScopeType::scope_match, current_level-1);
                         opt_func.append(String::from("\nValueDef::"));
                         opt_func.append(String::from("Result(arg_ty, _)"));
@@ -484,8 +532,6 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                 // Check if there is any child node already matched at same level
                 // If yes, pop and exit scope first, and then enter into new matching case
                 let index = opt_func.does_level_exist_in_stack(current_level);
-                println!("Current level: match_opcode = {}\n", current_level);
-                println!("Index : match_opcode = {}\n", index);
                 if index != 0 {
                     opt_func.pop_and_exit_scope_from(index);
                 }
@@ -516,28 +562,12 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                         opt_func.append(String::from("Opcode::IsubImm"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
-                    "icmpeq" => {
-                        opt_func.append(String::from("Opcode::Eq"));
+                    "icmp" => {
+                        opt_func.append(String::from("Opcode::Icmp"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
-                    "icmpne" => {
-                        opt_func.append(String::from("Opcode::Ne"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
-                    },
-                    "icmpslt" => {
-                        opt_func.append(String::from("Opcode::Slt"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
-                    },
-                    "icmpult" => {
-                        opt_func.append(String::from("Opcode::Ult"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
-                    },
-                    "icmpsle" => {
-                        opt_func.append(String::from("Opcode::Sle"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
-                    },
-                    "icmpule" => {
-                        opt_func.append(String::from("Opcode::Ule"));
+                    "icmp_imm" => {
+                        opt_func.append(String::from("Opcode::IcmpImm"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
                     "band" => {
@@ -610,6 +640,49 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                     opt_func.take_action(found_rhs.to_vec());
                 }
             },
+            NodeType::match_cond => {
+                let current_level = nodes[node].level;
+                opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
+                let mut opt_clone = opt_func.clone();
+                let mut ent = opt_clone.current_entity;
+                // FIXME: Any purpose of ent here?
+                if !ent.is_empty() {
+                    opt_func.append(String::from("match cond"));
+                    opt_func.enter_scope(ScopeType::scope_match, current_level);
+                }
+                if action_flag {
+                    action_flag = false;
+                    let found_rhs = rhs.get(&nodes[node].id);
+                    let found_rhs = &rhs[&nodes[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
+                }
+            },
+            NodeType::cond => {
+                let current_level = nodes[node].level;
+                opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
+                // Check if there is any child node already matched at same level
+                // If yes, pop and exit scope first, and then enter into new matching case
+                let index = opt_func.does_level_exist_in_stack(current_level);
+                if index != 0 {
+                    opt_func.pop_and_exit_scope_from(index);
+                }
+                // match the actual opcode types
+                match nodes[node].node_value.as_ref() {
+                    "eq" | "ne" | "ult" | "ule" | "slt" | "sle" => {
+                        let cond = get_cond_name(nodes[node].clone().node_value);
+                        opt_func.append(cond);
+                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    },
+                    _ => {
+                        panic!("Error: this condition type is not yet handled");
+                    },
+                }
+                if action_flag {
+                    action_flag = false;
+                    let found_rhs = &rhs[&nodes[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
+                }
+            },
             NodeType::match_args => {
                 let current_level = nodes[node].level;
                 //set the level of root->next nodes to 0+1
@@ -618,18 +691,25 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
                 // we will decide later whether we need this match on args or not
                 // depending on if the argument type is Result or Param. Param
                 // type does not need this match part at all.
-                arg_str.push_str(&(String::from("match pos.func.dfg.value_def")));
-                arg_str.push_str(&(String::from("(")));
+                //println!("In match_args, arg_str before making is: \n{}\n", arg_str);
+                let mut optional_argstr = String::from("");
+                optional_argstr.push_str(&(String::from("match pos.func.dfg.value_def")));
+                optional_argstr.push_str(&(String::from("(")));
                 // make string like: args_2 or args_2[0] depending on binaryImm or binary
                 let arg_node_val = nodes[node].node_value.clone();
-                arg_str.push_str(&(String::from("args_")));
-                arg_str.push_str(&(String::from(arg_counter.to_string())));
+                optional_argstr.push_str(&(String::from("args_")));
+                optional_argstr.push_str(&(String::from(arg_counter.to_string())));
                 if let Some(i) = arg_node_val.find('[') {
-                    arg_str.push_str(&(nodes[node].node_value.clone())[i..]);
+                    optional_argstr.push_str(&(nodes[node].node_value.clone())[i..]);
                 }
-                arg_str.push_str(&(String::from(")")));
+                optional_argstr.push_str(&(String::from(")")));
+                //println!("- - - - - optional arg string == \n{}\n", optional_argstr);
                 // FIXME: Do we want to take action here and should we
                 // append to arg_str, or opt_func?
+                if arg_str != optional_argstr {
+                    arg_str.push_str(&optional_argstr);
+                }
+                //println!("- - - - - FINAL arg string == \n{}\n", arg_str);
             },
             NodeType::match_plain_const => {
                 let current_level = nodes[node].level;
@@ -681,26 +761,25 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>, mut rhs: HashMap<usize, V
     }
 
     // exit func scope
-    // FIXME: Debug this part now.
     // debug scope stack info
-    println!("********* Scope Stack ***********");
-    for x in 0 .. opt_func.scope_stack.len() {
-        let elem = opt_func.scope_stack[x].clone();
-        println!("Level of scope elem = {}", elem.level);
-        match elem.scope_type {
-            ScopeType::scope_func => {
-                println!("scope func");
-            },
-            ScopeType::scope_match => {
-                println!("scope match");
-            },
-            ScopeType::scope_case => {
-                println!("scope case");
-            },
-            _ => {},
-        }
-    }
-    println!("********* Scope Stack End ***********");
+    //println!("********* Scope Stack ***********");
+    //for x in 0 .. opt_func.scope_stack.len() {
+    //    let elem = opt_func.scope_stack[x].clone();
+    //    println!("Level of scope elem = {}", elem.level);
+    //    match elem.scope_type {
+    //        ScopeType::scope_func => {
+    //            println!("scope func");
+    //        },
+    //        ScopeType::scope_match => {
+    //            println!("scope match");
+    //        },
+    //        ScopeType::scope_case => {
+    //            println!("scope case");
+    //        },
+    //        _ => {},
+    //    }
+    //}
+    //println!("********* Scope Stack End ***********");
     for s in 0 .. opt_func.scope_stack.len() {
         match opt_func.scope_stack.pop() {
             Some(elem) => {

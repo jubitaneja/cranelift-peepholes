@@ -19,6 +19,8 @@ pub enum NodeType {
     match_const,
     match_plain_const,
     match_root,
+    match_cond,
+    cond,
     match_none,
 }
 
@@ -76,6 +78,7 @@ pub fn get_infer_clift_inst(clift_insts: Vec<CtonInst>) -> CtonInst {
         valuedef: CtonValueDef::NoneType,
         kind: CtonInstKind::NoneType,
         opcode: CtonOpcode::NoneType,
+        cond: None,
         width: 0,
         var_num: Some(0),
         cops: None,
@@ -142,6 +145,8 @@ pub fn get_node_type(ty: NodeType) -> String {
         NodeType::match_plain_const => "match_plain_const".to_string(),
         NodeType::match_root => "match_root".to_string(),
         NodeType::match_valdef => "match_valdef".to_string(),
+        NodeType::match_cond => "match_cond".to_string(),
+        NodeType::cond => "cond_type".to_string(),
         NodeType::match_none | _ => panic!("Unexpected node type"),
     }
 }
@@ -213,11 +218,39 @@ impl Arena {
     }
 
     pub fn build_specific_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
-        let opcode_val = clift_inst.opcode.clone();
         let width_val = clift_inst.width.clone();
         Node {
             node_type: NodeType::opcode,
-            node_value: cliftinstbuilder::get_clift_opcode_name(opcode_val),
+            node_value: cliftinstbuilder::get_clift_opcode_name(
+                        clift_inst.opcode.clone()),
+            width: width_val,
+            id: self.count,
+            var_id: clift_inst.var_num.clone(),
+            arg_flag: false,
+            level: 0,
+            next: None,
+        }
+    }
+
+    pub fn build_cond_node(&mut self, clift_inst: &CtonInst) -> Node {
+        Node {
+            node_type: NodeType::match_cond,
+            node_value: "cond".to_string(),
+            id: self.count,
+            width: 0,
+            var_id: clift_inst.var_num.clone(),
+            arg_flag: false,
+            level: 0,
+            next: None,
+        }
+    }
+
+    pub fn build_specific_cond_node(&mut self, clift_inst: &CtonInst) -> Node {
+        let cond_val = clift_inst.cond.clone();
+        let width_val = clift_inst.width.clone();
+        Node {
+            node_type: NodeType::cond,
+            node_value: cliftinstbuilder::get_clift_cond_name(cond_val),
             width: width_val,
             id: self.count,
             var_id: clift_inst.var_num.clone(),
@@ -244,7 +277,7 @@ impl Arena {
     pub fn build_separate_arg_node(&mut self, argtype: String, arg: usize, parent_instdata: String) -> Node {
         let mut node_val = "".to_string();
         match parent_instdata.as_ref() {
-            "BinaryImm" => {
+            "BinaryImm" | "IntCompareImm" => {
                 node_val = get_arg_name_for_binaryImm(arg, argtype);
             },
             _ => {
@@ -455,37 +488,58 @@ impl Arena {
     }
 
     pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
-        // build instdata node (generic match_instdata)
         let node_instdata = self.build_instdata_node(clift_inst);
         self.update_count();
 
-        // build specific instdata node (Binary, Unary, binaryImm, etc.)
         let node_specific_inst = self.build_specific_instdata_node(clift_inst);
         self.update_count();
 
-        // set the connection b/w above two nodes
-        let updated_instdata = self.set_next_of_prev_node(node_specific_inst.clone(), node_instdata.clone());
+        let updated_instdata = self.set_next_of_prev_node(
+                               node_specific_inst.clone(),
+                               node_instdata.clone());
 
-        // Build generic opcode node (match_opcode)
         let node_opcode = self.build_opcode_node(clift_inst);
         self.update_count();
 
-        // set the connection b/w prev two nodes pass nodes in order:[current, prev]
-        let updated_spec_inst = self.set_next_of_prev_node(node_opcode.clone(), node_specific_inst.clone());
+        let updated_spec_inst = self.set_next_of_prev_node(
+                                node_opcode.clone(),
+                                node_specific_inst.clone());
 
-        // build specific opcode node (IAdd, ISub, etc.)
         let node_specific_opcode = self.build_specific_opcode_node(clift_inst);
         self.update_count();
 
-        // set the connection b/w above two opcode nodes
-        let updated_opcode = self.set_next_of_prev_node(node_specific_opcode.clone(), node_opcode.clone());
+        let updated_opcode = self.set_next_of_prev_node(
+                             node_specific_opcode.clone(),
+                             node_opcode.clone());
 
-        self.nodes.push(updated_instdata.clone());
-        self.nodes.push(updated_spec_inst.clone());
-        self.nodes.push(updated_opcode.clone());
-        self.nodes.push(node_specific_opcode);
+        if node_specific_opcode.node_value.clone().contains("icmp") {
+            let node_cond = self.build_cond_node(clift_inst);
+            self.update_count();
 
-        //self.build_args_node(clift_inst);
+            let updated_spec_opcode = self.set_next_of_prev_node(
+                                      node_cond.clone(),
+                                      node_specific_opcode.clone());
+
+            let node_specific_cond = self.build_specific_cond_node(clift_inst);
+            self.update_count();
+
+            let updated_cond = self.set_next_of_prev_node(
+                               node_specific_cond.clone(),
+                               node_cond.clone());
+
+            self.nodes.push(updated_instdata.clone());
+            self.nodes.push(updated_spec_inst.clone());
+            self.nodes.push(updated_opcode.clone());
+            self.nodes.push(updated_spec_opcode.clone());
+            self.nodes.push(updated_cond.clone());
+            self.nodes.push(node_specific_cond.clone());
+        } else {
+            self.nodes.push(updated_instdata.clone());
+            self.nodes.push(updated_spec_inst.clone());
+            self.nodes.push(updated_opcode.clone());
+            self.nodes.push(node_specific_opcode);
+        }
+
         self.build_args_node(clift_inst, node_specific_inst.clone().node_value);
 
         self.nodes.clone()
