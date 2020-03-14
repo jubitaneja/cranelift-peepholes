@@ -110,7 +110,6 @@ impl<'a> Lexer<'a> {
     pub fn evaluate_const_value(&mut self, ch: Option<char>, neg: bool, const_val: &mut i32) {
         match ch {
             Some(c) => {
-                println!("current ch = {}", c);
                 if c >= '0' && c <= '9' {
                     let cons = c as i32;
                     let zero_val = '0' as i32;

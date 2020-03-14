@@ -252,6 +252,36 @@ pub fn is_node_actionable(node_id: usize, table: HashMap<usize, Vec<CtonInst>>) 
     }
 }
 
+pub enum IntCC {
+    Equal,
+    NotEqual,
+    SignedLessThan,
+    SignedGreaterThanOrEqual,
+    SignedGreaterThan,
+    SignedLessThanOrEqual,
+    UnsignedLessThan,
+    UnsignedGreaterThanOrEqual,
+    UnsignedGreaterThan,
+    UnsignedLessThanOrEqual,
+    Overflow,
+    NotOverflow,
+}
+
+pub fn get_cond_name(cmp: String) -> String {
+    let cond = match cmp.as_ref() {
+        "eq" => "IntCC::Equal".to_string(),
+        "ne" => "IntCC::NotEqual".to_string(),
+        "slt" => "IntCC::SignedLessThan".to_string(),
+        "ult" => "IntCC::UnsignedLessThan".to_string(),
+        "sle" => "IntCC::SignedLessThanOrEqual".to_string(),
+        "ule" => "IntCC::UnsignedLessThanOrEqual".to_string(),
+        // Souper does not generated ygt, sgt, sge, uge,
+        // overflow, not overflow - conditions
+        _ => "".to_string(),
+    };
+    cond
+}
+
 pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<CtonInst>>) ->
                         String {
     let mut opt_func = Opt::new();
@@ -329,6 +359,20 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                         opt_func.append(String::from("InstructionData::Binary { opcode, args }"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("opcode"));
+                        // FIXED: Generate: "let args_<counter> = args;"
+                        opt_func.append(String::from("let args_"));
+                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        opt_func.append(String::from(" = args;\n"));
+                    },
+                    "IntCompare" => {
+                        // FIXME: "args" part, make a connection
+                        // between actual args and string
+                        opt_func.append(String::from(
+                                 "InstructionData::IntCompare { opcode, cond, args }"));
+                        opt_func.enter_scope(
+                                 ScopeType::scope_case,
+                                 current_level);
+                        opt_func.set_entity(String::from("opcode"));
                        // FIXED: Generate: "let args_<counter> = args;"
                        opt_func.append(String::from("let args_"));
                        arg_counter = opt_func.get_argument_counter(arg_counter);
@@ -339,21 +383,36 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                         opt_func.append(String::from("InstructionData::Unary { opcode, arg }"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("opcode"));
-                       // FIXED: Generate: "let args_<counter> = arg;"
-                       opt_func.append(String::from("let args_"));
-                       arg_counter = opt_func.get_argument_counter(arg_counter);
-                       opt_func.append(String::from(" = arg;\n"));
+                        // FIXED: Generate: "let args_<counter> = arg;"
+                        opt_func.append(String::from("let args_"));
+                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        opt_func.append(String::from(" = arg;\n"));
                     },
                     "BinaryImm" => {
                         // FIXME: "args" part, make a connection between actual args and string
                         opt_func.append(String::from("InstructionData::BinaryImm { opcode, arg, imm }"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                         opt_func.set_entity(String::from("opcode"));
-                       // FIXED: Generate: "let args_<counter> = args;"
-                       opt_func.append(String::from("let args_"));
-                       arg_counter = opt_func.get_argument_counter(arg_counter);
-                       opt_func.append(String::from(" = arg;\n"));
-                       // FIXME: Add support for 'imm' part.
+                        // FIXED: Generate: "let args_<counter> = args;"
+                        opt_func.append(String::from("let args_"));
+                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        opt_func.append(String::from(" = arg;\n"));
+                        // FIXME: Add support for 'imm' part.
+                    },
+                    "IntCompareImm" => {
+                        // FIXME: "args" part, make a connection
+                        // between actual args and string
+                        opt_func.append(String::from(
+                                 "InstructionData::IntCompareImm { opcode, cond, arg, imm }"));
+                        opt_func.enter_scope(
+                                 ScopeType::scope_case,
+                                 current_level);
+                        opt_func.set_entity(String::from("opcode"));
+                        // FIXED: Generate: "let args_<counter> = args;"
+                        opt_func.append(String::from("let args_"));
+                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        opt_func.append(String::from(" = arg;\n"));
+                        // FIXME: Add support for 'imm' part.
                     },
                     _ => {
                         panic!("Error: This instruction data type is not yet handled");
@@ -460,29 +519,17 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                         opt_func.append(String::from("Opcode::IsubImm"));
                         opt_func.enter_scope(ScopeType::scope_case, current_level);
                     },
-                    "icmpeq" => {
-                        opt_func.append(String::from("Opcode::Eq"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    "icmp" => {
+                        opt_func.append(String::from("Opcode::Icmp"));
+                        opt_func.enter_scope(
+                                 ScopeType::scope_case,
+                                 current_level);
                     },
-                    "icmpne" => {
-                        opt_func.append(String::from("Opcode::Ne"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
-                    },
-                    "icmpslt" => {
-                        opt_func.append(String::from("Opcode::Slt"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
-                    },
-                    "icmpult" => {
-                        opt_func.append(String::from("Opcode::Ult"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
-                    },
-                    "icmpsle" => {
-                        opt_func.append(String::from("Opcode::Sle"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
-                    },
-                    "icmpule" => {
-                        opt_func.append(String::from("Opcode::Ule"));
-                        opt_func.enter_scope(ScopeType::scope_case, current_level);
+                    "icmp_imm" => {
+                        opt_func.append(String::from("Opcode::IcmpImm"));
+                        opt_func.enter_scope(
+                                 ScopeType::scope_case,
+                                 current_level);
                     },
                     "band" => {
                         opt_func.append(String::from("Opcode::Band"));
@@ -546,6 +593,64 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                     },
                     _ => {
                         panic!("Error: this opcode type is not yet handled");
+                    },
+                }
+                if action_flag {
+                    action_flag = false;
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
+                }
+            },
+            NodeType::match_cond => {
+                let current_level = arena.merged_tree[node].level;
+                opt_func.set_level_of_all_child_nodes(
+                         &mut arena,
+                         node,
+                         current_level);
+                let mut opt_clone = opt_func.clone();
+                let mut ent = opt_clone.current_entity;
+                // FIXME: Any purpose of ent here?
+                if !ent.is_empty() {
+                    opt_func.append(String::from("match cond"));
+                    opt_func.enter_scope(
+                             ScopeType::scope_match,
+                             current_level);
+                }
+                if action_flag {
+                    action_flag = false;
+                    let found_rhs = &rhs[&arena.merged_tree[node].id];
+                    opt_func.take_action(found_rhs.to_vec());
+                }
+            },
+            NodeType::cond => {
+                let current_level = arena.merged_tree[node].level;
+                opt_func.set_level_of_all_child_nodes(
+                         &mut arena,
+                         node,
+                         current_level);
+                // Check if there is any child node already
+                // matched at same level
+                // If yes, pop and exit scope first, and
+                // then enter into new matching case
+                let index = opt_func.does_level_exist_in_stack(current_level);
+                if index != 0 {
+                    opt_func.pop_and_exit_scope_from(index);
+                }
+                // match the actual opcode types
+                match arena.merged_tree[node].node_value.as_ref() {
+                    "eq" | "ne" | "ult" |
+                    "ule" | "slt" | "sle" => {
+                        let cond = get_cond_name(arena
+                                                 .merged_tree[node]
+                                                 .clone()
+                                                 .node_value);
+                        opt_func.append(cond);
+                        opt_func.enter_scope(
+                                 ScopeType::scope_case,
+                                 current_level);
+                    },
+                    _ => {
+                        panic!("Error: this condition type is not yet handled");
                     },
                 }
                 if action_flag {
