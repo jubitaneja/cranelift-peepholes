@@ -889,12 +889,10 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>,
                 const_counter = opt_func.get_const_counter(const_counter);
                 opt_func.append(String::from("let rhs_"));
                 opt_func.append(String::from(const_counter.to_string()));
-                opt_func.append(String::from(" : i32 = imm.into();\n"));
+                opt_func.append(String::from(" : i64 = imm.into();\n"));
                 opt_func.append(String::from("if rhs_"));
                 opt_func.append(String::from(const_counter.to_string()));
                 opt_func.append(String::from(" == "));
-                //opt_func.append(String::from("let rhs: i32 = imm.into();\n"));
-                //opt_func.append(String::from("if rhs == "));
                 opt_func.append(const_value.to_string());
                 opt_func.enter_scope(
                          ScopeType::scope_func,
