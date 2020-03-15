@@ -10,8 +10,8 @@ use cliftinstbuilder::{self, CtonInst, CtonValueDef,
 pub struct Opt {
     current_entity: String,
     func_str: String,
-    //scope_stack: Vec<ScopeType>,
     scope_stack: Vec<ScopeStack>,
+    const_stack: Vec<String>,
 }
 
 #[derive(Clone)]
@@ -33,6 +33,7 @@ impl Opt {
             current_entity: String::from("inst"),
             func_str: String::from(""),
             scope_stack: Vec::new(),
+            const_stack: Vec::new(),
         }
     }
 
@@ -73,6 +74,21 @@ impl Opt {
                 },
                 None => {},
             }
+        }
+    }
+
+    pub fn push_to_const_stack(&mut self, rhs: String) {
+        self.const_stack.push(rhs);
+    }
+
+    pub fn pop_from_const_stack(&mut self) -> String {
+        match self.const_stack.pop() {
+            Some(rhs) => {
+                rhs.to_string()
+            },
+            None => {
+                "".to_string()
+            },
         }
     }
 
@@ -495,11 +511,17 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>,
                                  ScopeType::scope_case,
                                  current_level);
                         opt_func.set_entity(String::from("opcode"));
-                        // FIXED: Generate: "let args_<counter> = args;"
                         opt_func.append(String::from("let args_"));
                         arg_counter = opt_func.get_argument_counter(arg_counter);
                         opt_func.append(String::from(" = arg;\n"));
-                        // FIXME: Add support for 'imm' part.
+                        // Push the rhs_<count> to ConstStack
+                        const_counter = opt_func.get_const_counter(const_counter);
+                        let mut rhs_arg = "rhs_".to_string();
+                        rhs_arg.push_str(&const_counter.to_string());
+                        opt_func.append(String::from("let "));
+                        opt_func.append(String::from(rhs_arg.to_string()));
+                        opt_func.append(String::from(" : i64 = imm.into();\n"));
+                        opt_func.push_to_const_stack(rhs_arg.to_string());
                     },
                     "IntCompareImm" => {
                         // FIXME: "args" part, make a connection
@@ -510,11 +532,17 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>,
                                  ScopeType::scope_case,
                                  current_level);
                         opt_func.set_entity(String::from("opcode"));
-                        // FIXED: Generate: "let args_<counter> = args;"
                         opt_func.append(String::from("let args_"));
                         arg_counter = opt_func.get_argument_counter(arg_counter);
                         opt_func.append(String::from(" = arg;\n"));
-                        // FIXME: Add support for 'imm' part.
+                        // Push the rhs_<count> to ConstStack
+                        const_counter = opt_func.get_const_counter(const_counter);
+                        let mut rhs_arg = "rhs_".to_string();
+                        rhs_arg.push_str(&const_counter.to_string());
+                        opt_func.append(String::from("let "));
+                        opt_func.append(String::from(rhs_arg.to_string()));
+                        opt_func.append(String::from(" : i64 = imm.into();\n"));
+                        opt_func.push_to_const_stack(rhs_arg.to_string());
                     },
                     _ => {
                         panic!("Error: This instruction data type is not yet handled");
@@ -887,11 +915,10 @@ pub fn generate_baseline_matcher(mut nodes: Vec<Node>,
                 // FIXME: fix width of the constant in rhs part
                 // Check Cranelift's instructions specifications
                 const_counter = opt_func.get_const_counter(const_counter);
-                opt_func.append(String::from("let rhs_"));
-                opt_func.append(String::from(const_counter.to_string()));
-                opt_func.append(String::from(" : i64 = imm.into();\n"));
-                opt_func.append(String::from("if rhs_"));
-                opt_func.append(String::from(const_counter.to_string()));
+                // FIXME: pop the rhs immediate arguments from the ConstStack
+                let rhs_arg = opt_func.pop_from_const_stack();
+                opt_func.append(String::from("if "));
+                opt_func.append(String::from(rhs_arg.to_string()));
                 opt_func.append(String::from(" == "));
                 opt_func.append(const_value.to_string());
                 opt_func.enter_scope(
