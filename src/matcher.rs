@@ -9,8 +9,9 @@ use cliftinstbuilder::{self, CtonInst, CtonValueDef, CtonInstKind, CtonOpcode, C
 pub struct Opt {
     current_entity: String,
     func_str: String,
-    //scope_stack: Vec<ScopeType>,
     scope_stack: Vec<ScopeStack>,
+    const_stack: Vec<String>,
+    const_table: HashMap<usize, String>,
 }
 
 #[derive(Clone)]
@@ -32,6 +33,8 @@ impl Opt {
             current_entity: String::from("inst"),
             func_str: String::from(""),
             scope_stack: Vec::new(),
+            const_stack: Vec::new(),
+            const_table: HashMap::new(),
         }
     }
 
@@ -69,6 +72,36 @@ impl Opt {
                 },
                 None => {},
             }
+        }
+    }
+
+    pub fn get_const_arg_from_hashTable(&mut self, level: usize) -> String {
+        match self.const_table.get(&level) {
+            Some(rhs) => {
+                rhs.to_string()
+            },
+            _ => {
+                "".to_string()
+            },
+        }
+    }
+
+    pub fn add_const_arg_to_hashTable(&mut self, arg: String, level: usize) {
+        self.const_table.insert(level, arg);
+    }
+
+    pub fn push_to_const_stack(&mut self, rhs: String) {
+        self.const_stack.push(rhs);
+    }
+
+    pub fn pop_from_const_stack(&mut self) -> String {
+        match self.const_stack.pop() {
+            Some(rhs) => {
+                rhs.to_string()
+            },
+            None => {
+                "".to_string()
+            },
         }
     }
 
@@ -293,20 +326,24 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
     for node in 0 .. arena.merged_tree.len() {
         action_flag = is_node_actionable(arena.merged_tree[node].id, rhs.clone());
         // dump: begin
-        //println!("Node ==== ============================================================");
-        //println!("\t\t Node Id = {}", arena.merged_tree[node].id);
-        //println!("\t\t Node Level = {}", arena.merged_tree[node].level);
-        //println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
-        //match arena.merged_tree[node].next.clone() {
-        //    Some(ids) => {
-        //        for i in 0 .. ids.len() {
-        //            println!("\t\t Node->next = {}", ids[i].index);
-        //        }
-        //    },
-        //    None => {
-        //        println!("No next\n")
-        //    },
-        //}
+        println!("Node ==== ===================================");
+        println!("\t\t Node Id = {}", arena.merged_tree[node].id);
+        println!("\t\t Actionable? = {}", action_flag);
+        println!("\t\t Node Type = {}",
+                  lhspatternmatcher::get_node_type(
+                  arena.merged_tree[node].clone().node_type));
+        println!("\t\t Node Level = {}", arena.merged_tree[node].level);
+        println!("\t\t Node Value = {}", arena.merged_tree[node].node_value);
+        match arena.merged_tree[node].next.clone() {
+            Some(ids) => {
+                for i in 0 .. ids.len() {
+                    println!("\t\t Node->next = {}", ids[i].index);
+                }
+            },
+            None => {
+                println!("No next\n")
+            },
+        }
         // dump: end
         match arena.merged_tree[node].node_type {
             NodeType::match_root => {
@@ -397,7 +434,14 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                         opt_func.append(String::from("let args_"));
                         arg_counter = opt_func.get_argument_counter(arg_counter);
                         opt_func.append(String::from(" = arg;\n"));
-                        // FIXME: Add support for 'imm' part.
+                        // Push the rhs_<count> to ConstStack
+                        const_counter = opt_func.get_const_counter(const_counter);
+                        let mut rhs_arg = "rhs_".to_string();
+                        rhs_arg.push_str(&const_counter.to_string());
+                        opt_func.append(String::from("let "));
+                        opt_func.append(String::from(rhs_arg.to_string()));
+                        opt_func.append(String::from(" : i64 = imm.into();\n"));
+                        opt_func.push_to_const_stack(rhs_arg.to_string());
                     },
                     "IntCompareImm" => {
                         // FIXME: "args" part, make a connection
@@ -412,7 +456,14 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                         opt_func.append(String::from("let args_"));
                         arg_counter = opt_func.get_argument_counter(arg_counter);
                         opt_func.append(String::from(" = arg;\n"));
-                        // FIXME: Add support for 'imm' part.
+                        // Push the rhs_<count> to ConstStack
+                        const_counter = opt_func.get_const_counter(const_counter);
+                        let mut rhs_arg = "rhs_".to_string();
+                        rhs_arg.push_str(&const_counter.to_string());
+                        opt_func.append(String::from("let "));
+                        opt_func.append(String::from(rhs_arg.to_string()));
+                        opt_func.append(String::from(" : i64 = imm.into();\n"));
+                        opt_func.push_to_const_stack(rhs_arg.to_string());
                     },
                     _ => {
                         panic!("Error: This instruction data type is not yet handled");
@@ -699,15 +750,22 @@ pub fn generate_matcher(mut arena: MergedArena, mut rhs: HashMap<usize, Vec<Cton
                 let const_value = &arena.merged_tree[node].node_value;
                 // FIXME: fix width of the constant in rhs part
                 // Check Cranelift's instructions specifications
-                const_counter = opt_func.get_const_counter(const_counter);
-                opt_func.append(String::from("let rhs_"));
-                opt_func.append(String::from(const_counter.to_string()));
-                opt_func.append(String::from(" : i32 = imm.into();\n"));
-                opt_func.append(String::from("if rhs_"));
-                opt_func.append(String::from(const_counter.to_string()));
+
+                let mut rhs_arg = opt_func.get_const_arg_from_hashTable(
+                                           current_level);
+                match rhs_arg.as_ref() {
+                    "" => {
+                        rhs_arg = opt_func.pop_from_const_stack();
+                        opt_func.add_const_arg_to_hashTable(rhs_arg.clone(),
+                                                            current_level);
+                        opt_func.append(String::from("if "));
+                    },
+                    _ => {
+                        opt_func.append(String::from("else if "));
+                    },
+                }
+                opt_func.append(String::from(rhs_arg.to_string()));
                 opt_func.append(String::from(" == "));
-                //opt_func.append(String::from("let rhs: i32 = imm.into();\n"));
-                //opt_func.append(String::from("if rhs == "));
                 opt_func.append(const_value.to_string());
                 opt_func.enter_scope(ScopeType::scope_func, current_level);
                 if action_flag {
