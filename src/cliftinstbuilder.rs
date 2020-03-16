@@ -585,7 +585,6 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     }
                 },
                 InstKind::Infer => {
-                    //println!("CtonBuilder: Infer\n");
                     CtonInst {
                         valuedef: CtonValueDef::NoneType,
                         kind: CtonInstKind::NoneType,
@@ -597,7 +596,6 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     }
                 },
                 InstKind::ResultInst => {
-                    //println!("CtonBuilder: Result\n");
                     CtonInst {
                         valuedef: CtonValueDef::NoneType,
                         kind: CtonInstKind::NoneType,
@@ -643,10 +641,6 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
 pub fn transform_souper_to_clift_insts(souper_insts: Vec<Inst>) -> Vec<CtonInst> {
     let mut cton_insts: Vec<CtonInst> = Vec::new();
     for souper_inst in souper_insts {
-        // get the mapping souper ISA to cretonne ISA
-        // And, insert each cton inst to a new vec<cton_inst>
-        // add more details to cton inst structure:
-        // name, binary/unary instruction data, 
         let cton_inst = mapping_souper_to_cton_isa(souper_inst);
         cton_insts.push(cton_inst);
     }

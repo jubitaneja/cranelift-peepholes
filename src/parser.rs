@@ -411,7 +411,10 @@ impl<'a> Parser<'a> {
                         Some(TokKind::Int(width, val)) => {
                             let ops = self.parse_ops();
                             //error checking on ops length
-                            assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
+                            assert!(ops.len() == 1,
+                                "expected one operand for infer \
+                                    instruction, but found {}",
+                                        ops.len());
                             self.create_inst(InstKind::ResultInst, "result", width, ops)
                         },
                         _ => {
@@ -462,7 +465,8 @@ impl<'a> Parser<'a> {
             },
             _ => {
                 // FIXME: Jubi: Build an error
-                panic!("Error: Either instruction should start with valname or identifier");
+                panic!("Error: Either instruction \
+                    should start with valname or identifier");
             },
         }
     }
@@ -488,24 +492,29 @@ pub fn parse(text: &str) -> Vec<Inst> {
                     },
                     _ => {
                         let LHS = inst.lhs;
-                        // Debug
-                        //println!("Inserting into hashMap ==============>>>>\n");
-                        //println!("Inst = {}\n", p.get_kind_name(inst.kind.clone()));
                         insts.push(inst);
-                        // create hashmap and keep inserting valnames + index pair
-                        // Debug
-                        //println!("LHS = {} : Idx = {}\n", LHS, insts.len()-1);
+                        // create hashmap and keep
+                        // inserting valnames + index pair
                         p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
+                        // Debug
+                        // println!("Inserting into hashMap in parser====\n");
+                        // println!("Inst = {}\n",
+                        //     p.get_kind_name(inst.kind.clone()));
+                        // println!("LHS = {} : Idx = {}\n",
+                        //     LHS, insts.len()-1);
                     },
                 }
             },
         }
     }
+
     // Debug
-    //println!("\n******* Debugging the hashtable for LHS name to Index ***\n");
-    //for (key, val) in p.lhsValNames_to_Idx {
-    //    println!("LHS = {}, Idx = {}\n", key, val);
-    //}
-    //println!("\n*********************************************************\n");
+    // println!("\n******* Debugging the hashtable for \
+    //     LHS name to Index ***\n");
+    // for (key, val) in p.lhsValNames_to_Idx {
+    //     println!("LHS = {}, Idx = {}\n", key, val);
+    // }
+    // println!("\n*******************\n");
+
     insts
 }

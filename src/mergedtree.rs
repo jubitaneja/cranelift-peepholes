@@ -215,31 +215,28 @@ impl MergedArena {
     }
 }
 
-pub fn generate_merged_prefix_tree(single_tree: Vec<Node>, mut merged_arena: MergedArena) -> MergedArena {
+pub fn generate_merged_prefix_tree(
+    single_tree: Vec<Node>,
+    mut merged_arena: MergedArena
+) -> MergedArena {
+
     if merged_arena.merged_tree.len() == 0 {
         let root_node = merged_arena.build_root_node();
         merged_arena.add_node_to_arena(root_node);
     }
 
-    let top_node = merged_arena.get_top_node_of_opt_pattern(single_tree.clone());
-    let top_val = merged_arena.get_value_of_node(top_node.clone());
-    let top_id = merged_arena.get_id_of_node(top_node.clone());
+    let top_node =
+        merged_arena.get_top_node_of_opt_pattern(
+            single_tree.clone());
+    let top_val =
+        merged_arena.get_value_of_node(top_node.clone());
+    let top_id =
+        merged_arena.get_id_of_node(top_node.clone());
 
     let found_root = merged_arena.find_node_with_id_in_arena(0);
     if merged_arena.is_node_dummy(found_root.clone()) {
         panic!("Error: the node is expected to be found in merged arena");
     }
-
-    //if merged_arena.is_node_dummy(found_root) {
-    //  error "root node is expected to have an id = 0 and it is not found in arena"
-    //}
-    //println!("**** found root node with value = {}", found_root.node_value);
-    // Debug
-    //if let Some(nodes_list) = found_root.next.clone() {
-    //    for x in  0 .. nodes_list.len() {
-    //        println!("root->next ====== {}", nodes_list[x].index);
-    //    }
-    //}
 
     if !merged_arena.node_has_any_connection(found_root.clone()) {
         // case 1

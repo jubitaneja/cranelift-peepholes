@@ -290,7 +290,7 @@ impl Opt {
                 insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(
                                    each_inst.opcode);
                 insert_inst_str += &"(".to_owned();
-                // FIXME: fix the args names and count of args here
+                // [Pending] FIXME: fix the args names and count of args here
                 insert_inst_str += &"args[0], args[1]".to_owned();
                 insert_inst_str += &");\n".to_owned();
                 self.func_str.push_str(&insert_inst_str);

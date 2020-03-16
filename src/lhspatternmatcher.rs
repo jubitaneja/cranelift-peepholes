@@ -584,19 +584,24 @@ impl Arena {
     }
 }
 
-pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>,
-                                     global_count: usize) -> Vec<Node> {
-    let infer_clift_inst = get_infer_clift_inst(clift_insts.clone());
-    let infer_clift_ops = get_infer_clift_op(infer_clift_inst);
-    let index_from_infer_clift_op = get_index_from_infer_clift_op(infer_clift_ops);
-    let inst_at_infer_op_idx = &clift_insts[index_from_infer_clift_op];
+pub fn generate_single_tree_patterns(
+    clift_insts: Vec<CtonInst>,
+    global_count: usize) -> Vec<Node> {
+
+    let infer_clift_inst =
+        get_infer_clift_inst(clift_insts.clone());
+    let infer_clift_ops =
+        get_infer_clift_op(infer_clift_inst);
+    let index_from_infer_clift_op =
+        get_index_from_infer_clift_op(infer_clift_ops);
+    let inst_at_infer_op_idx =
+        &clift_insts[index_from_infer_clift_op];
 
     /// Create Arena and initialize it
     let mut arena = Arena::new(global_count);
     arena.clift_insts = clift_insts.clone();
     let all_nodes = arena.build_sequence_of_nodes(inst_at_infer_op_idx);
 
-//    // just for debugging puprose
     //println!("--------------------------------");
     //for n in 0 .. all_nodes.len() {
     //    println!("Node id = {}", all_nodes[n].id);
