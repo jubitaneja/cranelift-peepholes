@@ -1,9 +1,10 @@
 // Parser for souper tokens
 
+use lexer::{self, Lexer, LocatedError, LocatedToken, Location, TokKind};
 use std::collections::HashMap;
-use lexer::{self, Lexer, TokKind, Location, LocatedToken, LocatedError};
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub enum InstKind {
     Var,
     Const,
@@ -46,7 +47,7 @@ pub struct SouperOperand {
     pub kind: SouperOpType,
     // what should be the type of constants values?
     pub idx_val: Option<usize>,
-    pub const_val: Option<i32>,//FIXME: fix this width of const value to i64 or something else?
+    pub const_val: Option<i32>, //FIXME: fix this width of const value to i64 or something else?
     pub width: u32,
 }
 
@@ -80,8 +81,7 @@ pub struct Parser<'a> {
     var_count: u32,
 
     // hash map of LHS valnames to Index values
-    lhsValNames_to_Idx: HashMap<&'a str, usize>,
-
+    lhs_val_names_to_idx: HashMap<&'a str, usize>,
 }
 
 impl<'a> Parser<'a> {
@@ -95,7 +95,7 @@ impl<'a> Parser<'a> {
             lhs_valname: "",
             width: 0,
             var_count: 0,
-            lhsValNames_to_Idx: HashMap::new(),
+            lhs_val_names_to_idx: HashMap::new(),
         }
     }
 
@@ -112,7 +112,13 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn create_inst(&mut self, instkind: InstKind, instname: &'a str, instwidth: u32, ops: Vec<SouperOperand>) -> Inst<'a> {
+    fn create_inst(
+        &mut self,
+        instkind: InstKind,
+        instname: &'a str,
+        instwidth: u32,
+        ops: Vec<SouperOperand>,
+    ) -> Inst<'a> {
         // return the inst struct with details
         // FIXME: add more details later if required
         // Add Ops details too here: Major TODO
@@ -155,6 +161,7 @@ impl<'a> Parser<'a> {
     }
 
     // return souper inst kind name for the given inst kind
+    #[allow(dead_code)]
     fn get_kind_name(&mut self, kind: InstKind) -> String {
         match kind {
             InstKind::Var => "var".to_string(),
@@ -184,13 +191,14 @@ impl<'a> Parser<'a> {
     }
 
     // print token name
+    #[allow(dead_code)]
     fn get_token_name(&mut self) {
         match self.lookahead {
-            Some(TokKind::ValName(lhs, width)) => println!("ValName "),
-            Some(TokKind::Ident(text)) => println!("Ident "),
+            Some(TokKind::ValName(..)) => println!("ValName "),
+            Some(TokKind::Ident(..)) => println!("Ident "),
             Some(TokKind::Comma) => println!("Comma "),
             Some(TokKind::Equal) => println!("Eq "),
-            Some(TokKind::Int(width, constVal)) => println!("Int "),
+            Some(TokKind::Int(..)) => println!("Int "),
             Some(TokKind::Eof) => println!("EOF "),
             Some(TokKind::Error) => println!("Error "),
             Some(TokKind::UntypedInt) => println!("Untypedint "),
@@ -204,26 +212,27 @@ impl<'a> Parser<'a> {
         match x {
             Some(TokKind::Error) => {
                 // do something here to build an error msg
-            },
-            _=> {
-                match self.lex.get_next_token() {
-                    Some(Ok(LocatedToken {kind, location})) => {
-                        self.lookahead = Some(kind);
-                        self.loc = location;
-                    },
-                    Some(Err(LocatedError{error, errmsg, location})) => {
-                        self.lex_error = Some(error);
-                        self.loc = location;
-                    },
-                    _ => {
-                        println!("Error: in consume_token(), invalid token type");
-                    },
+            }
+            _ => match self.lex.get_next_token() {
+                Some(Ok(LocatedToken { kind, location })) => {
+                    self.lookahead = Some(kind);
+                    self.loc = location;
+                }
+                Some(Err(LocatedError {
+                    error, location, ..
+                })) => {
+                    self.lex_error = Some(error);
+                    self.loc = location;
+                }
+                _ => {
+                    println!("Error: in consume_token(), invalid token type");
                 }
             },
         }
         self.lookahead.clone()
     }
 
+    #[allow(dead_code)]
     pub fn is_eof(&mut self) -> bool {
         match self.lookahead {
             Some(TokKind::Eof) => true,
@@ -242,7 +251,7 @@ impl<'a> Parser<'a> {
             match self.lookahead {
                 Some(TokKind::Comma) => {
                     self.consume_token();
-                },
+                }
                 _ => break,
             }
         }
@@ -253,7 +262,7 @@ impl<'a> Parser<'a> {
         match self.lookahead {
             Some(TokKind::ValName(lhs, width)) => {
                 let mut value = None;
-                for (key, val) in &self.lhsValNames_to_Idx {
+                for (key, val) in &self.lhs_val_names_to_idx {
                     if key == &lhs {
                         value = Some(*val);
                     }
@@ -266,8 +275,8 @@ impl<'a> Parser<'a> {
                     const_val: None,
                     width: width,
                 }
-            },
-            Some(TokKind::Int(width, constVal)) => {
+            }
+            Some(TokKind::Int(width, const_val)) => {
                 // get the value of const
                 // build const inst
                 // Inst I = IC.getConst()
@@ -276,10 +285,10 @@ impl<'a> Parser<'a> {
                 SouperOperand {
                     kind: SouperOpType::Constant,
                     idx_val: None,
-                    const_val: Some(constVal),
+                    const_val: Some(const_val),
                     width: width,
                 }
-            },
+            }
             Some(TokKind::UntypedInt) => {
                 // get the value of const
                 // build untyped const inst
@@ -289,13 +298,13 @@ impl<'a> Parser<'a> {
                 SouperOperand {
                     kind: SouperOpType::Constant,
                     idx_val: None,
-                    const_val: Some(0),//FIXME: should it be None? verify again
+                    const_val: Some(0), //FIXME: should it be None? verify again
                     width: 0,
                 }
-            },
+            }
             _ => {
                 panic!("unexpected token type of Op");
-            },
+            }
         }
     }
 
@@ -314,9 +323,9 @@ impl<'a> Parser<'a> {
                     let instwidth = self.width.clone();
 
                     self.create_var(InstKind::Var, instname, instwidth)
-                },
+                }
                 _ => {
-                    let instKind = self.get_inst_kind(text);
+                    let inst_kind = self.get_inst_kind(text);
 
                     // Start parsing Ops
                     self.consume_token();
@@ -325,13 +334,13 @@ impl<'a> Parser<'a> {
                     //println!("Build {} instruction", text);
                     // TODO: return the build instruction
                     // IC.getInst(instwidth, instkind, ops)
-                    //Some(self.create_inst(instKind, self.lhs_valname.clone()))
+                    //Some(self.create_inst(inst_kind, self.lhs_valname.clone()))
                     let instname = self.lhs_valname.clone();
                     let instwidth = self.width.clone();
 
                     // TODO: Add width to these insts
-                    self.create_inst(instKind, instname, instwidth, ops)
-                },
+                    self.create_inst(inst_kind, instname, instwidth, ops)
+                }
             }
         } else {
             panic!("Error: fn: parse_inst_types()");
@@ -356,17 +365,11 @@ impl<'a> Parser<'a> {
 
                 // Look for ident tokens like, var; add; phi; etc.
                 match self.lookahead {
-                    Some(TokKind::Ident(text)) => {
-                        self.parse_inst_types()
-                    },
-                    _ => {
-                        panic!("Error: Expected a valid Identifier after ValName -> Eq token");
-                    },
+                    Some(TokKind::Ident(_text)) => self.parse_inst_types(),
+                    _ => panic!("Error: Expected a valid Identifier after ValName -> Eq token"),
                 }
-            },
-            _ => {
-                panic!("Error: Expected Eq token followed by Valname token");
-            },
+            }
+            _ => panic!("Error: Expected Eq token followed by Valname token"),
         }
     }
 
@@ -378,50 +381,59 @@ impl<'a> Parser<'a> {
                 InstKind::Infer => {
                     self.consume_token();
                     match self.lookahead {
-                        Some(TokKind::ValName(lhs, width)) => {
+                        Some(TokKind::ValName(_lhs, width)) => {
                             let ops = self.parse_ops();
                             //error checking on ops length
-                            assert!(ops.len() == 1,
-                                    "expected one operand for infer instruction, but found {}", ops.len());
+                            assert!(
+                                ops.len() == 1,
+                                "expected one operand for infer instruction, but found {}",
+                                ops.len()
+                            );
                             //println!("Parser Build Infer instruction");
                             //self.create_inst(InstKind::Infer, lhs, width, ops)
                             //FIXED
                             self.create_inst(InstKind::Infer, "infer", width, ops)
-                        },
+                        }
                         _ => {
                             panic!("unexpected infer instruction operand");
                         }
                     }
-                },
+                }
                 InstKind::ResultInst => {
                     self.consume_token();
                     match self.lookahead {
-                        Some(TokKind::ValName(lhs, width)) => {
+                        Some(TokKind::ValName(_lhs, width)) => {
                             let ops = self.parse_ops();
                             //error checking on ops length
-                            assert!(ops.len() == 1, "expected one operand for infer instruction, but found {}", ops.len());
+                            assert!(
+                                ops.len() == 1,
+                                "expected one operand for infer instruction, but found {}",
+                                ops.len()
+                            );
                             //println!("Parsing build Result Inst\n");
                             //self.create_inst(InstKind::ResultInst, lhs, width, ops)
                             //FIXED
                             self.create_inst(InstKind::ResultInst, "result", width, ops)
-                        },
+                        }
                         // Result inst can have a typed int as an operand as well.
                         // We will make it a rule that Souper's result inst *DOES NOT*
                         // have any untyped constant operand.
-                        Some(TokKind::Int(width, val)) => {
+                        Some(TokKind::Int(width, _val)) => {
                             let ops = self.parse_ops();
                             //error checking on ops length
-                            assert!(ops.len() == 1,
+                            assert!(
+                                ops.len() == 1,
                                 "expected one operand for infer \
                                     instruction, but found {}",
-                                        ops.len());
+                                ops.len()
+                            );
                             self.create_inst(InstKind::ResultInst, "result", width, ops)
-                        },
+                        }
                         _ => {
                             panic!("unexpected result instruction operand");
                         }
                     }
-                },
+                }
                 _ => {
                     panic!("unexpected identifier instruction kind");
                 }
@@ -447,27 +459,25 @@ impl<'a> Parser<'a> {
     fn parse_inst(&mut self) -> Inst<'a> {
         // Instructions start either with valname or Ident
         // Example:
-        // %1:i32 = .... 
+        // %1:i32 = ....
         // cand ... , infer ... , result ...
-        // pc ... , blockpc ... , 
+        // pc ... , blockpc ... ,
 
         match self.lookahead {
             Some(TokKind::ValName(lhs, width)) => {
                 self.lhs_valname = lhs;
                 self.width = width;
                 self.parse_valname_inst()
-            },
-            Some(TokKind::Ident(text)) => {
-                self.parse_ident_inst()
-            },
-            Some(TokKind::Implies) => {
-                self.parse_implies_dummy_inst()
-            },
+            }
+            Some(TokKind::Ident(_)) => self.parse_ident_inst(),
+            Some(TokKind::Implies) => self.parse_implies_dummy_inst(),
             _ => {
                 // FIXME: Jubi: Build an error
-                panic!("Error: Either instruction \
-                    should start with valname or identifier");
-            },
+                panic!(
+                    "Error: Either instruction \
+                    should start with valname or identifier"
+                );
+            }
         }
     }
 }
@@ -489,29 +499,29 @@ pub fn parse(text: &str) -> Vec<Inst> {
                 match inst.kind {
                     InstKind::Implies => {
                         continue;
-                    },
+                    }
                     _ => {
-                        let LHS = inst.lhs;
+                        let lhs = inst.lhs;
                         insts.push(inst);
                         // create hashmap and keep
                         // inserting valnames + index pair
-                        p.lhsValNames_to_Idx.insert(LHS, insts.len()-1);
+                        p.lhs_val_names_to_idx.insert(lhs, insts.len() - 1);
                         // Debug
                         // println!("Inserting into hashMap in parser====\n");
                         // println!("Inst = {}\n",
                         //     p.get_kind_name(inst.kind.clone()));
                         // println!("LHS = {} : Idx = {}\n",
-                        //     LHS, insts.len()-1);
-                    },
+                        //     lhs, insts.len()-1);
+                    }
                 }
-            },
+            }
         }
     }
 
     // Debug
     // println!("\n******* Debugging the hashtable for \
     //     LHS name to Index ***\n");
-    // for (key, val) in p.lhsValNames_to_Idx {
+    // for (key, val) in p.lhs_val_names_to_idx {
     //     println!("LHS = {}, Idx = {}\n", key, val);
     // }
     // println!("\n*******************\n");
