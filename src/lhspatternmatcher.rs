@@ -1,7 +1,6 @@
 // LHS Pattern matcher
 
-use cliftinstbuilder::{self, CtonInst, CtonValueDef,
-                       CtonInstKind, CtonOpcode, CtonOperand};
+use cliftinstbuilder::{self, CtonInst, CtonInstKind, CtonOpcode, CtonOperand, CtonValueDef};
 
 pub struct Arena {
     nodes: Vec<Node>,
@@ -49,18 +48,17 @@ pub struct Node_Index {
 }
 
 /// Helper functions
-pub fn get_arg_name_for_binaryImm(index: usize,
-                                  argtype: String) -> String {
+pub fn get_arg_name_for_binaryImm(index: usize, argtype: String) -> String {
     let mut arg = "".to_string();
     match argtype.as_ref() {
         "index" => {
             arg = "arg".to_string();
             arg
-        },
+        }
         "const" => {
             arg = "imm".to_string();
             arg
-        },
+        }
         _ => panic!("BinaryImm inst can only have operands index 0|1\n"),
     }
 }
@@ -89,10 +87,10 @@ pub fn get_infer_clift_inst(clift_insts: Vec<CtonInst>) -> CtonInst {
             CtonOpcode::Infer => {
                 infer_inst = inst;
                 break;
-            },
+            }
             _ => {
                 continue;
-            },
+            }
         }
     }
     infer_inst
@@ -103,10 +101,9 @@ pub fn get_infer_clift_op(infer_inst: CtonInst) -> Vec<CtonOperand> {
     let infer_ops = infer_inst.cops;
     match infer_ops {
         Some(ops) => {
-            assert_eq!(ops.len(), 1,
-                       "Infer instruction must have only one operand");
+            assert_eq!(ops.len(), 1, "Infer instruction must have only one operand");
             ops
-        },
+        }
         None => panic!("Infer instruction must have one operand"),
     }
 }
@@ -115,12 +112,14 @@ pub fn get_infer_clift_op(infer_inst: CtonInst) -> Vec<CtonOperand> {
 pub fn get_index_from_infer_clift_op(infer_ops: Vec<CtonOperand>) -> usize {
     let mut idx: usize = 0;
     for op in infer_ops {
-        assert_eq!(op.const_val, None,
-                   "operand of infer inst must be an index to another inst");
+        assert_eq!(
+            op.const_val, None,
+            "operand of infer inst must be an index to another inst"
+        );
         match op.idx_val {
             Some(index) => {
                 idx = index;
-            },
+            }
             None => panic!("operand of infer inst must have a valid index value to another inst"),
         }
     }
@@ -130,9 +129,7 @@ pub fn get_index_from_infer_clift_op(infer_ops: Vec<CtonOperand>) -> usize {
 pub fn get_total_number_of_args(inst: &CtonInst) -> usize {
     let ops = inst.cops.clone();
     match ops {
-        Some(ops_list) => {
-            ops_list.len()
-        },
+        Some(ops_list) => ops_list.len(),
         None => 0,
     }
 }
@@ -180,8 +177,7 @@ impl Arena {
         }
     }
 
-    pub fn build_instdata_node(&mut self,
-                               clift_inst: &CtonInst) -> Node {
+    pub fn build_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
         Node {
             node_type: NodeType::match_instdata,
             node_value: "instdata".to_string(),
@@ -194,8 +190,7 @@ impl Arena {
         }
     }
 
-    pub fn build_specific_instdata_node(&mut self,
-                                        clift_inst: &CtonInst) -> Node {
+    pub fn build_specific_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
         let instdata_val = clift_inst.kind.clone();
         Node {
             node_type: NodeType::inst_type,
@@ -209,8 +204,7 @@ impl Arena {
         }
     }
 
-    pub fn build_opcode_node(&mut self,
-                             clift_inst: &CtonInst) -> Node {
+    pub fn build_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
         Node {
             node_type: NodeType::match_opcode,
             node_value: "opcode".to_string(),
@@ -223,13 +217,11 @@ impl Arena {
         }
     }
 
-    pub fn build_specific_opcode_node(&mut self,
-                                      clift_inst: &CtonInst) -> Node {
+    pub fn build_specific_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
         let width_val = clift_inst.width.clone();
         Node {
             node_type: NodeType::opcode,
-            node_value: cliftinstbuilder::get_clift_opcode_name(
-                        clift_inst.opcode.clone()),
+            node_value: cliftinstbuilder::get_clift_opcode_name(clift_inst.opcode.clone()),
             width: width_val,
             id: self.count,
             var_id: clift_inst.var_num.clone(),
@@ -239,8 +231,7 @@ impl Arena {
         }
     }
 
-    pub fn build_cond_node(&mut self,
-                           clift_inst: &CtonInst) -> Node {
+    pub fn build_cond_node(&mut self, clift_inst: &CtonInst) -> Node {
         Node {
             node_type: NodeType::match_cond,
             node_value: "cond".to_string(),
@@ -253,8 +244,7 @@ impl Arena {
         }
     }
 
-    pub fn build_specific_cond_node(&mut self,
-                                    clift_inst: &CtonInst) -> Node {
+    pub fn build_specific_cond_node(&mut self, clift_inst: &CtonInst) -> Node {
         let cond_val = clift_inst.cond.clone();
         let width_val = clift_inst.width.clone();
         Node {
@@ -269,36 +259,37 @@ impl Arena {
         }
     }
 
-    pub fn set_next_of_prev_node(&mut self,
-                                 current: Node,
-                                 mut previous: Node) -> Node {
+    pub fn set_next_of_prev_node(&mut self, current: Node, mut previous: Node) -> Node {
         let mut next_ids: Vec<NodeID> = Vec::new();
-        next_ids.push(NodeID{ index: current.id, });
+        next_ids.push(NodeID { index: current.id });
         previous.next = Some(next_ids);
         previous
     }
 
-    pub fn set_next_of_current_node_by_default(&mut self,
-                                               mut current: Node) -> Node {
+    pub fn set_next_of_current_node_by_default(&mut self, mut current: Node) -> Node {
         let mut next_ids: Vec<NodeID> = Vec::new();
-        next_ids.push(NodeID{ index: self.count.clone() });
+        next_ids.push(NodeID {
+            index: self.count.clone(),
+        });
         current.next = Some(next_ids);
         current
     }
 
-    pub fn build_separate_arg_node(&mut self,
-                                   argtype: String,
-                                   arg: usize,
-                                   parent_instdata: String) -> Node {
+    pub fn build_separate_arg_node(
+        &mut self,
+        argtype: String,
+        arg: usize,
+        parent_instdata: String,
+    ) -> Node {
         let mut node_val = "".to_string();
         match parent_instdata.as_ref() {
             "BinaryImm" | "IntCompareImm" => {
                 node_val = get_arg_name_for_binaryImm(arg, argtype);
-            },
+            }
             _ => {
                 // Binary, Var, Unary
                 node_val = get_arg_name(arg);
-            },
+            }
         }
         Node {
             node_type: NodeType::match_args,
@@ -312,12 +303,9 @@ impl Arena {
         }
     }
 
-    pub fn build_valdef_node(&mut self,
-                             clift_inst: &CtonInst) -> Node {
-        let k = cliftinstbuilder::get_clift_instdata_name(
-                                  clift_inst.kind.clone());
-        let p = cliftinstbuilder::get_clift_opcode_name(
-                                  clift_inst.opcode.clone());
+    pub fn build_valdef_node(&mut self, clift_inst: &CtonInst) -> Node {
+        let k = cliftinstbuilder::get_clift_instdata_name(clift_inst.kind.clone());
+        let p = cliftinstbuilder::get_clift_opcode_name(clift_inst.opcode.clone());
         let valdef = clift_inst.valuedef.clone();
         Node {
             node_type: NodeType::match_valdef,
@@ -333,8 +321,7 @@ impl Arena {
 
     // FIXME: fix constant width to i64, maybe? depending on const value
     // width in SouperOperand and CtonOperand
-    pub fn build_constant_node(&mut self,
-                               constant: i32) -> Node {
+    pub fn build_constant_node(&mut self, constant: i32) -> Node {
         // FIXME: Fix the width of constant
         Node {
             node_type: NodeType::match_const,
@@ -362,10 +349,9 @@ impl Arena {
         }
     }
 
-    pub fn get_node_with_id(&mut self,
-                            idx: usize) -> Option<Node_Index> {
+    pub fn get_node_with_id(&mut self, idx: usize) -> Option<Node_Index> {
         let mut ret_node = None;
-        for n in 0 .. self.nodes.clone().len() {
+        for n in 0..self.nodes.clone().len() {
             let node_id = self.nodes[n].clone().id;
             if node_id == idx {
                 ret_node = Some(Node_Index {
@@ -379,9 +365,11 @@ impl Arena {
         ret_node
     }
 
-    pub fn get_clift_op_type_from_arg_num(&mut self,
-                                          clift_inst: &CtonInst,
-                                          arg_num: usize) -> String {
+    pub fn get_clift_op_type_from_arg_num(
+        &mut self,
+        clift_inst: &CtonInst,
+        arg_num: usize,
+    ) -> String {
         let mut list_ops = Vec::new();
         let cops = &clift_inst.cops;
         match cops {
@@ -390,61 +378,54 @@ impl Arena {
                     match op.idx_val {
                         Some(idx) => {
                             list_ops.push("index");
-                        },
-                        None => {},
+                        }
+                        None => {}
                     }
                     match op.const_val {
                         Some(c) => {
                             list_ops.push("const");
-                        },
-                        None => {},
+                        }
+                        None => {}
                     }
                 }
-            },
-            None => {},
+            }
+            None => {}
         }
         list_ops[arg_num].to_string()
     }
 
-    pub fn build_args_node(&mut self,
-                           clift_inst: &CtonInst,
-                           parent_instdata: String) {
+    pub fn build_args_node(&mut self, clift_inst: &CtonInst, parent_instdata: String) {
         let total_args = get_total_number_of_args(clift_inst);
-        for op in 0 .. total_args {
-            let op_type = self.get_clift_op_type_from_arg_num(
-                               clift_inst,
-                               op);;
-            let named_arg_node = self.build_separate_arg_node(
-                                      op_type,
-                                      op,
-                                      parent_instdata.clone());
-            
+        for op in 0..total_args {
+            let op_type = self.get_clift_op_type_from_arg_num(clift_inst, op);
+            let named_arg_node = self.build_separate_arg_node(op_type, op, parent_instdata.clone());
+
             //set next of node before named arg node
             let c = self.count.clone();
-            let node_x = self.get_node_with_id(c-1);
+            let node_x = self.get_node_with_id(c - 1);
 
             match node_x {
                 Some(Node_Index { mut node, index }) => {
                     let mut next_ids: Vec<NodeID> = Vec::new();
-                    next_ids.push(NodeID{ index: self.count });
+                    next_ids.push(NodeID { index: self.count });
                     node.next = Some(next_ids);
                     self.nodes[index] = node;
-                },
+                }
                 None => {
-                    panic!("No node with the id = {} found in arena", self.count-1);
+                    panic!("No node with the id = {} found in arena", self.count - 1);
                 }
             }
-            
+
             self.update_count();
 
             // FIXME: valdef node has to be constructed
             // while traversing the ops types
             // not the instruction types
             // take it down to clift_inst.cops part
-            
+
             let mut arg_valdef_node = self.build_default_node();
             let cops = clift_inst.cops.clone();
-            
+
             match cops.clone() {
                 Some(ops) => {
                     let arg = &ops[op];
@@ -452,7 +433,7 @@ impl Arena {
                         Some(idx) => {
                             let root_inst = &self.clift_insts[idx].clone();
                             arg_valdef_node = self.build_valdef_node(root_inst);
-                        },
+                        }
                         None => {
                             // TODO: deal with constants later
                             // here if valdef is diff. for consts
@@ -461,31 +442,29 @@ impl Arena {
                                     // Build just a named "constant" node, later
                                     // build a const node with const value in it.
                                     arg_valdef_node = self.build_plain_constant_node();
-                                },
+                                }
                                 None => {
                                     panic!("clift inst op must have either an idx or const value")
-                                },
+                                }
                             }
-                        },
+                        }
                     }
-                },
+                }
                 None => {
                     println!("Expected args of an inst here\n");
-                },
+                }
             }
             //let arg_valdef_node = self.build_valdef_node(clift_inst);
 
             // set the connection b/w above two nodes
-            let updated_named_arg_node = self.set_next_of_prev_node(
-                                              arg_valdef_node.clone(),
-                                              named_arg_node.clone());
+            let updated_named_arg_node =
+                self.set_next_of_prev_node(arg_valdef_node.clone(), named_arg_node.clone());
 
             self.update_count();
-            // set next of valdef node because it's 
+            // set next of valdef node because it's
             // sure to have some nodes after this
-            let updated_valdef_node = self.set_next_of_current_node_by_default(
-                                           arg_valdef_node.clone());
-
+            let updated_valdef_node =
+                self.set_next_of_current_node_by_default(arg_valdef_node.clone());
 
             self.nodes.push(updated_named_arg_node);
             self.nodes.push(updated_valdef_node);
@@ -515,54 +494,51 @@ impl Arena {
                             }
                         },
                     }
-                },
+                }
                 None => {
-                    panic!("The clift instruction is expected to have {} operands", total_args);
+                    panic!(
+                        "The clift instruction is expected to have {} operands",
+                        total_args
+                    );
                 }
             }
         }
     }
 
-    pub fn build_sequence_of_nodes(&mut self,
-                                   clift_inst: &CtonInst) -> Vec<Node> {
+    pub fn build_sequence_of_nodes(&mut self, clift_inst: &CtonInst) -> Vec<Node> {
         let node_instdata = self.build_instdata_node(clift_inst);
         self.update_count();
 
         let node_specific_inst = self.build_specific_instdata_node(clift_inst);
         self.update_count();
 
-        let updated_instdata = self.set_next_of_prev_node(
-                               node_specific_inst.clone(),
-                               node_instdata.clone());
+        let updated_instdata =
+            self.set_next_of_prev_node(node_specific_inst.clone(), node_instdata.clone());
 
         let node_opcode = self.build_opcode_node(clift_inst);
         self.update_count();
 
-        let updated_spec_inst = self.set_next_of_prev_node(
-                                node_opcode.clone(),
-                                node_specific_inst.clone());
+        let updated_spec_inst =
+            self.set_next_of_prev_node(node_opcode.clone(), node_specific_inst.clone());
 
         let node_specific_opcode = self.build_specific_opcode_node(clift_inst);
         self.update_count();
 
-        let updated_opcode = self.set_next_of_prev_node(
-                             node_specific_opcode.clone(),
-                             node_opcode.clone());
+        let updated_opcode =
+            self.set_next_of_prev_node(node_specific_opcode.clone(), node_opcode.clone());
 
         if node_specific_opcode.node_value.clone().contains("icmp") {
             let node_cond = self.build_cond_node(clift_inst);
             self.update_count();
 
-            let updated_spec_opcode = self.set_next_of_prev_node(
-                                      node_cond.clone(),
-                                      node_specific_opcode.clone());
+            let updated_spec_opcode =
+                self.set_next_of_prev_node(node_cond.clone(), node_specific_opcode.clone());
 
             let node_specific_cond = self.build_specific_cond_node(clift_inst);
             self.update_count();
 
-            let updated_cond = self.set_next_of_prev_node(
-                               node_specific_cond.clone(),
-                               node_cond.clone());
+            let updated_cond =
+                self.set_next_of_prev_node(node_specific_cond.clone(), node_cond.clone());
 
             self.nodes.push(updated_instdata.clone());
             self.nodes.push(updated_spec_inst.clone());
@@ -577,25 +553,17 @@ impl Arena {
             self.nodes.push(node_specific_opcode);
         }
 
-        self.build_args_node(clift_inst,
-                             node_specific_inst.clone().node_value);
+        self.build_args_node(clift_inst, node_specific_inst.clone().node_value);
 
         self.nodes.clone()
     }
 }
 
-pub fn generate_single_tree_patterns(
-    clift_insts: Vec<CtonInst>,
-    global_count: usize) -> Vec<Node> {
-
-    let infer_clift_inst =
-        get_infer_clift_inst(clift_insts.clone());
-    let infer_clift_ops =
-        get_infer_clift_op(infer_clift_inst);
-    let index_from_infer_clift_op =
-        get_index_from_infer_clift_op(infer_clift_ops);
-    let inst_at_infer_op_idx =
-        &clift_insts[index_from_infer_clift_op];
+pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>, global_count: usize) -> Vec<Node> {
+    let infer_clift_inst = get_infer_clift_inst(clift_insts.clone());
+    let infer_clift_ops = get_infer_clift_op(infer_clift_inst);
+    let index_from_infer_clift_op = get_index_from_infer_clift_op(infer_clift_ops);
+    let inst_at_infer_op_idx = &clift_insts[index_from_infer_clift_op];
 
     /// Create Arena and initialize it
     let mut arena = Arena::new(global_count);

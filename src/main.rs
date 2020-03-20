@@ -1,29 +1,31 @@
 // Main function to invoke lexer, parser, codegen modules
 
+use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::collections::HashMap;
 
-mod lexer;
-mod parser;
+mod baseline_matcher;
 mod cliftinstbuilder;
+mod lexer;
 mod lhspatternmatcher;
+mod matcher;
+mod mergedtree;
+mod parser;
 mod rhscliftinsts;
 mod tablerhs;
-mod mergedtree;
-mod matcher;
-mod baseline_matcher;
 
 use mergedtree::MergedArena;
 
-fn main () {
+fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 3 {
-        panic!("ERROR: Expecting arguments list \
+        panic!(
+            "ERROR: Expecting arguments list \
                 '<file_name> <mode>'. mode can be \
-                'baseline' or 'fast'");
+                'baseline' or 'fast'"
+        );
     }
 
     let filename = &args[1];
@@ -46,8 +48,8 @@ fn main () {
 
     let splitter = contents.split(souper_delimiter);
     let mut merged_arena = MergedArena {
-         merged_tree: Vec::new(),
-         hmap: HashMap::new(),
+        merged_tree: Vec::new(),
+        hmap: HashMap::new(),
     };
     let mut rhs_table = HashMap::new();
     let mut global_nodes_count: usize = 0;
@@ -59,12 +61,9 @@ fn main () {
 
         // Parsing
         let souper_insts = parser::parse(&s);
-    
+
         // Cranelift Instruction Building
-        let clift_insts =
-            cliftinstbuilder::transform_souper_to_clift_insts(
-                souper_insts
-            );
+        let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
 
         // Debug
         // println!("====================================\n");
@@ -95,19 +94,15 @@ fn main () {
         // println!("====================================\n");
 
         // Pattern Matching - Single prefix tree
-        let lhs_single_tree =
-            lhspatternmatcher::generate_single_tree_patterns(
-                clift_insts.clone(),
-                global_nodes_count + 1
-            );
+        let lhs_single_tree = lhspatternmatcher::generate_single_tree_patterns(
+            clift_insts.clone(),
+            global_nodes_count + 1,
+        );
 
         global_nodes_count += lhs_single_tree.len();
 
         // Separate out only RHS cranelift insts
-        let rhs_clift_insts =
-            rhscliftinsts::get_result_clift_insts_only(
-                clift_insts.clone()
-            );
+        let rhs_clift_insts = rhscliftinsts::get_result_clift_insts_only(clift_insts.clone());
 
         // Debug
         // println!("- - - -  - - - - - - -\n");
@@ -122,13 +117,8 @@ fn main () {
 
         // Debug
         //println!("hash id for LHS is: {}\n", hash_id);
-        
-        rhs_table =
-            tablerhs::map_lhs_to_rhs(
-                hash_id,
-                rhs_clift_insts,
-                rhs_table.clone()
-            );
+
+        rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_clift_insts, rhs_table.clone());
 
         // Debug
         // println!("\n******************************\n");
@@ -143,12 +133,11 @@ fn main () {
 
         if (mode == "fast") {
             // Merged prefix tree
-            merged_arena =
-                mergedtree::generate_merged_prefix_tree(
-                    lhs_single_tree.clone(),
-                    merged_arena.clone()
-                );
-            
+            merged_arena = mergedtree::generate_merged_prefix_tree(
+                lhs_single_tree.clone(),
+                merged_arena.clone(),
+            );
+
             // Debug: Pretty print the merged arena
             // println!("----- nodes in merged_tree are -----");
             // for n in 0 .. merged_arena.merged_tree.len() {
@@ -183,25 +172,19 @@ fn main () {
         }
 
         if (mode == "baseline") {
-            let base_matcher =
-                baseline_matcher::generate_baseline_matcher(
-                    lhs_single_tree.clone(),
-                    rhs_table.clone(),
-                    lhs_count
-                );
+            let base_matcher = baseline_matcher::generate_baseline_matcher(
+                lhs_single_tree.clone(),
+                rhs_table.clone(),
+                lhs_count,
+            );
             lhs_count += 1;
             println!("{}", base_matcher);
         }
-  }
+    }
 
-  if (mode == "fast") {
-      let matcher_func =
-          matcher::generate_matcher(
-              merged_arena.clone(),
-              rhs_table.clone()
-          );
-      // Print the final generated function
-      println!("{}", matcher_func);
-  }
-
+    if (mode == "fast") {
+        let matcher_func = matcher::generate_matcher(merged_arena.clone(), rhs_table.clone());
+        // Print the final generated function
+        println!("{}", matcher_func);
+    }
 }

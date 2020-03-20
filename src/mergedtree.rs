@@ -1,8 +1,7 @@
 // Merged prefix tree
 
+use lhspatternmatcher::{self, Arena, Node, NodeID, NodeType, Node_Index};
 use std::collections::HashMap;
-use lhspatternmatcher::{self, Arena, Node, NodeType, NodeID, Node_Index};
-
 
 #[derive(Clone)]
 pub struct MergedArena {
@@ -46,7 +45,7 @@ impl MergedArena {
 
     pub fn update_next_nodes_list(&mut self, mut node: Node, next_id: usize) -> Node {
         if let Some(mut node_next_list) = node.next {
-            node_next_list.push(NodeID{ index: next_id });
+            node_next_list.push(NodeID { index: next_id });
             node.next = Some(node_next_list);
             node
         } else {
@@ -71,7 +70,7 @@ impl MergedArena {
 
     // when the node exists in arena already, update it
     pub fn update_node_in_arena(&mut self, updated_node: Node) {
-        for n in 0 .. self.merged_tree.len() {
+        for n in 0..self.merged_tree.len() {
             if self.merged_tree[n].id == updated_node.id {
                 self.merged_tree[n].next = updated_node.next;
                 break;
@@ -80,7 +79,7 @@ impl MergedArena {
     }
 
     pub fn update_node_arg_flag_in_arena(&mut self, updated_node: Node) {
-        for n in 0 .. self.merged_tree.len() {
+        for n in 0..self.merged_tree.len() {
             if self.merged_tree[n].id == updated_node.id {
                 self.merged_tree[n].arg_flag = updated_node.arg_flag;
                 break;
@@ -89,7 +88,7 @@ impl MergedArena {
     }
 
     pub fn update_node_level_in_arena(&mut self, updated_node: Node) {
-        for n in 0 .. self.merged_tree.len() {
+        for n in 0..self.merged_tree.len() {
             if self.merged_tree[n].id == updated_node.id {
                 self.merged_tree[n].level = updated_node.level;
                 break;
@@ -99,21 +98,21 @@ impl MergedArena {
 
     pub fn init_dummy_node(&mut self) -> Node {
         Node {
-              node_type: NodeType::match_none,
-              node_value: "dummy".to_string(),
-              width: 0,
-              id: <usize>::max_value(),
-              var_id: None,
-              arg_flag: false,
-              level: 0,
-              next: None,
-             }
+            node_type: NodeType::match_none,
+            node_value: "dummy".to_string(),
+            width: 0,
+            id: <usize>::max_value(),
+            var_id: None,
+            arg_flag: false,
+            level: 0,
+            next: None,
+        }
     }
 
     pub fn find_node_with_id_in_arena(&mut self, node_id: usize) -> Node {
         // FIXME: not a good implementation to traverse and exit if id is found
         let mut found_node = self.init_dummy_node();
-        for n in 0 .. self.merged_tree.len() {
+        for n in 0..self.merged_tree.len() {
             if self.merged_tree[n].id == node_id {
                 found_node = self.merged_tree[n].clone();
                 break;
@@ -150,7 +149,7 @@ impl MergedArena {
             if let Some(nodes_list) = current.next {
                 // assuming these are always linear trees with one next entry
                 let next_id = nodes_list[0].index;
-                for n in 0 .. single_tree.len() {
+                for n in 0..single_tree.len() {
                     if next_id == single_tree[n].id {
                         ret_node = single_tree[n].clone();
                         break;
@@ -166,7 +165,7 @@ impl MergedArena {
         let mut ret_nodes: Vec<Node> = Vec::new();
         if self.node_has_any_connection(current.clone()) {
             if let Some(nodes_list) = current.next {
-                for n in 0 .. nodes_list.len() {
+                for n in 0..nodes_list.len() {
                     let next_id = nodes_list[n].index;
                     ret_nodes.push(self.find_node_with_id_in_arena(next_id));
                 }
@@ -217,21 +216,16 @@ impl MergedArena {
 
 pub fn generate_merged_prefix_tree(
     single_tree: Vec<Node>,
-    mut merged_arena: MergedArena
+    mut merged_arena: MergedArena,
 ) -> MergedArena {
-
     if merged_arena.merged_tree.len() == 0 {
         let root_node = merged_arena.build_root_node();
         merged_arena.add_node_to_arena(root_node);
     }
 
-    let top_node =
-        merged_arena.get_top_node_of_opt_pattern(
-            single_tree.clone());
-    let top_val =
-        merged_arena.get_value_of_node(top_node.clone());
-    let top_id =
-        merged_arena.get_id_of_node(top_node.clone());
+    let top_node = merged_arena.get_top_node_of_opt_pattern(single_tree.clone());
+    let top_val = merged_arena.get_value_of_node(top_node.clone());
+    let top_id = merged_arena.get_id_of_node(top_node.clone());
 
     let found_root = merged_arena.find_node_with_id_in_arena(0);
     if merged_arena.is_node_dummy(found_root.clone()) {
@@ -244,7 +238,7 @@ pub fn generate_merged_prefix_tree(
         merged_arena.update_hash_map(top_val, top_id);
         let updated_root = merged_arena.update_next_nodes_list(found_root.clone(), top_id);
         merged_arena.update_node_in_arena(updated_root);
-        for n in 0 .. single_tree.len() {
+        for n in 0..single_tree.len() {
             merged_arena.add_node_to_arena(single_tree[n].clone());
         }
     } else {
@@ -277,7 +271,8 @@ pub fn generate_merged_prefix_tree(
             let mut merged_next_nodes: Vec<Node> = Vec::new();
             loop {
                 //////////////////////// TASK 1
-                strack = merged_arena.get_next_node_of_single_tree(single_tree.clone(), strack.clone());
+                strack =
+                    merged_arena.get_next_node_of_single_tree(single_tree.clone(), strack.clone());
                 merged_next_nodes = merged_arena.get_next_node_of_merged_tree(mtrack.clone());
 
                 // check for dummy nodes in single/merged tree
@@ -286,32 +281,34 @@ pub fn generate_merged_prefix_tree(
                 // in this merged_next_nodes: vec<Node> list
 
                 //////////////////////// TASK 2
-                if merged_arena.is_node_dummy(merged_next_nodes[0].clone()) &&
-                   !merged_arena.is_node_dummy(strack.clone()) {
-                       //
-                       //
-                       //  update prev->next with strack.id
-                       //  update prev node in arena
-                       //  loop {
-                       //   if strack is dummy {
-                       //       break;
-                       //   }
-                       //   add_to_arena(strack);
-                       //   strack = get_next_in_single_tree();
-                       //  }
-                       //
-                       //
-                       prev = merged_arena.update_next_nodes_list(prev, strack.id);
-                       merged_arena.update_node_in_arena(prev.clone());
-                       loop {
-                           if merged_arena.is_node_dummy(strack.clone()) {
-                               break;
-                           } else {
-                               merged_arena.add_node_in_arena(strack.clone());
-                               strack = merged_arena.get_next_node_of_single_tree(single_tree.clone(), strack.clone());
-                               continue;
-                           }
-                       }
+                if merged_arena.is_node_dummy(merged_next_nodes[0].clone())
+                    && !merged_arena.is_node_dummy(strack.clone())
+                {
+                    //
+                    //
+                    //  update prev->next with strack.id
+                    //  update prev node in arena
+                    //  loop {
+                    //   if strack is dummy {
+                    //       break;
+                    //   }
+                    //   add_to_arena(strack);
+                    //   strack = get_next_in_single_tree();
+                    //  }
+                    //
+                    //
+                    prev = merged_arena.update_next_nodes_list(prev, strack.id);
+                    merged_arena.update_node_in_arena(prev.clone());
+                    loop {
+                        if merged_arena.is_node_dummy(strack.clone()) {
+                            break;
+                        } else {
+                            merged_arena.add_node_in_arena(strack.clone());
+                            strack = merged_arena
+                                .get_next_node_of_single_tree(single_tree.clone(), strack.clone());
+                            continue;
+                        }
+                    }
                 }
 
                 //////////////////////// TASK 3
@@ -338,8 +335,10 @@ pub fn generate_merged_prefix_tree(
                 //
                 //
                 let mut same_nodes = false;
-                for mnode in 0 .. merged_next_nodes.len() {
-                    if merged_arena.are_node_values_same(merged_next_nodes[mnode].clone(), strack.clone()) {
+                for mnode in 0..merged_next_nodes.len() {
+                    if merged_arena
+                        .are_node_values_same(merged_next_nodes[mnode].clone(), strack.clone())
+                    {
                         prev = merged_next_nodes[mnode].clone();
                         mtrack = merged_next_nodes[mnode].clone();
                         same_nodes = true;
@@ -367,7 +366,8 @@ pub fn generate_merged_prefix_tree(
                             break;
                         } else {
                             merged_arena.add_node_in_arena(strack.clone());
-                            strack = merged_arena.get_next_node_of_single_tree(single_tree.clone(), strack.clone());
+                            strack = merged_arena
+                                .get_next_node_of_single_tree(single_tree.clone(), strack.clone());
                             continue;
                         }
                     }
@@ -378,7 +378,7 @@ pub fn generate_merged_prefix_tree(
             merged_arena.update_hash_map(top_val, top_id);
             let updated_root = merged_arena.update_next_nodes_list(found_root.clone(), top_id);
             merged_arena.update_node_in_arena(updated_root);
-            for n in 0 .. single_tree.len() {
+            for n in 0..single_tree.len() {
                 merged_arena.add_node_to_arena(single_tree[n].clone());
             }
         }

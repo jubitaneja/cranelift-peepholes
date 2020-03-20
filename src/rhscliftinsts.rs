@@ -1,6 +1,6 @@
 // RHS cranelift instructions only
 
-use cliftinstbuilder::{self, CtonInst, CtonValueDef, CtonInstKind, CtonOpcode, CtonOperand};
+use cliftinstbuilder::{self, CtonInst, CtonInstKind, CtonOpcode, CtonOperand, CtonValueDef};
 
 pub fn get_result_clift_insts_only(all_insts: Vec<CtonInst>) -> Vec<CtonInst> {
     // just split out only rhs part from all instructions
@@ -10,7 +10,7 @@ pub fn get_result_clift_insts_only(all_insts: Vec<CtonInst>) -> Vec<CtonInst> {
         match inst.opcode {
             CtonOpcode::Infer => {
                 infer_found = true;
-            },
+            }
             _ => {
                 if infer_found {
                     // start collecting result part now
@@ -18,7 +18,7 @@ pub fn get_result_clift_insts_only(all_insts: Vec<CtonInst>) -> Vec<CtonInst> {
                 } else {
                     continue;
                 }
-            },
+            }
         }
     }
     rhs_insts
