@@ -1,6 +1,6 @@
 // RHS cranelift instructions only
 
-use cliftinstbuilder::{self, CtonInst, CtonInstKind, CtonOpcode, CtonOperand, CtonValueDef};
+use cliftinstbuilder::{CtonInst, CtonOpcode};
 
 pub fn get_result_clift_insts_only(all_insts: Vec<CtonInst>) -> Vec<CtonInst> {
     // just split out only rhs part from all instructions

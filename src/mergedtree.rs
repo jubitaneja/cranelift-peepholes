@@ -1,6 +1,6 @@
 // Merged prefix tree
 
-use lhspatternmatcher::{self, Arena, Node, NodeID, NodeType, Node_Index};
+use lhspatternmatcher::{Node, NodeID, NodeType};
 use std::collections::HashMap;
 
 #[derive(Clone)]
@@ -12,7 +12,7 @@ pub struct MergedArena {
 impl MergedArena {
     pub fn build_root_node(&mut self) -> Node {
         Node {
-            node_type: NodeType::match_root,
+            node_type: NodeType::MatchRoot,
             node_value: "root".to_string(),
             width: 0,
             id: 0,
@@ -53,6 +53,7 @@ impl MergedArena {
         }
     }
 
+    #[allow(dead_code)]
     pub fn update_node_with_arg_flag(&mut self, mut node: Node, val: bool) -> Node {
         node.arg_flag = val;
         node
@@ -78,6 +79,7 @@ impl MergedArena {
         }
     }
 
+    #[allow(dead_code)]
     pub fn update_node_arg_flag_in_arena(&mut self, updated_node: Node) {
         for n in 0..self.merged_tree.len() {
             if self.merged_tree[n].id == updated_node.id {
@@ -98,7 +100,7 @@ impl MergedArena {
 
     pub fn init_dummy_node(&mut self) -> Node {
         Node {
-            node_type: NodeType::match_none,
+            node_type: NodeType::MatchNone,
             node_value: "dummy".to_string(),
             width: 0,
             id: <usize>::max_value(),
@@ -268,12 +270,12 @@ pub fn generate_merged_prefix_tree(
             // Loop and compare the merged-tree nodes values with single-tree nodes vals
             // one-by-one and, make a decision of when to append the nodes from given
             // single-tree optimization pattern
-            let mut merged_next_nodes: Vec<Node> = Vec::new();
             loop {
                 //////////////////////// TASK 1
                 strack =
                     merged_arena.get_next_node_of_single_tree(single_tree.clone(), strack.clone());
-                merged_next_nodes = merged_arena.get_next_node_of_merged_tree(mtrack.clone());
+                let merged_next_nodes =
+                    merged_arena.get_next_node_of_merged_tree(mtrack.clone());
 
                 // check for dummy nodes in single/merged tree
 

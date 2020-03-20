@@ -10,18 +10,18 @@ pub struct Arena {
 
 #[derive(Clone)]
 pub enum NodeType {
-    match_instdata,
-    inst_type,
-    match_opcode,
-    opcode,
-    match_args,
-    match_valdef,
-    match_const,
-    match_plain_const,
-    match_root,
-    match_cond,
-    cond,
-    match_none,
+    MatchInstData,
+    InstType,
+    MatchOpcode,
+    Opcode,
+    MatchArgs,
+    MatchValDef,
+    MatchConst,
+    MatchPlainConst,
+    MatchRoot,
+    MatchCond,
+    Cond,
+    MatchNone,
 }
 
 #[derive(Clone)]
@@ -42,23 +42,16 @@ pub struct NodeID {
 }
 
 #[derive(Clone)]
-pub struct Node_Index {
+pub struct NodeIndex {
     node: Node,
     index: usize,
 }
 
 /// Helper functions
-pub fn get_arg_name_for_binaryImm(index: usize, argtype: String) -> String {
-    let mut arg = "".to_string();
+pub fn get_arg_name_for_binary_imm(_index: usize, argtype: &str) -> String {
     match argtype.as_ref() {
-        "index" => {
-            arg = "arg".to_string();
-            arg
-        }
-        "const" => {
-            arg = "imm".to_string();
-            arg
-        }
+        "index" => "arg".to_string(),
+        "const" => "imm".to_string(),
         _ => panic!("BinaryImm inst can only have operands index 0|1\n"),
     }
 }
@@ -136,18 +129,18 @@ pub fn get_total_number_of_args(inst: &CtonInst) -> usize {
 
 pub fn get_node_type(ty: NodeType) -> String {
     match ty {
-        NodeType::match_instdata => "match_instdata".to_string(),
-        NodeType::inst_type => "inst_type".to_string(),
-        NodeType::match_opcode => "match_opcode".to_string(),
-        NodeType::opcode => "opcode".to_string(),
-        NodeType::match_args => "match_args".to_string(),
-        NodeType::match_const => "match_const".to_string(),
-        NodeType::match_plain_const => "match_plain_const".to_string(),
-        NodeType::match_root => "match_root".to_string(),
-        NodeType::match_valdef => "match_valdef".to_string(),
-        NodeType::match_cond => "match_cond".to_string(),
-        NodeType::cond => "cond_type".to_string(),
-        NodeType::match_none | _ => panic!("Unexpected node type"),
+        NodeType::MatchInstData => "MatchInstData".to_string(),
+        NodeType::InstType => "InstType".to_string(),
+        NodeType::MatchOpcode => "MatchOpcode".to_string(),
+        NodeType::Opcode => "Opcode".to_string(),
+        NodeType::MatchArgs => "MatchArgs".to_string(),
+        NodeType::MatchConst => "MatchConst".to_string(),
+        NodeType::MatchPlainConst => "MatchPlainConst".to_string(),
+        NodeType::MatchRoot => "MatchRoot".to_string(),
+        NodeType::MatchValDef => "MatchValDef".to_string(),
+        NodeType::MatchCond => "MatchCond".to_string(),
+        NodeType::Cond => "Cond".to_string(),
+        NodeType::MatchNone => panic!("Unexpected node type"),
     }
 }
 
@@ -166,7 +159,7 @@ impl Arena {
 
     pub fn build_default_node(&mut self) -> Node {
         Node {
-            node_type: NodeType::match_none,
+            node_type: NodeType::MatchNone,
             node_value: "".to_string(),
             width: 0,
             id: self.count,
@@ -179,7 +172,7 @@ impl Arena {
 
     pub fn build_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
         Node {
-            node_type: NodeType::match_instdata,
+            node_type: NodeType::MatchInstData,
             node_value: "instdata".to_string(),
             width: 0,
             id: self.count,
@@ -193,7 +186,7 @@ impl Arena {
     pub fn build_specific_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
         let instdata_val = clift_inst.kind.clone();
         Node {
-            node_type: NodeType::inst_type,
+            node_type: NodeType::InstType,
             node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
             width: clift_inst.width.clone(),
             id: self.count,
@@ -206,7 +199,7 @@ impl Arena {
 
     pub fn build_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
         Node {
-            node_type: NodeType::match_opcode,
+            node_type: NodeType::MatchOpcode,
             node_value: "opcode".to_string(),
             id: self.count,
             width: 0,
@@ -220,7 +213,7 @@ impl Arena {
     pub fn build_specific_opcode_node(&mut self, clift_inst: &CtonInst) -> Node {
         let width_val = clift_inst.width.clone();
         Node {
-            node_type: NodeType::opcode,
+            node_type: NodeType::Opcode,
             node_value: cliftinstbuilder::get_clift_opcode_name(clift_inst.opcode.clone()),
             width: width_val,
             id: self.count,
@@ -233,7 +226,7 @@ impl Arena {
 
     pub fn build_cond_node(&mut self, clift_inst: &CtonInst) -> Node {
         Node {
-            node_type: NodeType::match_cond,
+            node_type: NodeType::MatchCond,
             node_value: "cond".to_string(),
             id: self.count,
             width: 0,
@@ -248,7 +241,7 @@ impl Arena {
         let cond_val = clift_inst.cond.clone();
         let width_val = clift_inst.width.clone();
         Node {
-            node_type: NodeType::cond,
+            node_type: NodeType::Cond,
             node_value: cliftinstbuilder::get_clift_cond_name(cond_val),
             width: width_val,
             id: self.count,
@@ -281,18 +274,15 @@ impl Arena {
         arg: usize,
         parent_instdata: String,
     ) -> Node {
-        let mut node_val = "".to_string();
-        match parent_instdata.as_ref() {
-            "BinaryImm" | "IntCompareImm" => {
-                node_val = get_arg_name_for_binaryImm(arg, argtype);
-            }
+        let node_val = match parent_instdata.as_ref() {
+            "BinaryImm" | "IntCompareImm" => get_arg_name_for_binary_imm(arg, &argtype),
             _ => {
                 // Binary, Var, Unary
-                node_val = get_arg_name(arg);
+                get_arg_name(arg)
             }
-        }
+        };
         Node {
-            node_type: NodeType::match_args,
+            node_type: NodeType::MatchArgs,
             node_value: node_val,
             width: 0,
             id: self.count,
@@ -304,11 +294,9 @@ impl Arena {
     }
 
     pub fn build_valdef_node(&mut self, clift_inst: &CtonInst) -> Node {
-        let k = cliftinstbuilder::get_clift_instdata_name(clift_inst.kind.clone());
-        let p = cliftinstbuilder::get_clift_opcode_name(clift_inst.opcode.clone());
         let valdef = clift_inst.valuedef.clone();
         Node {
-            node_type: NodeType::match_valdef,
+            node_type: NodeType::MatchValDef,
             node_value: cliftinstbuilder::get_clift_valdef_name(valdef),
             id: self.count,
             width: clift_inst.width.clone(),
@@ -324,7 +312,7 @@ impl Arena {
     pub fn build_constant_node(&mut self, constant: i32) -> Node {
         // FIXME: Fix the width of constant
         Node {
-            node_type: NodeType::match_const,
+            node_type: NodeType::MatchConst,
             node_value: constant.to_string(),
             id: self.count,
             width: 0,
@@ -338,7 +326,7 @@ impl Arena {
     pub fn build_plain_constant_node(&mut self) -> Node {
         // FIXME: Fix the width of constant
         Node {
-            node_type: NodeType::match_plain_const,
+            node_type: NodeType::MatchPlainConst,
             node_value: "constant".to_string(),
             id: self.count,
             width: 0,
@@ -349,12 +337,12 @@ impl Arena {
         }
     }
 
-    pub fn get_node_with_id(&mut self, idx: usize) -> Option<Node_Index> {
+    pub fn get_node_with_id(&mut self, idx: usize) -> Option<NodeIndex> {
         let mut ret_node = None;
         for n in 0..self.nodes.clone().len() {
             let node_id = self.nodes[n].clone().id;
             if node_id == idx {
-                ret_node = Some(Node_Index {
+                ret_node = Some(NodeIndex {
                     node: self.nodes[n].clone(),
                     index: n,
                 });
@@ -372,24 +360,15 @@ impl Arena {
     ) -> String {
         let mut list_ops = Vec::new();
         let cops = &clift_inst.cops;
-        match cops {
-            Some(ops) => {
-                for op in ops {
-                    match op.idx_val {
-                        Some(idx) => {
-                            list_ops.push("index");
-                        }
-                        None => {}
-                    }
-                    match op.const_val {
-                        Some(c) => {
-                            list_ops.push("const");
-                        }
-                        None => {}
-                    }
+        if let Some(ops) = cops {
+            for op in ops {
+                if op.idx_val.is_some() {
+                    list_ops.push("index");
+                }
+                if op.const_val.is_some() {
+                    list_ops.push("const");
                 }
             }
-            None => {}
         }
         list_ops[arg_num].to_string()
     }
@@ -405,7 +384,7 @@ impl Arena {
             let node_x = self.get_node_with_id(c - 1);
 
             match node_x {
-                Some(Node_Index { mut node, index }) => {
+                Some(NodeIndex { mut node, index }) => {
                     let mut next_ids: Vec<NodeID> = Vec::new();
                     next_ids.push(NodeID { index: self.count });
                     node.next = Some(next_ids);
@@ -435,18 +414,17 @@ impl Arena {
                             arg_valdef_node = self.build_valdef_node(root_inst);
                         }
                         None => {
+                            assert!(
+                                arg.const_val.is_some(),
+                                "clift inst op must have either an idx or const value"
+                            );
+
                             // TODO: deal with constants later
                             // here if valdef is diff. for consts
-                            match arg.const_val.clone() {
-                                Some(c) => {
-                                    // Build just a named "constant" node, later
-                                    // build a const node with const value in it.
-                                    arg_valdef_node = self.build_plain_constant_node();
-                                }
-                                None => {
-                                    panic!("clift inst op must have either an idx or const value")
-                                }
-                            }
+
+                            // Build just a named "constant" node, later
+                            // build a const node with const value in it.
+                            arg_valdef_node = self.build_plain_constant_node();
                         }
                     }
                 }
@@ -477,8 +455,7 @@ impl Arena {
                     match arg.idx_val.clone() {
                         Some(idx) => {
                             let root_inst = &self.clift_insts[idx].clone();
-                            let detail_arg_node = self.build_sequence_of_nodes(
-                                                       root_inst);
+                            self.build_sequence_of_nodes(root_inst);
                         },
                         None => {
                             match arg.const_val.clone() {
@@ -565,7 +542,7 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>, global_count: u
     let index_from_infer_clift_op = get_index_from_infer_clift_op(infer_clift_ops);
     let inst_at_infer_op_idx = &clift_insts[index_from_infer_clift_op];
 
-    /// Create Arena and initialize it
+    // Create Arena and initialize it
     let mut arena = Arena::new(global_count);
     arena.clift_insts = clift_insts.clone();
     let all_nodes = arena.build_sequence_of_nodes(inst_at_infer_op_idx);

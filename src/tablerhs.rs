@@ -1,6 +1,6 @@
 // Hash Map for LHS to RHS
 
-use cliftinstbuilder::{self, CtonInst, CtonInstKind, CtonOpcode, CtonOperand, CtonValueDef};
+use cliftinstbuilder::CtonInst;
 use std::collections::HashMap;
 
 pub fn map_lhs_to_rhs(

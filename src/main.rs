@@ -131,7 +131,7 @@ fn main() {
         // }
         // println!("\n******************************\n");
 
-        if (mode == "fast") {
+        if mode == "fast" {
             // Merged prefix tree
             merged_arena = mergedtree::generate_merged_prefix_tree(
                 lhs_single_tree.clone(),
@@ -171,7 +171,7 @@ fn main() {
             // println!("========================");
         }
 
-        if (mode == "baseline") {
+        if mode == "baseline" {
             let base_matcher = baseline_matcher::generate_baseline_matcher(
                 lhs_single_tree.clone(),
                 rhs_table.clone(),
@@ -182,7 +182,7 @@ fn main() {
         }
     }
 
-    if (mode == "fast") {
+    if mode == "fast" {
         let matcher_func = matcher::generate_matcher(merged_arena.clone(), rhs_table.clone());
         // Print the final generated function
         println!("{}", matcher_func);

@@ -12,18 +12,21 @@ pub enum TokKind<'a> {
     Equal,
     Implies,
     Int(u32, i32),
-    UntypedInt,
     Comment(&'a str),
     Eof,
+
+    #[allow(dead_code)]
+    UntypedInt,
 }
 
 // Error type
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Error {
     InvalidChar,
 }
 
 // Error with location and error string
+#[derive(Debug, Clone)]
 pub struct LocatedError {
     pub error: Error,
     pub errmsg: String,
@@ -38,7 +41,7 @@ pub struct LocatedToken<'a> {
 
 // Line number specifies the location
 // of token or error
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Location {
     pub line_num: usize,
 }
@@ -95,7 +98,7 @@ impl<'a> Lexer<'a> {
     // Is the current character a digit?
     pub fn is_digit(&mut self, ch: Option<char>) -> bool {
         match ch {
-            Some('0'...'9') => true,
+            Some('0'..='9') => true,
             Some(_) => false,
             _ => false,
         }
@@ -109,9 +112,9 @@ impl<'a> Lexer<'a> {
                     let zero_val = '0' as i32;
                     // split the addition to avoid add with overflow
                     // issues for INT_MAX values.
-                    let mut x = *const_val * 10;
-                    let mut y = cons - zero_val;
-                    if (neg) {
+                    let x = *const_val * 10;
+                    let y = cons - zero_val;
+                    if neg {
                         *const_val = x - y;
                     } else {
                         *const_val = x + y;
@@ -143,14 +146,14 @@ impl<'a> Lexer<'a> {
                 Error::InvalidChar,
                 "expected 'i' to specify bitwidth".to_string(),
                 loc.clone(),
-            );
+            )
+            .unwrap();
             //token(TokKind::Error, loc)
         }
 
         // scan the width value
         self.next_ch();
         let width_begin = self.pos;
-        let width = 0;
         let mut current_ch = self.lookahead.clone();
         let mut width_value: u32 = 0;
         while self.is_digit(current_ch) {
@@ -165,8 +168,8 @@ impl<'a> Lexer<'a> {
                 Error::InvalidChar,
                 "expected an integer".to_string(),
                 loc.clone(),
-            );
-            panic!("expected an integer bitwidth\n");
+            )
+            .unwrap();
             //token(TokKind::Error, loc)
         }
         //println!("-------------- width = {} -------------\n", width_value);
@@ -175,8 +178,8 @@ impl<'a> Lexer<'a> {
                 Error::InvalidChar,
                 "width must be atleast 1".to_string(),
                 loc.clone(),
-            );
-            panic!("width must be atleast 1\n");
+            )
+            .unwrap();
             //token(TokKind::Error, loc)
         }
 
@@ -186,7 +189,7 @@ impl<'a> Lexer<'a> {
     // Is the current character an alphabet?
     pub fn is_alphabet(&mut self, ch: Option<char>) -> bool {
         match ch {
-            Some('a'...'z') | Some('A'...'Z') => true,
+            Some('a'..='z') | Some('A'..='Z') => true,
             Some(_) => false,
             _ => false,
         }
@@ -268,7 +271,7 @@ impl<'a> Lexer<'a> {
             }
             Some('%') => {
                 self.next_ch();
-                let mut start_pos = self.pos;
+                let start_pos = self.pos;
                 let mut current_ch = self.lookahead.clone();
 
                 // scan the LHS identifier
@@ -285,10 +288,11 @@ impl<'a> Lexer<'a> {
                         Error::InvalidChar,
                         "expected an identifier".to_string(),
                         loc.clone(),
-                    );
+                    )
+                    .unwrap();
                     //token(TokKind::Error, loc)
                 }
-                let LHS_ValName = &self.source[start_pos - 1..self.pos];
+                let lhs_val_name = &self.source[start_pos - 1..self.pos];
 
                 // Look for bitwidth specifications, if any
                 let mut width: u32 = 0;
@@ -296,10 +300,10 @@ impl<'a> Lexer<'a> {
                     width = self.scan_bitwidth();
                 }
 
-                token(TokKind::ValName(LHS_ValName, width), loc)
+                token(TokKind::ValName(lhs_val_name, width), loc)
             }
             // FIXME: modularize all these cases
-            Some('a'...'z') | Some('A'...'Z') => {
+            Some('a'..='z') | Some('A'..='Z') => {
                 let begin_pos = self.pos;
                 let mut current_ch = self.lookahead.clone();
                 while self.is_alphabet(current_ch) {
@@ -311,7 +315,7 @@ impl<'a> Lexer<'a> {
                 token(TokKind::Ident(text), loc)
             }
             // FIXME: Take care of negative int too
-            Some('0'...'9') | Some('-') => {
+            Some('0'..='9') | Some('-') => {
                 let mut current_ch = self.lookahead.clone();
                 let mut negative = false;
                 if current_ch == Some('-') {
@@ -336,8 +340,8 @@ impl<'a> Lexer<'a> {
                         Error::InvalidChar,
                         "expected an integer".to_string(),
                         loc.clone(),
-                    );
-                    panic!("expected an integer constant value\n");
+                    )
+                    .unwrap();
                 }
 
                 let mut width: u32 = 0;
@@ -369,7 +373,7 @@ impl<'a> Lexer<'a> {
     pub fn get_next_token(&mut self) -> Option<Result<LocatedToken<'a>, LocatedError>> {
         loop {
             let loc = self.loc();
-            return match self.lookahead {
+            match self.lookahead {
                 None => {
                     // Break with an EOF token.
                     break Some(token(TokKind::Eof, loc));
@@ -415,26 +419,23 @@ impl<'a> Lexer<'a> {
                 _ => {
                     break Some(self.scan_rest());
                 }
-            };
+            }
         }
     }
 }
 
 // Lexer Driver
+#[allow(dead_code)]
 pub fn start_lexer(text: &str) {
     let mut input_lex = Lexer::new(text);
     // Lex until EOF token is found.
     loop {
         let tok = input_lex.get_next_token();
-        match tok {
-            Some(Ok(LocatedToken { kind, location })) => match kind {
-                TokKind::Eof => {
-                    break;
-                }
-                _ => {}
-            },
-            Some(_) => {}
-            _ => {}
+        if let Some(Ok(LocatedToken {
+            kind: TokKind::Eof, ..
+        })) = tok
+        {
+            break;
         }
     }
 }

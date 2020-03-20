@@ -2,7 +2,7 @@
 // This phase of codegen will simply build cranelift instructions
 // from souper instructions
 
-use parser::{self, Inst, InstKind, Parser, SouperOperand};
+use parser::{Inst, InstKind, SouperOperand};
 
 #[derive(Clone)]
 pub struct CtonInst {
@@ -23,6 +23,7 @@ pub enum CtonValueDef {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub enum CtonInstKind {
     Unary,
     UnaryImm,
@@ -79,6 +80,7 @@ pub enum CtonCmpCond {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub enum CtonOpType {
     Index,
     Constant,
@@ -93,6 +95,7 @@ pub struct CtonOperand {
 /// Helper functions
 
 /// Returns the cretonne instruction names for the given cretonne opcode
+#[allow(dead_code)]
 pub fn get_cton_inst_name(opcode: CtonOpcode) {
     match opcode {
         CtonOpcode::Iadd => println!("CtonOpcode = Iadd"),
@@ -125,7 +128,8 @@ pub fn get_cton_inst_name(opcode: CtonOpcode) {
     }
 }
 
-pub fn getCtonOpCodeName(opcode: CtonOpcode) {
+#[allow(dead_code)]
+pub fn get_cton_opcode_name(opcode: CtonOpcode) {
     match opcode {
         CtonOpcode::Iadd => println!("Cton::Opcode = Iadd"),
         CtonOpcode::Imul => println!("Cton::Opcode = Imul"),
@@ -161,7 +165,6 @@ pub fn get_clift_valdef_name(vdef: CtonValueDef) -> String {
         CtonValueDef::Result => "Result".to_string(),
         CtonValueDef::Param => "Param".to_string(),
         CtonValueDef::NoneType => "None".to_string(),
-        _ => "".to_string(),
     }
 }
 
@@ -239,24 +242,12 @@ pub fn build_clift_ops(souper_ops: Option<Vec<SouperOperand>>) -> Option<Vec<Cto
 }
 
 pub fn inst_has_const_operand(clift_ops: Option<Vec<CtonOperand>>) -> bool {
-    let mut found = false;
-    match clift_ops {
-        Some(cops) => {
-            for cop in cops {
-                match cop.const_val {
-                    Some(c) => {
-                        found = true;
-                        break;
-                    }
-                    None => found = false,
-                }
-            }
-        }
-        None => {
-            panic!("Cranelift inst must have operands\n");
-        }
-    }
-    found
+    clift_ops
+        .as_ref()
+        .into_iter()
+        .flat_map(|ops| &**ops)
+        .find(|op| op.const_val.is_some())
+        .is_some()
 }
 
 /// Codegen Phase #1
@@ -264,10 +255,10 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
     match souper_inst {
         Inst {
             kind,
-            lhs,
             width,
             var_number,
             ops,
+            ..
         } => {
             match kind {
                 // FIXME: Deal with ops mapping in a better way later
@@ -605,22 +596,6 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     var_num: None,
                     cops: build_clift_ops(ops),
                 },
-            }
-        }
-        _ => {
-            // Earlier, it was silently making Var node for all
-            // instructions that are not supported
-            // in this project.
-            // FIXME: it should returns an error if any instkind is not
-            // handled, or maybe like a NOP ctonInst.
-            CtonInst {
-                valuedef: CtonValueDef::Param,
-                kind: CtonInstKind::Var,
-                opcode: CtonOpcode::Var,
-                cond: None,
-                width: 0,
-                var_num: None,
-                cops: None,
             }
         }
     }
