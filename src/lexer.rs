@@ -4,15 +4,15 @@ use std::str::CharIndices;
 
 // Types of Tokens
 #[derive(Clone)]
-pub enum TokKind<'a> {
+pub enum TokKind {
     Error,
-    Ident(&'a str),
-    ValName(&'a str, u32),
+    Ident(String),
+    ValName(String, u32),
     Comma,
     Equal,
     Implies,
     Int(u32, i32),
-    Comment(&'a str),
+    Comment(String),
     Eof,
 
     #[allow(dead_code)]
@@ -34,8 +34,8 @@ pub struct LocatedError {
 }
 
 // Token with type and location
-pub struct LocatedToken<'a> {
-    pub kind: TokKind<'a>,
+pub struct LocatedToken {
+    pub kind: TokKind,
     pub location: Location,
 }
 
@@ -47,7 +47,7 @@ pub struct Location {
 }
 
 // Build the token with all attributes
-fn token<'a>(token: TokKind<'a>, loc: Location) -> Result<LocatedToken<'a>, LocatedError> {
+fn token<'a>(token: TokKind, loc: Location) -> Result<LocatedToken, LocatedError> {
     Ok(LocatedToken {
         kind: token,
         location: loc,
@@ -216,18 +216,18 @@ impl<'a> Lexer<'a> {
     }
 
     // Scan rest of the commented line starting with ';'.
-    pub fn rest_of_line(&mut self) -> &'a str {
+    pub fn rest_of_line(&mut self) -> String {
         let begin = self.pos;
         loop {
             match self.next_ch() {
-                None | Some('\n') => return &self.source[begin..self.pos],
+                None | Some('\n') => return self.source[begin..self.pos].to_owned(),
                 _ => {}
             }
         }
     }
 
     //scan implies symbol in (LHS -> RHS)
-    fn scan_implies(&mut self) -> Result<LocatedToken<'a>, LocatedError> {
+    fn scan_implies(&mut self) -> Result<LocatedToken, LocatedError> {
         let loc = self.loc();
         let current_ch = self.lookahead;
         match current_ch {
@@ -241,7 +241,7 @@ impl<'a> Lexer<'a> {
     }
 
     // Scan a comment extending to the end of the current line.
-    fn scan_comment(&mut self) -> Result<LocatedToken<'a>, LocatedError> {
+    fn scan_comment(&mut self) -> Result<LocatedToken, LocatedError> {
         let loc = self.loc();
         let text = self.rest_of_line();
         token(TokKind::Comment(text), loc)
@@ -253,7 +253,7 @@ impl<'a> Lexer<'a> {
     // %a:i64 = add %0, 1:i64
     // infer %a
     // result %a
-    fn scan_rest(&mut self) -> Result<LocatedToken<'a>, LocatedError> {
+    fn scan_rest(&mut self) -> Result<LocatedToken, LocatedError> {
         let loc = self.loc();
         match self.lookahead {
             // FIXME: ideally there won't be None here, because
@@ -292,7 +292,7 @@ impl<'a> Lexer<'a> {
                     .unwrap();
                     //token(TokKind::Error, loc)
                 }
-                let lhs_val_name = &self.source[start_pos - 1..self.pos];
+                let lhs_val_name = self.source[start_pos - 1..self.pos].to_owned();
 
                 // Look for bitwidth specifications, if any
                 let mut width: u32 = 0;
@@ -310,7 +310,7 @@ impl<'a> Lexer<'a> {
                     self.next_ch();
                     current_ch = self.lookahead.clone();
                 }
-                let text = &self.source[begin_pos..self.pos];
+                let text = self.source[begin_pos..self.pos].to_owned();
                 //println!("Token: Ident");
                 token(TokKind::Ident(text), loc)
             }
@@ -370,7 +370,7 @@ impl<'a> Lexer<'a> {
 
     // Get next token. This function is a driver to invoke the token generator
     // (scan_rest) to scan the meaningful characters.
-    pub fn get_next_token(&mut self) -> Option<Result<LocatedToken<'a>, LocatedError>> {
+    pub fn get_next_token(&mut self) -> Option<Result<LocatedToken, LocatedError>> {
         loop {
             let loc = self.loc();
             match self.lookahead {

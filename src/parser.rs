@@ -52,9 +52,10 @@ pub struct SouperOperand {
     pub width: u32,
 }
 
-pub struct Inst<'a> {
+#[derive(Clone)]
+pub struct Inst {
     pub kind: InstKind,
-    pub lhs: &'a str,
+    pub lhs: String,
     pub width: u32,
     pub var_number: Option<u32>,
     pub ops: Option<Vec<SouperOperand>>,
@@ -65,7 +66,7 @@ pub struct Parser<'a> {
     lex: Lexer<'a>,
 
     /// Current lookahead token.
-    lookahead: Option<TokKind<'a>>,
+    lookahead: Option<TokKind>,
 
     /// Location of lookahead.
     loc: Location,
@@ -73,7 +74,7 @@ pub struct Parser<'a> {
     lex_error: Option<lexer::Error>,
 
     /// LHS Valname
-    lhs_valname: &'a str,
+    lhs_valname: String,
 
     /// width
     width: u32,
@@ -82,7 +83,7 @@ pub struct Parser<'a> {
     var_count: u32,
 
     // hash map of LHS valnames to Index values
-    lhs_val_names_to_idx: HashMap<&'a str, usize>,
+    lhs_val_names_to_idx: HashMap<String, usize>,
 
     // track count of constants, whenever we create it
     // as an individual instruction
@@ -100,7 +101,7 @@ impl<'a> Parser<'a> {
             lookahead: None,
             loc: Location { line_num: 0 },
             lex_error: None,
-            lhs_valname: "",
+            lhs_valname: String::from(""),
             width: 0,
             var_count: 0,
             lhs_val_names_to_idx: HashMap::new(),
@@ -109,7 +110,12 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn create_var(&mut self, instkind: InstKind, instname: &'a str, instwidth: u32) -> Inst<'a> {
+    fn create_var(
+        &mut self,
+        instkind: InstKind,
+        instname: String,
+        instwidth: u32
+    ) -> Inst {
         // return the inst struct with details
         // FIXME: add more details later if required
         self.var_count += 1;
@@ -125,10 +131,10 @@ impl<'a> Parser<'a> {
     fn create_inst(
         &mut self,
         instkind: InstKind,
-        instname: &'a str,
+        instname: String,
         instwidth: u32,
         ops: Vec<SouperOperand>,
-    ) -> Inst<'a> {
+    ) -> Inst {
         // return the inst struct with details
         // FIXME: add more details later if required
         // Add Ops details too here: Major TODO
@@ -142,8 +148,8 @@ impl<'a> Parser<'a> {
     }
 
     // return inst Kind for the given inst names
-    fn get_inst_kind(&mut self, name: &str) -> InstKind {
-        match name {
+    fn get_inst_kind(&mut self, name: String) -> InstKind {
+        match name.as_ref() {
             "var" => InstKind::Var,
             "add" => InstKind::Add,
             "mul" => InstKind::Mul,
@@ -171,7 +177,7 @@ impl<'a> Parser<'a> {
     }
 
     // return souper inst kind name for the given inst kind
-    #[allow(dead_code)]
+    //#[allow(dead_code)]
     fn get_kind_name(&mut self, kind: InstKind) -> String {
         match kind {
             InstKind::Var => "var".to_string(),
@@ -196,6 +202,7 @@ impl<'a> Parser<'a> {
             InstKind::ResultInst => "result".to_string(),
             InstKind::Implies => "->".to_string(),
             InstKind::Infer => "infer".to_string(),
+            InstKind::Const => "const".to_string(),
             _ => "Inst Kind name is not yet handled in function: get_kind_name()".to_string(),
         }
     }
@@ -217,7 +224,7 @@ impl<'a> Parser<'a> {
     }
 
     // returns the current token
-    fn consume_token(&mut self) -> Option<TokKind<'a>> {
+    fn consume_token(&mut self) -> Option<TokKind> {
         let x = self.lookahead.clone();
         match x {
             Some(TokKind::Error) => {
@@ -269,7 +276,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_op(&mut self) -> SouperOperand {
-        match self.lookahead {
+        match self.lookahead.clone() {
             Some(TokKind::ValName(lhs, width)) => {
                 let mut value = None;
                 for (key, val) in &self.lhs_val_names_to_idx {
@@ -318,18 +325,18 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn create_const_lhs(&mut self) -> &'a str {
+    fn create_const_lhs(&mut self) -> String {
         self.const_count += 1;
         let mut lhs = String::from("%const");
         lhs.push_str(&self.const_count.to_string());
-        &lhs
+        lhs
     }
 
     fn create_const_inst(
         &mut self,
         op: SouperOperand,
         width: u32
-    ) -> Inst<'a> {
+    ) -> Inst {
         let mut const_ops = vec![];
         const_ops.push(op);
         Inst {
@@ -344,22 +351,22 @@ impl<'a> Parser<'a> {
     fn create_const_inst_sequence(
         &mut self,
         kind: InstKind,
-        lhs: &'a str,
+        lhs: String,
         width: u32,
         ops: Vec<SouperOperand>
-    ) -> Vec<Inst<'a>> {
+    ) -> Vec<Inst> {
         let mut insts = vec![];
         // create const inst for first operand
         let const_inst0 = self.create_const_inst(ops[0].clone(), width);
         let const_idx0 = self.total_insts;
-        self.lhs_val_names_to_idx.insert(const_inst0.lhs, const_idx0);
+        self.lhs_val_names_to_idx.insert(const_inst0.lhs.clone(), const_idx0);
         self.total_insts += 1;
         insts.push(const_inst0);
 
         // create const inst for second operand
         let const_inst1 = self.create_const_inst(ops[1].clone(), width);
         let const_idx1 = self.total_insts;
-        self.lhs_val_names_to_idx.insert(const_inst1.lhs, const_idx1);
+        self.lhs_val_names_to_idx.insert(const_inst1.lhs.clone(), const_idx1);
         self.total_insts += 1;
         insts.push(const_inst1);
 
@@ -406,9 +413,9 @@ impl<'a> Parser<'a> {
         op_type
     }
 
-    fn parse_inst_types(&mut self) -> Vec<Inst<'a>> {
-        if let Some(TokKind::Ident(text)) = self.lookahead {
-            match self.get_inst_kind(text) {
+    fn parse_inst_types(&mut self) -> Vec<Inst> {
+        if let Some(TokKind::Ident(text)) = self.lookahead.clone() {
+            match self.get_inst_kind(text.clone()) {
                 InstKind::Var => {
                     // TODO: error checking
                     // instwidth == 0 => error "var inst expects atleast width=1"
@@ -421,7 +428,7 @@ impl<'a> Parser<'a> {
                     var_inst
                 }
                 _ => {
-                    let inst_kind = self.get_inst_kind(text);
+                    let inst_kind = self.get_inst_kind(text.clone());
                     self.consume_token();
                     let ops = self.parse_ops();
                     let instname = self.lhs_valname.clone();
@@ -452,7 +459,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_valname_inst(&mut self) -> Vec<Inst<'a>> {
+    fn parse_valname_inst(&mut self) -> Vec<Inst> {
         // FIXME: Jubi: Add this info to token struct and get it
         // instwidth = self.width
         // instValName = self.instValname
@@ -470,7 +477,7 @@ impl<'a> Parser<'a> {
 
                 // Look for ident tokens like, var; add; phi; etc.
                 match self.lookahead {
-                    Some(TokKind::Ident(_text)) => self.parse_inst_types(),
+                    Some(TokKind::Ident(..)) => self.parse_inst_types(),
                     _ => panic!("Error: Expected a valid Identifier after ValName -> Eq token"),
                 }
             }
@@ -480,13 +487,13 @@ impl<'a> Parser<'a> {
 
     // parse instructions that start with an identifier
     // example: infer, cand, pc, blockpc inst in Souper IR
-    fn parse_ident_inst(&mut self) -> Vec<Inst<'a>> {
-        if let Some(TokKind::Ident(text)) = self.lookahead {
+    fn parse_ident_inst(&mut self) -> Vec<Inst> {
+        if let Some(TokKind::Ident(text)) = self.lookahead.clone() {
             let mut insts = vec![];
-            match self.get_inst_kind(text) {
+            match self.get_inst_kind(text.clone()) {
                 InstKind::Infer => {
                     self.consume_token();
-                    match self.lookahead {
+                    match self.lookahead.clone() {
                         Some(TokKind::ValName(_lhs, width)) => {
                             let ops = self.parse_ops();
                             assert!(
@@ -497,7 +504,7 @@ impl<'a> Parser<'a> {
                             insts.push(
                                 self.create_inst(
                                     InstKind::Infer,
-                                    "infer",
+                                    String::from("infer"),
                                     width,
                                     ops
                                 )
@@ -511,7 +518,7 @@ impl<'a> Parser<'a> {
                 }
                 InstKind::ResultInst => {
                     self.consume_token();
-                    match self.lookahead {
+                    match self.lookahead.clone() {
                         Some(TokKind::ValName(_lhs, width)) => {
                             let ops = self.parse_ops();
                             //error checking on ops length
@@ -523,7 +530,7 @@ impl<'a> Parser<'a> {
                             insts.push(
                                 self.create_inst(
                                     InstKind::ResultInst,
-                                    "result",
+                                    String::from("result"),
                                     width,
                                     ops
                                 )
@@ -545,7 +552,7 @@ impl<'a> Parser<'a> {
                             insts.push(
                                 self.create_inst(
                                     InstKind::ResultInst,
-                                    "result",
+                                    String::from("result"),
                                     width,
                                     ops
                                 )
@@ -567,11 +574,11 @@ impl<'a> Parser<'a> {
     }
 
     // parse dummy inst for implies symbol
-    fn parse_implies_dummy_inst(&mut self) -> Inst<'a> {
+    fn parse_implies_dummy_inst(&mut self) -> Inst {
         self.consume_token();
         Inst {
             kind: InstKind::Implies,
-            lhs: "",
+            lhs: String::from(""),
             width: 0,
             var_number: Some(0),
             ops: None,
@@ -579,14 +586,14 @@ impl<'a> Parser<'a> {
     }
 
     // parse each instruction
-    fn parse_inst(&mut self) -> Vec<Inst<'a>> {
+    fn parse_inst(&mut self) -> Vec<Inst> {
         // Instructions start either with valname or Ident
         // Example:
         // %1:i32 = ....
         // cand ... , infer ... , result ...
         // pc ... , blockpc ... ,
 
-        match self.lookahead {
+        match self.lookahead.clone() {
             Some(TokKind::ValName(lhs, width)) => {
                 self.lhs_valname = lhs;
                 self.width = width;
@@ -629,7 +636,7 @@ pub fn parse(text: &str) -> Vec<Inst> {
                         continue;
                     }
                     _ => {
-                        let lhs = inst.lhs;
+                        let lhs = inst.lhs.clone();
                         insts.push(inst);
                         // create hashmap and keep
                         // inserting valnames + index pair
@@ -637,9 +644,9 @@ pub fn parse(text: &str) -> Vec<Inst> {
                         if p.lhs_val_names_to_idx.get(&lhs).is_none() {
                             p.lhs_val_names_to_idx.insert(lhs, p.total_insts);
                             // Debug
-                            println!("Inserting into hashMap in parser====\n");
-                            println!("LHS = {} : Idx = {}\n",
-                                lhs, p.total_insts);
+                            // println!("Inserting into hashMap in parser====\n");
+                            // println!("LHS = {} : Idx = {}\n",
+                            //     lhs, p.total_insts);
 
                             p.total_insts += 1;
                         }
@@ -651,12 +658,36 @@ pub fn parse(text: &str) -> Vec<Inst> {
     }
 
     // Debug
-    // println!("\n******* Debugging the hashtable for \
-    //     LHS name to Index ***\n");
-    // for (key, val) in p.lhs_val_names_to_idx {
-    //     println!("LHS = {}, Idx = {}\n", key, val);
-    // }
-    // println!("\n*******************\n");
+    for i in insts.clone() {
+        println!("Inst = {}\n", p.get_kind_name(i.kind));
+        println!("\t LHS = {}\n", i.lhs);
+        match i.ops {
+            Some(ops_lst) => {
+                for op in ops_lst {
+                    //
+                    match op.idx_val {
+                        Some(id) => {
+                            println!("\t op: idx_val = {}\n", id);
+                        },
+                        None => {},
+                    }
+                    match op.const_val {
+                        Some(c) => {
+                            println!("\t op: const_val = {}\n", c);
+                        },
+                        None => {},
+                    }
+                }
+            },
+            None => {},
+        }
+    }
+    println!("\n******* Debugging the hashtable for \
+        LHS name to Index ***\n");
+    for (key, val) in p.lhs_val_names_to_idx {
+        println!("LHS = {}, Idx = {}\n", key, val);
+    }
+    println!("\n*******************\n");
 
     insts
 }
