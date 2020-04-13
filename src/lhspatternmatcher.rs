@@ -547,22 +547,30 @@ pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>, global_count: u
     arena.clift_insts = clift_insts.clone();
     let all_nodes = arena.build_sequence_of_nodes(inst_at_infer_op_idx);
 
-    //println!("--------------------------------");
-    //for n in 0 .. all_nodes.len() {
-    //    println!("Node id = {}", all_nodes[n].id);
-    //    println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
-    //    println!("Node value = {}", all_nodes[n].node_value);
-    //    match all_nodes[n].clone().next {
-    //        Some(x) => {
-    //            for i in 0 .. x.len() {
-    //                println!("next = {}", x[i].index);
-    //            }
-    //        },
-    //        None => {
-    //            println!("next = None");
-    //        }
-    //    }
-    //    println!("--------------------------------");
-    //}
+    println!("--------------------------------");
+    for n in 0 .. all_nodes.len() {
+        println!("Node id = {}", all_nodes[n].id);
+        match all_nodes[n].clone().var_id {
+            Some (var_num) => {
+                println!("Var number = {}", var_num);
+            },
+            None => {
+                println!("Var number = None\n");
+            },
+        }
+        println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
+        println!("Node value = {}", all_nodes[n].node_value);
+        match all_nodes[n].clone().next {
+            Some(x) => {
+                for i in 0 .. x.len() {
+                    println!("next = {}", x[i].index);
+                }
+            },
+            None => {
+                println!("next = None");
+            }
+        }
+        println!("--------------------------------");
+    }
     all_nodes
 }

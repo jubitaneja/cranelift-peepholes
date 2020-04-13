@@ -313,6 +313,14 @@ pub fn generate_matcher(mut arena: MergedArena, rhs: HashMap<usize, Vec<CtonInst
         println!("Node ==== ===================================");
         println!("\t\t Node Id = {}", arena.merged_tree[node].id);
         println!("\t\t Actionable? = {}", action_flag);
+        match arena.merged_tree[node].clone().var_id {
+            Some(x) => {
+                println!("Var number = {}", x);
+            },
+            None => {
+                println!("Var number = None\n");
+            },
+        }
         println!(
             "\t\t Node Type = {}",
             lhspatternmatcher::get_node_type(arena.merged_tree[node].clone().node_type)

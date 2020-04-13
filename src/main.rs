@@ -66,32 +66,32 @@ fn main() {
         let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
 
         // Debug
-        // println!("====================================\n");
-        // for ci in clift_insts.clone() {
-        //     println!("Clift Inst = {}\n",
-        //         cliftinstbuilder::get_clift_opcode_name(ci.opcode));
-        //     match ci.cops {
-        //         Some(ops) => {
-        //             for op in ops {
-        //                 match op.idx_val {
-        //                     Some(idxVal) => {
-        //                         println!("Op idx = {}\n", idxVal);
-        //                     },
-        //                     None => {
-        //                         match op.const_val {
-        //                             Some(c) => {
-        //                                 println!("Op const val = {}\n", c);
-        //                             },
-        //                             None => {},
-        //                         }
-        //                     },
-        //                 }
-        //             }
-        //         },
-        //         None => {},
-        //     }
-        // }
-        // println!("====================================\n");
+        println!("====================================\n");
+        for ci in clift_insts.clone() {
+            println!("Clift Inst = {}\n",
+                cliftinstbuilder::get_clift_opcode_name(ci.opcode));
+            match ci.cops {
+                Some(ops) => {
+                    for op in ops {
+                        match op.idx_val {
+                            Some(idxVal) => {
+                                println!("Op idx = {}\n", idxVal);
+                            },
+                            None => {
+                                match op.const_val {
+                                    Some(c) => {
+                                        println!("Op const val = {}\n", c);
+                                    },
+                                    None => {},
+                                }
+                            },
+                        }
+                    }
+                },
+                None => {},
+            }
+        }
+        println!("====================================\n");
 
         // Pattern Matching - Single prefix tree
         let lhs_single_tree = lhspatternmatcher::generate_single_tree_patterns(

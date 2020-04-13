@@ -250,6 +250,80 @@ pub fn inst_has_const_operand(clift_ops: Option<Vec<CtonOperand>>) -> bool {
         .is_some()
 }
 
+//pub fn get_operand(ops: Option<Vec<CtonOperand>>, i: u32) -> Option<CtonOperand> {
+//    match ops {
+//        Some(cops) => {
+//            cops[i]
+//        },
+//        None => None,
+//   }
+//}
+//
+//pub fn build_clift_insts(
+//    opcode: CtonOpcode,
+//    ops: Option<Vec<CtonOperand>>,
+//    kind: CtonInstKind,
+//    cond: Option<CtonCmpCond>,
+//    width: u32,
+//    var_num: Option<u32>) -> Vec<CtonInst> {
+//        let mut insts = Vec![];
+//        // if both operands are const
+//        let op0 = get_operand(clift_ops.clone(), 0);
+//        let op1 = get_operand(clift_ops.clone(), 1);
+//        if both_const_operands(clift_ops.clone()) {
+//            // iconst op0
+//            let mut ops0: Vec<CtonOperand> = Vec::new();
+//            ops0.push(Some(op0));
+//            insts.push(CtonInst {
+//                valuedef: CtonValueDef::Result,
+//                kind: CtonInstKind::UnaryImm,
+//                opcode: CtonOpcode::ConstInst,
+//                cond: None,
+//                width: width,
+//                var_num: None,
+//                cops: Some(ops0),
+//            });
+//            // iconst op1
+//            let mut ops1: Vec<CtonOperand> = Vec::new();
+//            ops1.push(Some(op1));
+//            insts.push(CtonInst {
+//                valuedef: CtonValueDef::Result,
+//                kind: CtonInstKind::UnaryImm,
+//                opcode: CtonOpcode::ConstInst,
+//                cond: None,
+//                width: width,
+//                var_num: None,
+//                cops: Some(ops1),
+//            });
+//            // iadd op0, op1
+//            // let mut all_ops: Vec<CtonOperand> = Vec::new();
+//            // all_ops.push(ops0);
+//            // all_ops.push(ops1);
+//            insts.push(CtonInst {
+//                valuedef: CtonValueDef::Result,
+//                kind: CtonInstKind::Binary,
+//                opcode: CtonOpcode::Iadd,
+//                cond: None,
+//                width: width,
+//                var_num: None,
+//                cops: Some(all_ops),
+//            });
+//        } else if inst_has_const_operand(clift_ops.clone()) {
+//            inst_opcode = CtonOpcode::IaddImm;
+//            kind = CtonInstKind::BinaryImm;
+//        } else {
+//        CtonInst {
+//            valuedef: CtonValueDef::Result,
+//            kind: kind,
+//            opcode: inst_opcode,
+//            cond: None,
+//            width: width,
+//            var_num: var_number,
+//            cops: clift_ops,
+//        }
+//        }
+//}
+
 /// Codegen Phase #1
 pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
     match souper_inst {
@@ -267,6 +341,18 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Iadd;
                     let mut kind = CtonInstKind::Binary;
+                    // FIXME
+                    //let insts = build_clift_insts(
+                    //    inst_opcode,
+                    //    clift_ops.clone(),
+                    //    kind,
+                    //    None, // condition
+                    //    width,
+                    //    var_num);
+                    //if inst_has_const_operand(clift_ops.clone()) {
+                    //    inst_opcode = CtonOpcode::IaddImm;
+                    //    kind = CtonInstKind::BinaryImm;
+                    //}
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::IaddImm;
                         kind = CtonInstKind::BinaryImm;

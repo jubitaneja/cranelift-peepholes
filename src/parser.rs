@@ -43,6 +43,7 @@ pub enum SouperOpType {
     Constant,
 }
 
+#[derive(Clone)]
 pub struct SouperOperand {
     pub kind: SouperOpType,
     // what should be the type of constants values?
@@ -82,6 +83,13 @@ pub struct Parser<'a> {
 
     // hash map of LHS valnames to Index values
     lhs_val_names_to_idx: HashMap<&'a str, usize>,
+
+    // track count of constants, whenever we create it
+    // as an individual instruction
+    const_count: u32,
+
+    // total instructions
+    total_insts: usize,
 }
 
 impl<'a> Parser<'a> {
@@ -96,6 +104,8 @@ impl<'a> Parser<'a> {
             width: 0,
             var_count: 0,
             lhs_val_names_to_idx: HashMap::new(),
+            const_count: 0,
+            total_insts: 0,
         }
     }
 
@@ -308,7 +318,95 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_inst_types(&mut self) -> Inst<'a> {
+    fn create_const_lhs(&mut self) -> &'a str {
+        self.const_count += 1;
+        let mut lhs = String::from("%const");
+        lhs.push_str(&self.const_count.to_string());
+        &lhs
+    }
+
+    fn create_const_inst(
+        &mut self,
+        op: SouperOperand,
+        width: u32
+    ) -> Inst<'a> {
+        let mut const_ops = vec![];
+        const_ops.push(op);
+        Inst {
+            kind: InstKind::Const,
+            lhs: self.create_const_lhs(),
+            width: width,
+            var_number: None,
+            ops: Some(const_ops),
+        }
+    }
+
+    fn create_const_inst_sequence(
+        &mut self,
+        kind: InstKind,
+        lhs: &'a str,
+        width: u32,
+        ops: Vec<SouperOperand>
+    ) -> Vec<Inst<'a>> {
+        let mut insts = vec![];
+        // create const inst for first operand
+        let const_inst0 = self.create_const_inst(ops[0].clone(), width);
+        let const_idx0 = self.total_insts;
+        self.lhs_val_names_to_idx.insert(const_inst0.lhs, const_idx0);
+        self.total_insts += 1;
+        insts.push(const_inst0);
+
+        // create const inst for second operand
+        let const_inst1 = self.create_const_inst(ops[1].clone(), width);
+        let const_idx1 = self.total_insts;
+        self.lhs_val_names_to_idx.insert(const_inst1.lhs, const_idx1);
+        self.total_insts += 1;
+        insts.push(const_inst1);
+
+        // create final inst using above two as ops
+        let mut inst_ops = vec![];
+        inst_ops.push(SouperOperand {
+            kind: SouperOpType::Index,
+            idx_val: Some(const_idx0),
+            const_val: None,
+            width: width,
+        });
+        inst_ops.push(SouperOperand {
+            kind: SouperOpType::Index,
+            idx_val: Some(const_idx1),
+            const_val: None,
+            width: width,
+        });
+        insts.push(Inst {
+            kind: kind,
+            lhs: lhs,
+            width: width,
+            var_number: None,
+            ops: Some(inst_ops),
+        });
+
+        insts
+    }
+
+    fn both_ops_const(&mut self, ops: Vec<SouperOperand>) -> bool {
+        let mut op_type = true;
+        for op in ops {
+            match op.kind {
+                SouperOpType::Index => {
+                    op_type = false;
+                    break
+                },
+                _ => {},
+            }
+            //if let op.kind = SouperOpType::Index {
+            //    op_type = false;
+            //    break
+            //}
+        }
+        op_type
+    }
+
+    fn parse_inst_types(&mut self) -> Vec<Inst<'a>> {
         if let Some(TokKind::Ident(text)) = self.lookahead {
             match self.get_inst_kind(text) {
                 InstKind::Var => {
@@ -316,30 +414,37 @@ impl<'a> Parser<'a> {
                     // instwidth == 0 => error "var inst expects atleast width=1"
 
                     self.consume_token();
-                    // TODO: Deal with dataflow facts later here!
-
                     let instname = self.lhs_valname.clone();
-                    // TODO: collect more attributes of var
                     let instwidth = self.width.clone();
-
-                    self.create_var(InstKind::Var, instname, instwidth)
+                    let mut var_inst = vec![];
+                    var_inst.push(self.create_var(InstKind::Var, instname, instwidth));
+                    var_inst
                 }
                 _ => {
                     let inst_kind = self.get_inst_kind(text);
-
-                    // Start parsing Ops
                     self.consume_token();
                     let ops = self.parse_ops();
-
-                    //println!("Build {} instruction", text);
-                    // TODO: return the build instruction
-                    // IC.getInst(instwidth, instkind, ops)
-                    //Some(self.create_inst(inst_kind, self.lhs_valname.clone()))
                     let instname = self.lhs_valname.clone();
                     let instwidth = self.width.clone();
 
-                    // TODO: Add width to these insts
-                    self.create_inst(inst_kind, instname, instwidth, ops)
+                    if self.both_ops_const(ops.clone()) {
+                        self.create_const_inst_sequence(
+                            inst_kind,
+                            instname,
+                            instwidth,
+                            ops)
+                    } else {
+                        let mut insts = vec![];
+                        insts.push(
+                            self.create_inst(
+                                inst_kind,
+                                instname,
+                                instwidth,
+                                ops
+                            )
+                        );
+                        insts
+                    }
                 }
             }
         } else {
@@ -347,7 +452,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_valname_inst(&mut self) -> Inst<'a> {
+    fn parse_valname_inst(&mut self) -> Vec<Inst<'a>> {
         // FIXME: Jubi: Add this info to token struct and get it
         // instwidth = self.width
         // instValName = self.instValname
@@ -375,24 +480,29 @@ impl<'a> Parser<'a> {
 
     // parse instructions that start with an identifier
     // example: infer, cand, pc, blockpc inst in Souper IR
-    fn parse_ident_inst(&mut self) -> Inst<'a> {
+    fn parse_ident_inst(&mut self) -> Vec<Inst<'a>> {
         if let Some(TokKind::Ident(text)) = self.lookahead {
+            let mut insts = vec![];
             match self.get_inst_kind(text) {
                 InstKind::Infer => {
                     self.consume_token();
                     match self.lookahead {
                         Some(TokKind::ValName(_lhs, width)) => {
                             let ops = self.parse_ops();
-                            //error checking on ops length
                             assert!(
                                 ops.len() == 1,
                                 "expected one operand for infer instruction, but found {}",
                                 ops.len()
                             );
-                            //println!("Parser Build Infer instruction");
-                            //self.create_inst(InstKind::Infer, lhs, width, ops)
-                            //FIXED
-                            self.create_inst(InstKind::Infer, "infer", width, ops)
+                            insts.push(
+                                self.create_inst(
+                                    InstKind::Infer,
+                                    "infer",
+                                    width,
+                                    ops
+                                )
+                            );
+                            insts
                         }
                         _ => {
                             panic!("unexpected infer instruction operand");
@@ -410,10 +520,15 @@ impl<'a> Parser<'a> {
                                 "expected one operand for infer instruction, but found {}",
                                 ops.len()
                             );
-                            //println!("Parsing build Result Inst\n");
-                            //self.create_inst(InstKind::ResultInst, lhs, width, ops)
-                            //FIXED
-                            self.create_inst(InstKind::ResultInst, "result", width, ops)
+                            insts.push(
+                                self.create_inst(
+                                    InstKind::ResultInst,
+                                    "result",
+                                    width,
+                                    ops
+                                )
+                            );
+                            insts
                         }
                         // Result inst can have a typed int as an operand as well.
                         // We will make it a rule that Souper's result inst *DOES NOT*
@@ -427,7 +542,15 @@ impl<'a> Parser<'a> {
                                     instruction, but found {}",
                                 ops.len()
                             );
-                            self.create_inst(InstKind::ResultInst, "result", width, ops)
+                            insts.push(
+                                self.create_inst(
+                                    InstKind::ResultInst,
+                                    "result",
+                                    width,
+                                    ops
+                                )
+                            );
+                            insts
                         }
                         _ => {
                             panic!("unexpected result instruction operand");
@@ -456,7 +579,7 @@ impl<'a> Parser<'a> {
     }
 
     // parse each instruction
-    fn parse_inst(&mut self) -> Inst<'a> {
+    fn parse_inst(&mut self) -> Vec<Inst<'a>> {
         // Instructions start either with valname or Ident
         // Example:
         // %1:i32 = ....
@@ -470,7 +593,11 @@ impl<'a> Parser<'a> {
                 self.parse_valname_inst()
             }
             Some(TokKind::Ident(_)) => self.parse_ident_inst(),
-            Some(TokKind::Implies) => self.parse_implies_dummy_inst(),
+            Some(TokKind::Implies) => {
+                let mut insts = vec![];
+                insts.push(self.parse_implies_dummy_inst());
+                insts
+            },
             _ => {
                 // FIXME: Jubi: Build an error
                 panic!(
@@ -495,7 +622,8 @@ pub fn parse(text: &str) -> Vec<Inst> {
         match p.lookahead {
             Some(TokKind::Eof) => break,
             _ => {
-                let inst = p.parse_inst();
+                let parsed_insts = p.parse_inst();
+                for inst in parsed_insts {
                 match inst.kind {
                     InstKind::Implies => {
                         continue;
@@ -505,14 +633,18 @@ pub fn parse(text: &str) -> Vec<Inst> {
                         insts.push(inst);
                         // create hashmap and keep
                         // inserting valnames + index pair
-                        p.lhs_val_names_to_idx.insert(lhs, insts.len() - 1);
-                        // Debug
-                        // println!("Inserting into hashMap in parser====\n");
-                        // println!("Inst = {}\n",
-                        //     p.get_kind_name(inst.kind.clone()));
-                        // println!("LHS = {} : Idx = {}\n",
-                        //     lhs, insts.len()-1);
+                        // FIXME: TODO: If key exists in hashmap, then don't insert 
+                        if p.lhs_val_names_to_idx.get(&lhs).is_none() {
+                            p.lhs_val_names_to_idx.insert(lhs, p.total_insts);
+                            // Debug
+                            println!("Inserting into hashMap in parser====\n");
+                            println!("LHS = {} : Idx = {}\n",
+                                lhs, p.total_insts);
+
+                            p.total_insts += 1;
+                        }
                     }
+                }
                 }
             }
         }
