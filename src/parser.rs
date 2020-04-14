@@ -177,7 +177,7 @@ impl<'a> Parser<'a> {
     }
 
     // return souper inst kind name for the given inst kind
-    //#[allow(dead_code)]
+    #[allow(dead_code)]
     fn get_kind_name(&mut self, kind: InstKind) -> String {
         match kind {
             InstKind::Var => "var".to_string(),
