@@ -413,6 +413,18 @@ pub fn generate_matcher(mut arena: MergedArena, rhs: HashMap<usize, Vec<CtonInst
                         arg_counter = opt_func.get_argument_counter(arg_counter);
                         opt_func.append(String::from(" = arg;\n"));
                     }
+                    "UnaryImm" => {
+                        opt_func.append(String::from("InstructionData::UnaryImm { opcode, imm }"));
+                        opt_func.enter_scope(ScopeType::ScopeCase, current_level);
+                        opt_func.set_entity(String::from("opcode"));
+                        const_counter = opt_func.get_const_counter(const_counter);
+                        let mut rhs_arg = "rhs_".to_string();
+                        rhs_arg.push_str(&const_counter.to_string());
+                        opt_func.append(String::from("let "));
+                        opt_func.append(String::from(rhs_arg.to_string()));
+                        opt_func.append(String::from(" : i64 = imm.into();\n"));
+                        opt_func.push_to_const_stack(rhs_arg.to_string());
+                    }
                     "BinaryImm" => {
                         // FIXME: "args" part, make a connection between actual args and string
                         opt_func.append(String::from(
@@ -621,6 +633,10 @@ pub fn generate_matcher(mut arena: MergedArena, rhs: HashMap<usize, Vec<CtonInst
                     }
                     "ctz" => {
                         opt_func.append(String::from("Opcode::Ctz"));
+                        opt_func.enter_scope(ScopeType::ScopeCase, current_level);
+                    }
+                    "iconst" => {
+                        opt_func.append(String::from("Opcode::Iconst"));
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                     }
                     _ => {

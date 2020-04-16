@@ -275,7 +275,7 @@ impl Arena {
         parent_instdata: String,
     ) -> Node {
         let node_val = match parent_instdata.as_ref() {
-            "BinaryImm" | "IntCompareImm" => get_arg_name_for_binary_imm(arg, &argtype),
+            "BinaryImm" | "IntCompareImm" | "UnaryImm" => get_arg_name_for_binary_imm(arg, &argtype),
             _ => {
                 // Binary, Var, Unary
                 get_arg_name(arg)
@@ -536,7 +536,10 @@ impl Arena {
     }
 }
 
-pub fn generate_single_tree_patterns(clift_insts: Vec<CtonInst>, global_count: usize) -> Vec<Node> {
+pub fn generate_single_tree_patterns(
+    clift_insts: Vec<CtonInst>,
+    global_count: usize
+) -> Vec<Node> {
     let infer_clift_inst = get_infer_clift_inst(clift_insts.clone());
     let infer_clift_ops = get_infer_clift_op(infer_clift_inst);
     let index_from_infer_clift_op = get_index_from_infer_clift_op(infer_clift_ops);

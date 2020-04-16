@@ -447,6 +447,18 @@ pub fn generate_baseline_matcher(
                         arg_counter = opt_func.get_argument_counter(arg_counter);
                         opt_func.append(String::from(" = arg;\n"));
                     }
+                    "UnaryImm" => {
+                        opt_func.append(String::from("InstructionData::UnaryImm { opcode, imm }"));
+                        opt_func.enter_scope(ScopeType::ScopeCase, current_level);
+                        opt_func.set_entity(String::from("opcode"));
+                        const_counter = opt_func.get_const_counter(const_counter);
+                        let mut rhs_arg = "rhs_".to_string();
+                        rhs_arg.push_str(&const_counter.to_string());
+                        opt_func.append(String::from("let "));
+                        opt_func.append(String::from(rhs_arg.to_string()));
+                        opt_func.append(String::from(" : i64 = imm.into();\n"));
+                        opt_func.push_to_const_stack(rhs_arg.to_string());
+                    }
                     "BinaryImm" => {
                         // FIXME: "args" part, make a connection
                         // between actual args and string
@@ -660,6 +672,10 @@ pub fn generate_baseline_matcher(
                         opt_func.append(String::from("Opcode::Ctz"));
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                     }
+                    "iconst" => {
+                        opt_func.append(String::from("Opcode::Iconst"));
+                        opt_func.enter_scope(ScopeType::ScopeCase, current_level);
+                    }
                     _ => {
                         panic!("Error: this opcode type is not yet handled");
                     }
@@ -720,18 +736,21 @@ pub fn generate_baseline_matcher(
                 // on args or not depending on if the argument type
                 // is Result or Param. Param
                 // type does not need this match part at all.
-                let mut optional_argstr = String::from("");
-                optional_argstr.push_str(&(String::from("match pos.func.dfg.value_def")));
-                optional_argstr.push_str(&(String::from("(")));
-                // make string like: args_2 or args_2[0]
-                // depending on binaryImm or binary
                 let arg_node_val = nodes[node].node_value.clone();
-                optional_argstr.push_str(&(String::from("args_")));
-                optional_argstr.push_str(&(String::from(arg_counter.to_string())));
-                if let Some(i) = arg_node_val.find('[') {
-                    optional_argstr.push_str(&(nodes[node].node_value.clone())[i..]);
+                let mut optional_argstr = String::from("");
+                if arg_node_val.contains("arg") {
+                    optional_argstr.push_str(&(String::from("match pos.func.dfg.value_def")));
+                    optional_argstr.push_str(&(String::from("(")));
+                    // make string like: args_2 or args_2[0]
+                    // depending on binaryImm or binary
+                    //let arg_node_val = nodes[node].node_value.clone();
+                    optional_argstr.push_str(&(String::from("args_")));
+                    optional_argstr.push_str(&(String::from(arg_counter.to_string())));
+                    if let Some(i) = arg_node_val.find('[') {
+                        optional_argstr.push_str(&(nodes[node].node_value.clone())[i..]);
+                    }
+                    optional_argstr.push_str(&(String::from(")")));
                 }
-                optional_argstr.push_str(&(String::from(")")));
                 // FIXME: Do we want to take action here and should we
                 // append to arg_str, or opt_func?
                 if arg_str != optional_argstr {

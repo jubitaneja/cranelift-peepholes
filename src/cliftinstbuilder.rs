@@ -37,6 +37,7 @@ pub enum CtonInstKind {
 
 #[derive(Clone)]
 pub enum CtonOpcode {
+    Iconst,
     Iadd,
     IaddImm,
     Var,
@@ -98,6 +99,7 @@ pub struct CtonOperand {
 #[allow(dead_code)]
 pub fn get_cton_inst_name(opcode: CtonOpcode) {
     match opcode {
+        CtonOpcode::Iconst => println!("CtonOpcode = Iconst"),
         CtonOpcode::Iadd => println!("CtonOpcode = Iadd"),
         CtonOpcode::Imul => println!("CtonOpcode = Imul"),
         CtonOpcode::ImulImm => println!("CtonOpcode = ImulImm"),
@@ -131,6 +133,7 @@ pub fn get_cton_inst_name(opcode: CtonOpcode) {
 #[allow(dead_code)]
 pub fn get_cton_opcode_name(opcode: CtonOpcode) {
     match opcode {
+        CtonOpcode::Iconst => println!("Cton::Opcode = Iconst"),
         CtonOpcode::Iadd => println!("Cton::Opcode = Iadd"),
         CtonOpcode::Imul => println!("Cton::Opcode = Imul"),
         CtonOpcode::ImulImm => println!("Cton::Opcode = ImulImm"),
@@ -195,6 +198,7 @@ pub fn get_clift_cond_name<'a>(cond: Option<CtonCmpCond>) -> String {
 
 pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
     match opcode {
+        CtonOpcode::Iconst => "iconst".to_string(),
         CtonOpcode::Iadd => "iadd".to_string(),
         CtonOpcode::Imul => "imul".to_string(),
         CtonOpcode::ImulImm => "imul_imm".to_string(),
@@ -337,22 +341,22 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
             match kind {
                 // FIXME: Deal with ops mapping in a better way later
                 // because, we have to get rid of souperoperand type completely
+                InstKind::Const => {
+                    let clift_ops = build_clift_ops(ops);
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::UnaryImm,
+                        opcode: CtonOpcode::Iconst,
+                        cond: None,
+                        width: width,
+                        var_num: var_number,
+                        cops: clift_ops,
+                    }
+                }
                 InstKind::Add => {
                     let clift_ops = build_clift_ops(ops);
                     let mut inst_opcode = CtonOpcode::Iadd;
                     let mut kind = CtonInstKind::Binary;
-                    // FIXME
-                    //let insts = build_clift_insts(
-                    //    inst_opcode,
-                    //    clift_ops.clone(),
-                    //    kind,
-                    //    None, // condition
-                    //    width,
-                    //    var_num);
-                    //if inst_has_const_operand(clift_ops.clone()) {
-                    //    inst_opcode = CtonOpcode::IaddImm;
-                    //    kind = CtonInstKind::BinaryImm;
-                    //}
                     if inst_has_const_operand(clift_ops.clone()) {
                         inst_opcode = CtonOpcode::IaddImm;
                         kind = CtonInstKind::BinaryImm;
