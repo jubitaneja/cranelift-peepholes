@@ -74,8 +74,8 @@ fn main() {
                 Some(ops) => {
                     for op in ops {
                         match op.idx_val {
-                            Some(idxVal) => {
-                                println!("Op idx = {}\n", idxVal);
+                            Some(idx_val) => {
+                                println!("Op idx = {}\n", idx_val);
                             },
                             None => {
                                 match op.const_val {

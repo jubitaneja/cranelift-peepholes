@@ -153,6 +153,7 @@ impl Opt {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -214,6 +215,7 @@ impl Opt {
             arg_flag: false,
             level: 0,
             next: Some(Vec::new()),
+            idx_num: None,
         }
     }
 
@@ -357,6 +359,10 @@ pub fn generate_baseline_matcher(
         println!("\t\t Node Id = {}", nodes[node].id);
         println!("\t\t Node Level = {}", nodes[node].level);
         println!("\t\t Node Value = {}", nodes[node].node_value);
+        match nodes[node].idx_num.clone() {
+            Some(i) => println!("\t\t Node op idx number = {}", i),
+            None => println!("\t\t Node op idx number = NONE"),
+        }
         match nodes[node].next.clone() {
             Some(ids) => {
                 for i in 0..ids.len() {

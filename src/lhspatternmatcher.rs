@@ -34,6 +34,7 @@ pub struct Node {
     pub arg_flag: bool,
     pub level: usize,
     pub next: Option<Vec<NodeID>>,
+    pub idx_num: Option<usize>,
 }
 
 #[derive(Clone)]
@@ -167,6 +168,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -180,6 +182,20 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
+        }
+    }
+
+    pub fn get_arg_name_for_instdata_node(kind: CtonInstKind) -> String {
+        let mut arg_name = "".to_string();
+        match kind {
+            Unary | UnaryImm |
+            Binary | BinaryImm |
+            IntCompare | IntCompareImm => {
+                arg_name.push_str("arg_");
+                arg_name.push_str(self.instdata_count);
+            },
+            _ => {},
         }
     }
 
@@ -194,6 +210,8 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
+            //arg_name: self.get_arg_name_for_instdata_node(instdata_val),
         }
     }
 
@@ -207,6 +225,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -221,6 +240,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -234,6 +254,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -249,6 +270,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -273,6 +295,7 @@ impl Arena {
         argtype: String,
         arg: usize,
         parent_instdata: String,
+        idx_num: Option<usize>,
     ) -> Node {
         let node_val = match parent_instdata.as_ref() {
             "BinaryImm" | "IntCompareImm" | "UnaryImm" => get_arg_name_for_binary_imm(arg, &argtype),
@@ -290,6 +313,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: idx_num,
         }
     }
 
@@ -304,6 +328,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -320,6 +345,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -334,6 +360,7 @@ impl Arena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
@@ -367,17 +394,44 @@ impl Arena {
                 }
                 if op.const_val.is_some() {
                     list_ops.push("const");
+                    match op.const_val {
+                        Some(c) => println!("Op is a constant with value: {}\n", c),
+                        _ => {},
+                    }
                 }
             }
         }
         list_ops[arg_num].to_string()
     }
 
+    pub fn get_clift_op_index_num_from_arg_num(
+        &mut self,
+        clift_inst: &CtonInst,
+        arg_num: usize,
+    ) -> Option<usize> {
+        let cops = &clift_inst.cops;
+        let mut idx = None;
+        if let Some(ops) = cops {
+            for op in 0..ops.len() {
+                if op == arg_num {
+                    match ops[op].idx_val {
+                        Some(i) => {
+                            idx = Some(i);
+                        },
+                        None => {},
+                    }
+                }
+            }
+        }
+        idx
+    }
+
     pub fn build_args_node(&mut self, clift_inst: &CtonInst, parent_instdata: String) {
         let total_args = get_total_number_of_args(clift_inst);
         for op in 0..total_args {
             let op_type = self.get_clift_op_type_from_arg_num(clift_inst, op);
-            let named_arg_node = self.build_separate_arg_node(op_type, op, parent_instdata.clone());
+            let idx_number = self.get_clift_op_index_num_from_arg_num(clift_inst, op);
+            let named_arg_node = self.build_separate_arg_node(op_type, op, parent_instdata.clone(), idx_number);
 
             //set next of node before named arg node
             let c = self.count.clone();
@@ -563,6 +617,10 @@ pub fn generate_single_tree_patterns(
         }
         println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
         println!("Node value = {}", all_nodes[n].node_value);
+        match all_nodes[n].idx_num.clone() {
+            Some(i) => println!("Node op idx num = {}", i),
+            None => println!("Node op idx num = NONE"),
+        }
         match all_nodes[n].clone().next {
             Some(x) => {
                 for i in 0 .. x.len() {

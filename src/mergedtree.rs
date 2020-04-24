@@ -20,6 +20,7 @@ impl MergedArena {
             arg_flag: false,
             level: 0,
             next: Some(Vec::new()),
+            idx_num: None,
         }
     }
 
@@ -108,6 +109,7 @@ impl MergedArena {
             arg_flag: false,
             level: 0,
             next: None,
+            idx_num: None,
         }
     }
 
