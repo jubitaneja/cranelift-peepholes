@@ -154,6 +154,7 @@ impl Opt {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -216,6 +217,7 @@ impl Opt {
             level: 0,
             next: Some(Vec::new()),
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -363,6 +365,7 @@ pub fn generate_baseline_matcher(
             Some(i) => println!("\t\t Node op idx number = {}", i),
             None => println!("\t\t Node op idx number = NONE"),
         }
+        println!("\t\t\t Node arg_name = {}", nodes[node].arg_name);
         match nodes[node].next.clone() {
             Some(ids) => {
                 for i in 0..ids.len() {

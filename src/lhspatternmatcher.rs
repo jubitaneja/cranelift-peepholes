@@ -6,6 +6,7 @@ pub struct Arena {
     nodes: Vec<Node>,
     clift_insts: Vec<CtonInst>,
     count: usize,
+    instdata_count: usize,
 }
 
 #[derive(Clone)]
@@ -35,6 +36,7 @@ pub struct Node {
     pub level: usize,
     pub next: Option<Vec<NodeID>>,
     pub idx_num: Option<usize>,
+    pub arg_name: String,
 }
 
 #[derive(Clone)]
@@ -151,6 +153,7 @@ impl Arena {
             nodes: Vec::new(),
             clift_insts: Vec::new(),
             count: global_counter,
+            instdata_count: 0,
         }
     }
 
@@ -169,6 +172,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -183,27 +187,30 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
-    pub fn get_arg_name_for_instdata_node(kind: CtonInstKind) -> String {
+    pub fn get_arg_name_for_instdata_node(&mut self, kind: CtonInstKind) -> String {
         let mut arg_name = "".to_string();
         match kind {
-            Unary | UnaryImm |
-            Binary | BinaryImm |
-            IntCompare | IntCompareImm => {
+            CtonInstKind::Unary | CtonInstKind::UnaryImm |
+            CtonInstKind::Binary | CtonInstKind::BinaryImm |
+            CtonInstKind::IntCompare | CtonInstKind::IntCompareImm => {
                 arg_name.push_str("arg_");
-                arg_name.push_str(self.instdata_count);
+                arg_name.push_str(&self.instdata_count.to_string());
+                self.instdata_count += 1;
             },
             _ => {},
         }
+        arg_name
     }
 
     pub fn build_specific_instdata_node(&mut self, clift_inst: &CtonInst) -> Node {
         let instdata_val = clift_inst.kind.clone();
         Node {
             node_type: NodeType::InstType,
-            node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val),
+            node_value: cliftinstbuilder::get_clift_instdata_name(instdata_val.clone()),
             width: clift_inst.width.clone(),
             id: self.count,
             var_id: clift_inst.var_num.clone(),
@@ -211,7 +218,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
-            //arg_name: self.get_arg_name_for_instdata_node(instdata_val),
+            arg_name: self.get_arg_name_for_instdata_node(instdata_val.clone()),
         }
     }
 
@@ -226,6 +233,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -241,6 +249,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -255,6 +264,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -271,6 +281,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -314,6 +325,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: idx_num,
+            arg_name: "".to_string(),
         }
     }
 
@@ -329,6 +341,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -346,6 +359,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -361,6 +375,7 @@ impl Arena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -621,6 +636,7 @@ pub fn generate_single_tree_patterns(
             Some(i) => println!("Node op idx num = {}", i),
             None => println!("Node op idx num = NONE"),
         }
+        println!("Node arg_name == {}", all_nodes[n].arg_name);
         match all_nodes[n].clone().next {
             Some(x) => {
                 for i in 0 .. x.len() {

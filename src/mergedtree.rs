@@ -21,6 +21,7 @@ impl MergedArena {
             level: 0,
             next: Some(Vec::new()),
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
@@ -110,6 +111,7 @@ impl MergedArena {
             level: 0,
             next: None,
             idx_num: None,
+            arg_name: "".to_string(),
         }
     }
 
