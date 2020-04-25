@@ -9,6 +9,7 @@ mod baseline_matcher;
 mod cliftinstbuilder;
 mod lexer;
 mod lhspatternmatcher;
+mod processlhs;
 mod matcher;
 mod mergedtree;
 mod parser;
@@ -101,6 +102,12 @@ fn main() {
 
         global_nodes_count += lhs_single_tree.len();
 
+        // Process linear prefix tree of LHS for updating arg names
+        // from parent instdata nodes to arg nodes
+        let lhs_info = processlhs::update_arg_nodes_in_lhs(
+            lhs_single_tree.clone()
+        );
+
         // Separate out only RHS cranelift insts
         let rhs_clift_insts = rhscliftinsts::get_result_clift_insts_only(clift_insts.clone());
 
@@ -173,9 +180,10 @@ fn main() {
 
         if mode == "baseline" {
             let base_matcher = baseline_matcher::generate_baseline_matcher(
-                lhs_single_tree.clone(),
+                lhs_info.nodes.clone(),
                 rhs_table.clone(),
                 lhs_count,
+                lhs_info.htable.clone()
             );
             lhs_count += 1;
             println!("{}", base_matcher);

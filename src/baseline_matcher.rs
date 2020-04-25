@@ -221,7 +221,32 @@ impl Opt {
         }
     }
 
-    pub fn take_action(&mut self, rhs: Vec<CtonInst>) {
+    pub fn get_argnames_from_idx(
+        &mut self,
+        indices: Vec<usize>,
+        table: HashMap<usize, String>
+    ) -> String {
+        let mut arg_str = "".to_owned();
+        println!("Table contents \n");
+        for (k, v) in table.clone() {
+            println!("{} : {}\n", k.to_string(), v);
+        }
+        for i in 0..indices.len() {
+            println!("**** for index = {}\n", indices[i]);
+            match table.get(&indices[i]) {
+                Some(arg) => {
+                    println!("****** found arg === {}\n", arg);
+                    arg_str.push_str(&arg);
+                },
+                None => {},
+            }
+            arg_str.push_str(&String::from(", "));
+       }
+       println!("************ replaced args = {}\n", arg_str);
+       arg_str
+    }
+
+    pub fn take_action(&mut self, rhs: Vec<CtonInst>, table: HashMap<usize, String>) {
         if rhs.len() == 1 {
             let each_inst = rhs[0].clone();
             let mut rhs_const: i32 = 0;
@@ -258,18 +283,51 @@ impl Opt {
         } else {
             for inst in 0..rhs.len() - 2 {
                 let each_inst = rhs[inst].clone();
+                let mut inst_ops_idx : Vec<usize> = Vec::new();
+                match each_inst.cops {
+                    Some(ops) => {
+                        for op in ops {
+                            match op.idx_val {
+                                Some(id) => {
+                                    inst_ops_idx.push(id);
+                                },
+                                None => {},
+                            }
+                        }
+                    },
+                    None => {},
+                }
+
                 let mut insert_inst_str = "let inst".to_owned();
                 insert_inst_str += &inst.to_string();
                 insert_inst_str += &" = pos.ins().".to_owned();
                 insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
                 insert_inst_str += &"(".to_owned();
                 // [Pending] FIXME: fix the args names and count of args here
-                insert_inst_str += &"args[0], args[1]".to_owned();
+                // NEW FIX: Jubi: use arg names from hash table corresponding to its index
+                //insert_inst_str += &"args[0], args[1]".to_owned();
+
+                insert_inst_str.push_str(&self.get_argnames_from_idx(inst_ops_idx, table.clone()));
+
                 insert_inst_str += &");\n".to_owned();
                 self.func_str.push_str(&insert_inst_str);
             }
             for inst in rhs.len() - 2..rhs.len() - 1 {
                 let each_inst = rhs[inst].clone();
+                let mut inst_ops_idx : Vec<usize> = Vec::new();
+                match each_inst.cops {
+                    Some(ops) => {
+                        for op in ops {
+                            match op.idx_val {
+                                Some(id) => {
+                                    inst_ops_idx.push(id);
+                                },
+                                None => {},
+                            }
+                        }
+                    },
+                    None => {},
+                }
                 let mut replace_inst_str = "pos.func.dfg.replace(".to_owned();
                 // FIXME: fix the inst name here
                 replace_inst_str += &"inst".to_owned();
@@ -277,7 +335,11 @@ impl Opt {
                 replace_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
                 replace_inst_str += &"(".to_owned();
                 // FIXME: fix the args names and count of args here
-                replace_inst_str += &"args[0], args[1]".to_owned();
+                // New fix: JUbi
+                //replace_inst_str += &"args[0], args[1]".to_owned();
+
+                replace_inst_str.push_str(&self.get_argnames_from_idx(inst_ops_idx, table.clone()));
+
                 replace_inst_str += &");\n".to_owned();
                 self.func_str.push_str(&replace_inst_str);
             }
@@ -339,6 +401,7 @@ pub fn generate_baseline_matcher(
     mut nodes: Vec<Node>,
     rhs: HashMap<usize, Vec<CtonInst>>,
     count: u32,
+    idx_to_argname: HashMap<usize, String>
 ) -> String {
     let mut opt_func = Opt::new();
     let mut arg_str = String::from("");
@@ -384,7 +447,7 @@ pub fn generate_baseline_matcher(
                 opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::MatchInstData => {
@@ -404,7 +467,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::InstType => {
@@ -428,8 +491,16 @@ pub fn generate_baseline_matcher(
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                         opt_func.set_entity(String::from("opcode"));
                         // FIXED: Generate: "let args_<counter> = args;"
-                        opt_func.append(String::from("let args_"));
-                        arg_counter = opt_func.get_argument_counter(arg_counter);
+
+                        // NEW FIX: Jubi: We now pick arg_<number> from
+                        // nodes' arg_name
+
+                        // opt_func.append(String::from("let args_"));
+                        // arg_counter = opt_func.get_argument_counter(arg_counter);
+
+                        opt_func.append(String::from("let "));
+                        opt_func.append(nodes[node].arg_name.clone());
+
                         opt_func.append(String::from(" = args;\n"));
                     }
                     "IntCompare" => {
@@ -514,7 +585,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::MatchValDef => {
@@ -555,7 +626,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::MatchOpcode => {
@@ -571,7 +642,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::Opcode => {
@@ -691,7 +762,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::MatchCond => {
@@ -706,7 +777,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::Cond => {
@@ -733,7 +804,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::MatchArgs => {
@@ -753,8 +824,14 @@ pub fn generate_baseline_matcher(
                     // make string like: args_2 or args_2[0]
                     // depending on binaryImm or binary
                     //let arg_node_val = nodes[node].node_value.clone();
-                    optional_argstr.push_str(&(String::from("args_")));
-                    optional_argstr.push_str(&(String::from(arg_counter.to_string())));
+
+                    // NEW FIX: Jubi: We will pick arg_name of this node,
+                    // and append it with [0] or [1]
+                    //optional_argstr.push_str(&(String::from("args_")));
+                    //optional_argstr.push_str(&(String::from(arg_counter.to_string())));
+
+                    optional_argstr.push_str(&(nodes[node].arg_name.clone()));
+
                     if let Some(i) = arg_node_val.find('[') {
                         optional_argstr.push_str(&(nodes[node].node_value.clone())[i..]);
                     }
@@ -771,7 +848,7 @@ pub fn generate_baseline_matcher(
                 opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             NodeType::MatchConst => {
@@ -801,7 +878,7 @@ pub fn generate_baseline_matcher(
                 opt_func.enter_scope(ScopeType::ScopeFunc, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), idx_to_argname.clone());
                 }
             }
             _ => {
