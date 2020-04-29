@@ -10,6 +10,7 @@ mod cliftinstbuilder;
 mod lexer;
 mod lhspatternmatcher;
 mod processlhs;
+mod processrhs;
 mod matcher;
 mod mergedtree;
 mod parser;
@@ -109,8 +110,13 @@ fn main() {
         );
 
         // Separate out only RHS cranelift insts
-        let rhs_clift_insts = rhscliftinsts::get_result_clift_insts_only(clift_insts.clone());
+        let rhs_clift_insts =
+            rhscliftinsts::get_result_clift_insts_only(
+                clift_insts.clone());
 
+        let updated_rhs_insts =
+            processrhs::update_rhs_with_argnames(
+                rhs_clift_insts.clone(), lhs_info.htable.clone());
         // Debug
         // println!("- - - -  - - - - - - -\n");
         // for ri in rhs_clift_insts.clone() {
@@ -119,13 +125,14 @@ fn main() {
         // }
         // println!("- - - - - - -  - - - -\n");
 
-        // create a hashMap <leaf_node_of_each_LHS, RHS_tree>
-        let hash_id = lhs_single_tree[lhs_single_tree.len() - 1].id;
+        //let hash_id = lhs_single_tree[lhs_single_tree.len() - 1].id;
+        let hash_id = lhs_info.nodes[lhs_info.nodes.len() - 1].id;
 
         // Debug
         //println!("hash id for LHS is: {}\n", hash_id);
 
-        rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_clift_insts, rhs_table.clone());
+        //rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_clift_insts, rhs_table.clone());
+        rhs_table = tablerhs::map_lhs_to_rhs(hash_id, updated_rhs_insts, rhs_table.clone());
 
         // Debug
         // println!("\n******************************\n");
@@ -141,7 +148,8 @@ fn main() {
         if mode == "fast" {
             // Merged prefix tree
             merged_arena = mergedtree::generate_merged_prefix_tree(
-                lhs_single_tree.clone(),
+                //lhs_single_tree.clone(),
+                lhs_info.nodes.clone(),
                 merged_arena.clone(),
             );
 
@@ -182,17 +190,16 @@ fn main() {
             let base_matcher = baseline_matcher::generate_baseline_matcher(
                 lhs_info.nodes.clone(),
                 rhs_table.clone(),
-                lhs_count,
-                lhs_info.htable.clone()
+                lhs_count
             );
             lhs_count += 1;
             println!("{}", base_matcher);
         }
     }
 
-    if mode == "fast" {
-        let matcher_func = matcher::generate_matcher(merged_arena.clone(), rhs_table.clone());
-        // Print the final generated function
-        println!("{}", matcher_func);
-    }
+//    if mode == "fast" {
+//        let matcher_func = matcher::generate_matcher(merged_arena.clone(), rhs_table.clone());
+//        // Print the final generated function
+//        println!("{}", matcher_func);
+//    }
 }

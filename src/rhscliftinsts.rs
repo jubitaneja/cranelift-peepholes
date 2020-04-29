@@ -2,7 +2,9 @@
 
 use cliftinstbuilder::{CtonInst, CtonOpcode};
 
-pub fn get_result_clift_insts_only(all_insts: Vec<CtonInst>) -> Vec<CtonInst> {
+pub fn get_result_clift_insts_only(
+    all_insts: Vec<CtonInst>
+) -> Vec<CtonInst> {
     // just split out only rhs part from all instructions
     let mut infer_found = false;
     let mut rhs_insts: Vec<CtonInst> = Vec::new();

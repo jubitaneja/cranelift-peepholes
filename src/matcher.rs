@@ -335,6 +335,15 @@ pub fn generate_matcher(mut arena: MergedArena, rhs: HashMap<usize, Vec<CtonInst
             }
             None => println!("No next\n"),
         }
+        match arena.merged_tree[node].idx_num {
+            Some(idx) => {
+                println!("Node op idx num = {}", idx);
+            },
+            None => {
+                println!("Node op idx num = NONE");
+            },
+        }
+        println!("Node arg name = {}", arena.merged_tree[node].arg_name);
         // dump: end
         match arena.merged_tree[node].node_type {
             NodeType::MatchRoot => {
