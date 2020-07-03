@@ -16,6 +16,7 @@ mod mergedtree;
 mod parser;
 mod rhscliftinsts;
 mod tablerhs;
+mod pctable;
 
 use mergedtree::MergedArena;
 
@@ -109,6 +110,17 @@ fn main() {
             lhs_single_tree.clone()
         );
 
+        // Build path conditions hashtable for each LHS vector of nodes
+        let lhs_pc = pctable::get_path_condition_args_for_lhs(
+            lhs_info.nodes.clone()
+        );
+        println!("\n************* PC HASHTABLE *****************\n");
+        for (x, y) in lhs_pc.clone() {
+            println!("Arg: {}, idx: {}", x, y);
+        }
+        println!("\n******************************\n");
+
+
         // Separate out only RHS cranelift insts
         let rhs_clift_insts =
             rhscliftinsts::get_result_clift_insts_only(
@@ -131,7 +143,6 @@ fn main() {
         // Debug
         //println!("hash id for LHS is: {}\n", hash_id);
 
-        //rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_clift_insts, rhs_table.clone());
         rhs_table = tablerhs::map_lhs_to_rhs(hash_id, updated_rhs_insts, rhs_table.clone());
 
         // Debug
@@ -190,16 +201,18 @@ fn main() {
             let base_matcher = baseline_matcher::generate_baseline_matcher(
                 lhs_info.nodes.clone(),
                 rhs_table.clone(),
-                lhs_count
+                lhs_count,
+                lhs_info.htable.clone(),
+                lhs_pc.clone()
             );
             lhs_count += 1;
             println!("{}", base_matcher);
         }
     }
 
-//    if mode == "fast" {
-//        let matcher_func = matcher::generate_matcher(merged_arena.clone(), rhs_table.clone());
-//        // Print the final generated function
-//        println!("{}", matcher_func);
-//    }
+    if mode == "fast" {
+        let matcher_func = matcher::generate_matcher(merged_arena.clone(), rhs_table.clone());
+        // Print the final generated function
+        println!("{}", matcher_func);
+    }
 }

@@ -222,34 +222,71 @@ impl Opt {
         }
     }
 
-    pub fn get_argnames_from_idx(
+    pub fn get_relation_in_args(
         &mut self,
-        indices: Vec<usize>,
-        table: HashMap<usize, String>
-    ) -> String {
-        let mut arg_str = "".to_owned();
-        println!("Table contents \n");
-        for (k, v) in table.clone() {
-            println!("{} : {}\n", k.to_string(), v);
+        table: HashMap<String, usize>,
+        arg1: String,
+        arg2: String) -> String {
+        let mut result = "".to_owned();
+        let idx1 = table[&arg1];
+        let idx2 = table[&arg2];
+        if idx1 == idx2 {
+            result.push_str(&arg1);
+            result.push_str(&" == ".to_string());
+            result.push_str(&arg2);
+        } else {
+            result.push_str(&arg1);
+            result.push_str(&" != ".to_string());
+            result.push_str(&arg2);
         }
-        for i in 0..indices.len() {
-            println!("**** for index = {}\n", indices[i]);
-            match table.get(&indices[i]) {
-                Some(arg) => {
-                    println!("****** found arg === {}\n", arg);
-                    arg_str.push_str(&arg);
-                },
-                None => {},
-            }
-            arg_str.push_str(&String::from(", "));
-       }
-       println!("************ replaced args = {}\n", arg_str);
-       arg_str
+        println!("*** Result str = {}\n", result);
+        result
     }
 
-    pub fn take_action(&mut self, rhs: Vec<CliftInstWithArgs>) {
+    pub fn generate_path_condition(&mut self, pctable: HashMap<String, usize>) -> String {
+        // first, collect all keys in vector
+        let mut pc_args = Vec::new();
+        for key in pctable.keys() {
+            pc_args.push(key.clone());
+        }
+        
+        // make all combinations
+        let mut pcs = Vec::new();
+        for i in 0..pc_args.len() {
+            for j in i+1..pc_args.len() {
+                println!("pcarg i = {}, j = {}\n", pc_args[i], pc_args[j]);
+                let mut pc = self.get_relation_in_args(
+                    pctable.clone(),
+                    pc_args[i].clone(),
+                    pc_args[j].clone());
+                pcs.push(pc);
+            }
+        }
+
+        let mut result = "".to_owned();
+        if pcs.len() > 0 {
+            result.push_str(&pcs[0]);
+        }
+
+        for i in 1..pcs.len() {
+            result.push_str(&" && ".to_string());
+            result.push_str(&pcs[i]);
+        }
+        result
+    }
+
+    pub fn take_action(&mut self, rhs: Vec<CliftInstWithArgs>, pctbl: HashMap<String, usize>) {
         for i in 0..rhs.len() {
-            println!("** Inst = {}\n", cliftinstbuilder::get_clift_opcode_name(rhs[i].opcode.clone()));
+            println!("** Take Action for Inst = {}\n", cliftinstbuilder::get_clift_opcode_name(rhs[i].opcode.clone()));
+        }
+        let mut pc_str = "".to_owned();
+        if pctbl.len() > 1 {
+            pc_str += &"if (".to_owned();
+            pc_str += &self.generate_path_condition(pctbl.clone());
+            pc_str += &")".to_owned();
+            self.func_str.push_str(&pc_str);
+            self.func_str.push_str(&" {\n".to_string());
+            println!("***** Final pc str = {}\n", pc_str);
         }
         let mut replace_inst_str = "".to_owned();
         if rhs.len() == 1 {
@@ -319,6 +356,7 @@ impl Opt {
                 self.func_str.push_str(&replace_inst_str);
             }
         }
+        self.func_str.push_str(&"\n}\n".to_string());
     }
 
     pub fn get_argument_counter(&mut self, mut count: u32) -> u32 {
@@ -372,10 +410,23 @@ pub fn get_cond_name(cmp: String) -> String {
     cond
 }
 
+pub fn get_arg_name_dup(idx: usize, tbl: HashMap<usize, String>) -> String {
+    let mut arg_name = "PC_ARG_".to_owned();
+    match tbl.get(&idx) {
+        Some(name) => arg_name.push_str(&name),
+        None => {
+            println!("***```````` arg name not found, for index = {}\n", idx);
+        },
+    }
+    arg_name
+}
+
 pub fn generate_baseline_matcher(
     mut nodes: Vec<Node>,
     rhs: HashMap<usize, Vec<CliftInstWithArgs>>,
-    count: u32
+    count: u32,
+    idx_to_argname: HashMap<usize, String>,
+    pc_table: HashMap<String, usize>
 ) -> String {
     for (id, rinsts) in &rhs {
         println!("id = {} : \n", id);
@@ -406,10 +457,21 @@ pub fn generate_baseline_matcher(
         println!("\t\t Node Level = {}", nodes[node].level);
         println!("\t\t Node Value = {}", nodes[node].node_value);
         match nodes[node].idx_num.clone() {
-            Some(i) => println!("\t\t Node op idx number = {}", i),
+            Some(i) => {
+                println!("\t\t Node op idx number = {}", i);
+                println!("\t\t\t\t Node pre-cond name = {}\n", get_arg_name_dup(i, idx_to_argname.clone()));
+            },
             None => println!("\t\t Node op idx number = NONE"),
         }
         println!("\t\t\t Node arg_name = {}", nodes[node].arg_name);
+        match nodes[node].clone().var_id {
+            Some (var_num) => {
+                println!("\t\t\t Node Var number = {}", var_num);
+            },
+            None => {
+                println!("\t\t\t Node Var number = None\n");
+            },
+        }
         match nodes[node].next.clone() {
             Some(ids) => {
                 for i in 0..ids.len() {
@@ -428,7 +490,7 @@ pub fn generate_baseline_matcher(
                 opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::MatchInstData => {
@@ -448,7 +510,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::InstType => {
@@ -566,7 +628,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::MatchValDef => {
@@ -607,7 +669,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::MatchOpcode => {
@@ -623,7 +685,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::Opcode => {
@@ -743,7 +805,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::MatchCond => {
@@ -758,7 +820,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::Cond => {
@@ -785,7 +847,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::MatchArgs => {
@@ -829,7 +891,7 @@ pub fn generate_baseline_matcher(
                 opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             NodeType::MatchConst => {
@@ -859,7 +921,7 @@ pub fn generate_baseline_matcher(
                 opt_func.enter_scope(ScopeType::ScopeFunc, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
                 }
             }
             _ => {

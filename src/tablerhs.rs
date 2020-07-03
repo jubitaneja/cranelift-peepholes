@@ -1,6 +1,5 @@
 // Hash Map for LHS to RHS
 
-use cliftinstbuilder::CtonInst;
 use processrhs::CliftInstWithArgs;
 use std::collections::HashMap;
 
