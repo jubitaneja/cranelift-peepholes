@@ -1,0 +1,33 @@
+++ ./plot.r control-main-fix variable-superopt
+[1] "mean time control:  0.1286"
+[1] "mean time variable:  0.1257"
+Saving 7 x 7 in image
+Warning messages:
+1: Removed 1 rows containing non-finite values (stat_boxplot). 
+2: Removed 2 rows containing missing values (geom_point). 
+[1] "mean rss control:  43868.44"
+[1] "mean rss variable:  43869.2"
+Saving 7 x 7 in image
+Warning messages:
+1: Removed 2 rows containing non-finite values (stat_boxplot). 
+2: Removed 2 rows containing missing values (geom_point). 
+[1] "mean cache misses control:  17862055.59"
+[1] "mean branch misses control:  16697063.22"
+[1] "mean instructions control:  16697063.22"
+[1] "mean cache misses variable:  17660120.14"
+[1] "mean branch misses variable:  17054217.05"
+[1] "mean instructions variable:  17054217.05"
+Saving 7 x 7 in image
+Warning messages:
+1: Removed 2 rows containing non-finite values (stat_boxplot). 
+2: Removed 2 rows containing missing values (geom_point). 
+Saving 7 x 7 in image
+Warning messages:
+1: Removed 2 rows containing non-finite values (stat_boxplot). 
+2: Removed 2 rows containing missing values (geom_point). 
+Saving 7 x 7 in image
+Warning messages:
+1: Removed 2 rows containing non-finite values (stat_boxplot). 
+2: Removed 2 rows containing missing values (geom_point). 
+[1] "All done!\n"
+

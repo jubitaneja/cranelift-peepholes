@@ -22,9 +22,24 @@ pub fn update_pchashtable(
 }
 
 pub fn build_pc_argname(node: Node) -> String {
+    println!("\nbuild pc argname\n");
     let mut argname = "".to_string();
     argname.push_str(&node.arg_name);
-    argname.push_str(&node.node_value[4..]);
+    // Bugfix: node value can be "imm" for
+    // iconst nodes
+    println!("part1 of pcargname = {}\n", argname);
+    println!("\npart2 fetched from node value = {}\n", &node.node_value.clone());
+    // fixme: fix this bug here, on matching node value to "arg"
+    // "arg" is the node value for the binaryimm opcode cases.
+    // if node.node_value != "imm" {
+    //     argname.push_str(&node.node_value[4..]);
+    // }
+    if node.node_value == "imm" {}
+    else if node.node_value == "arg" {}
+    else {
+        argname.push_str(&node.node_value[4..]);
+    }
+    println!("pc argname returned = {}\n", argname);
     argname
 }
 
@@ -35,6 +50,7 @@ pub fn get_pcarg_from_node_id(
 }
 
 pub fn get_path_condition_args_for_lhs(nodes: Vec<Node>) -> HashMap<String, usize> {
+    println!("** pctable: start func\n");
     let mut pcargs_to_idx: HashMap<String, usize> = HashMap::new();
     let mut nextnode_table: HashMap<usize, String> = HashMap::new();
 
@@ -84,4 +100,3 @@ pub fn get_path_condition_args_for_lhs(nodes: Vec<Node>) -> HashMap<String, usiz
     }
     pcargs_to_idx
 }
-

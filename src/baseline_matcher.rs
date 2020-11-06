@@ -255,7 +255,7 @@ impl Opt {
         for i in 0..pc_args.len() {
             for j in i+1..pc_args.len() {
                 println!("pcarg i = {}, j = {}\n", pc_args[i], pc_args[j]);
-                let mut pc = self.get_relation_in_args(
+                let pc = self.get_relation_in_args(
                     pctable.clone(),
                     pc_args[i].clone(),
                     pc_args[j].clone());
@@ -276,9 +276,6 @@ impl Opt {
     }
 
     pub fn take_action(&mut self, rhs: Vec<CliftInstWithArgs>, pctbl: HashMap<String, usize>) {
-        for i in 0..rhs.len() {
-            println!("** Take Action for Inst = {}\n", cliftinstbuilder::get_clift_opcode_name(rhs[i].opcode.clone()));
-        }
         let mut pc_str = "".to_owned();
         if pctbl.len() > 1 {
             pc_str += &"if (".to_owned();
@@ -286,7 +283,6 @@ impl Opt {
             pc_str += &")".to_owned();
             self.func_str.push_str(&pc_str);
             self.func_str.push_str(&" {\n".to_string());
-            println!("***** Final pc str = {}\n", pc_str);
         }
         let mut replace_inst_str = "".to_owned();
         if rhs.len() == 1 {
@@ -555,8 +551,11 @@ pub fn generate_baseline_matcher(
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                         opt_func.set_entity(String::from("opcode"));
                         // FIXED: Generate: "let args_<counter> = args;"
-                        opt_func.append(String::from("let args_"));
-                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        //opt_func.append(String::from("let args_"));
+                        //arg_counter = opt_func.get_argument_counter(arg_counter);
+                        opt_func.append(String::from("let "));
+                        opt_func.append(nodes[node].arg_name.clone());
+
                         opt_func.append(String::from(" = args;\n"));
                     }
                     "Unary" => {

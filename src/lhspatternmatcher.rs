@@ -194,6 +194,7 @@ impl Arena {
     pub fn get_arg_name_for_instdata_node(&mut self, kind: CtonInstKind) -> String {
         let mut arg_name = "".to_string();
         match kind {
+            // FIXME: Bug in this code for superopt_2 func in cranelift repo. case: 0 == 0?
             CtonInstKind::Unary | CtonInstKind::UnaryImm |
             CtonInstKind::Binary | CtonInstKind::BinaryImm |
             CtonInstKind::IntCompare | CtonInstKind::IntCompareImm => {

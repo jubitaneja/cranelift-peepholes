@@ -103,7 +103,7 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
                             let parent_arg_name = &nodes[node].arg_name.clone();
                             let n1 = process.pop_from_arg_stack();
                             match n1 {
-                                Some(mut n) => {
+                                Some(n) => {
                                     println!("Popped node: {} from arg_stack\n", n.id);
                                     let updated_n1 = process. 
                                         update_arg_name_for_node(
@@ -121,7 +121,7 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
                             }
                             let n2 = process.pop_from_arg_stack();
                             match n2 {
-                                Some(mut n) => {
+                                Some(n) => {
                                     println!("Popped node: {} from arg_stack\n", n.id);
                                     let updated_n2 = process.
                                         update_arg_name_for_node(
