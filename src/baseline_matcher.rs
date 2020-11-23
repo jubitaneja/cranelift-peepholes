@@ -278,9 +278,8 @@ impl Opt {
     pub fn take_action(&mut self, rhs: Vec<CliftInstWithArgs>, pctbl: HashMap<String, usize>) {
         let mut pc_str = "".to_owned();
         if pctbl.len() > 1 {
-            pc_str += &"if (".to_owned();
+            pc_str += &"if ".to_owned();
             pc_str += &self.generate_path_condition(pctbl.clone());
-            pc_str += &")".to_owned();
             self.func_str.push_str(&pc_str);
             self.func_str.push_str(&" {\n".to_string());
         }
