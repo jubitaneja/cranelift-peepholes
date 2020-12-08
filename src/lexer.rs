@@ -11,7 +11,7 @@ pub enum TokKind {
     Comma,
     Equal,
     Implies,
-    Int(u32, i32),
+    Int(u32, i128),
     Comment(String),
     Eof,
 
@@ -104,7 +104,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn evaluate_const_value(&mut self, ch: Option<char>, neg: bool, const_val: &mut i32) {
+    pub fn evaluate_const_value(&mut self, ch: Option<char>, neg: bool, const_val: &mut i128) {
         match ch {
             Some(c) => {
                 if c >= '0' && c <= '9' {
@@ -112,12 +112,12 @@ impl<'a> Lexer<'a> {
                     let zero_val = '0' as i32;
                     // split the addition to avoid add with overflow
                     // issues for INT_MAX values.
-                    let x = *const_val * 10;
-                    let y = cons - zero_val;
+                    let x = (*const_val as i128) * 10;
+                    let y = (cons - zero_val) as i128;
                     if neg {
-                        *const_val = x - y;
+                        *const_val = (x - y) as i128;
                     } else {
-                        *const_val = x + y;
+                        *const_val = (x + y) as i128;
                     }
                 }
             }
@@ -327,7 +327,7 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 let const_begin = self.pos;
-                let mut const_val: i32 = 0;
+                let mut const_val: i128 = 0;
                 while self.is_digit(current_ch) {
                     self.next_ch();
                     self.evaluate_const_value(current_ch, negative, &mut const_val);

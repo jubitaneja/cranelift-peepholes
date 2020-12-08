@@ -48,7 +48,7 @@ pub struct SouperOperand {
     pub kind: SouperOpType,
     // what should be the type of constants values?
     pub idx_val: Option<usize>,
-    pub const_val: Option<i32>, //FIXME: fix this width of const value to i64 or something else?
+    pub const_val: Option<i128>, //FIXME: fix this width of const value to i64 or something else?
     pub width: u32,
 }
 
