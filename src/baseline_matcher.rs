@@ -90,19 +90,21 @@ impl Opt {
         // pop the stack until that level and then
         // push the new level.
         // Debug
-        //println!("Current stack before entering scope is: -------");
-        //for x in 0 .. self.scope_stack.len() {
-        //println!("stack levels pushed so far = {}", self.scope_stack[x].level);
-        //}
-        //println!("find the level number = {} in stack", current_level);
+        println!("\n************ Current stack before entering scope is: \n");
+        for x in 0 .. self.scope_stack.len() {
+            println!("stack levels pushed so far = {}", self.scope_stack[x].level);
+        }
+        println!("Current level number = {}", current_level);
         let index = self.does_level_exist_in_stack(current_level);
         //println!("Found index from stack == {}", index);
         if index != 0 {
             // index exists
             // pop first
+            println!("Level {} exists, pop and exit scope first", current_level);
             self.pop_and_exit_scope_from(index);
         }
         // push the level
+        println!("Push the level {}", current_level);
         self.scope_stack.push(ScopeStack {
             scope_type: scope.clone(),
             level: current_level,
@@ -110,18 +112,22 @@ impl Opt {
         // append the string
         match scope {
             ScopeType::ScopeMatch => {
+                println!("match scope");
                 self.append(String::from(" {\n"));
             }
             ScopeType::ScopeFunc => {
+                println!("function scope");
                 self.append(String::from(" {\n"));
             }
             ScopeType::ScopeCase => {
+                println!("case scope");
                 self.append(String::from(" => {\n"));
             }
         }
     }
 
     pub fn exit_scope(&mut self, scope: ScopeType, _level: usize) {
+        println!("Exit scope for level number : {}", _level);
         match scope {
             ScopeType::ScopeMatch => {
                 self.append(String::from("\n}"));
@@ -275,13 +281,16 @@ impl Opt {
         result
     }
 
-    pub fn take_action(&mut self, rhs: Vec<CliftInstWithArgs>, pctbl: HashMap<String, usize>) {
+    pub fn take_action(&mut self, rhs: Vec<CliftInstWithArgs>, pctbl: HashMap<String, usize>, _level: usize) {
         let mut pc_str = "".to_owned();
         if pctbl.len() > 1 {
             pc_str += &"if ".to_owned();
             pc_str += &self.generate_path_condition(pctbl.clone());
             self.func_str.push_str(&pc_str);
-            self.func_str.push_str(&" {\n".to_string());
+            // FIXED: You can't enter into scope without pushing them
+            // on the stack with level number of the node on scope stack
+            //self.func_str.push_str(&" {\n".to_string());
+            self.enter_scope(ScopeType::ScopeFunc, _level);
         }
         let mut replace_inst_str = "".to_owned();
         if rhs.len() == 1 {
@@ -351,7 +360,11 @@ impl Opt {
                 self.func_str.push_str(&replace_inst_str);
             }
         }
-        self.func_str.push_str(&"\n}\n".to_string());
+        // FIXED: This was added just as a hack earlier
+        // to exit the scope for if (args[x] == args[y]) condition
+        // Now, exit_scope() function can take care of it because
+        // enter_scope() is called to deal with entering into if condition
+        //self.func_str.push_str(&"\n}\n".to_string());
     }
 
     pub fn get_argument_counter(&mut self, mut count: u32) -> u32 {
@@ -485,7 +498,7 @@ pub fn generate_baseline_matcher(
                 opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::MatchInstData => {
@@ -505,7 +518,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::InstType => {
@@ -626,7 +639,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::MatchValDef => {
@@ -667,7 +680,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::MatchOpcode => {
@@ -683,7 +696,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::Opcode => {
@@ -803,7 +816,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::MatchCond => {
@@ -818,7 +831,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::Cond => {
@@ -845,7 +858,7 @@ pub fn generate_baseline_matcher(
                 }
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::MatchArgs => {
@@ -889,7 +902,7 @@ pub fn generate_baseline_matcher(
                 opt_func.set_level_of_all_child_nodes(&mut nodes, node, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             NodeType::MatchConst => {
@@ -919,7 +932,7 @@ pub fn generate_baseline_matcher(
                 opt_func.enter_scope(ScopeType::ScopeFunc, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
-                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone());
+                    opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
                 }
             }
             _ => {
@@ -930,24 +943,24 @@ pub fn generate_baseline_matcher(
 
     // exit func scope
     // debug scope stack info
-    //println!("********* Scope Stack ***********");
-    //for x in 0 .. opt_func.scope_stack.len() {
-    //    let elem = opt_func.scope_stack[x].clone();
-    //    println!("Level of scope elem = {}", elem.level);
-    //    match elem.scope_type {
-    //        ScopeType::ScopeFunc => {
-    //            println!("scope func");
-    //        },
-    //        ScopeType::ScopeMatch => {
-    //            println!("scope match");
-    //        },
-    //        ScopeType::ScopeCase => {
-    //            println!("scope case");
-    //        },
-    //        _ => {},
-    //    }
-    //}
-    //println!("********* Scope Stack End ***********");
+    println!("********* Scope Stack ***********");
+    for x in 0 .. opt_func.scope_stack.len() {
+        let elem = opt_func.scope_stack[x].clone();
+        println!("Level of scope elem = {}", elem.level);
+        match elem.scope_type {
+            ScopeType::ScopeFunc => {
+                println!("scope func");
+            },
+            ScopeType::ScopeMatch => {
+                println!("scope match");
+            },
+            ScopeType::ScopeCase => {
+                println!("scope case");
+            },
+            _ => {},
+        }
+    }
+    println!("********* Scope Stack End ***********");
     while let Some(elem) = opt_func.scope_stack.pop() {
         opt_func.exit_scope(elem.scope_type, elem.level);
         //let elem_ty = opt_func.scope_stack.pop();
