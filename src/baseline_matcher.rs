@@ -957,7 +957,6 @@ pub fn generate_baseline_matcher(
             ScopeType::ScopeCase => {
                 println!("scope case");
             },
-            _ => {},
         }
     }
     println!("********* Scope Stack End ***********");
