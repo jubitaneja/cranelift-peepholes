@@ -597,7 +597,7 @@ pub fn generate_baseline_matcher(
                         // FIXME: "args" part, make a connection
                         // between actual args and string
                         opt_func.append(String::from(
-                            "InstructionData::BinaryImm { opcode, arg, imm }",
+                            "InstructionData::BinaryImm64 { opcode, arg, imm }",
                         ));
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                         opt_func.set_entity(String::from("opcode"));
