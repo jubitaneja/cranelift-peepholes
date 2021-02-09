@@ -28,14 +28,14 @@ impl OpStacks {
         self.parent_stack.push(node);
     }
 
-    pub fn ready_to_pop_from_arg_stack(&mut self) -> bool {
-        // FIXME: this popping logic should be on the basis
+    pub fn ready_to_pop_from_arg_stack(&mut self, args: usize) -> bool {
+        // FIXED: this popping logic should be on the basis
         // of top element in parent stack. If its binary,
         // then we need at least 2 elems in arg stack to pop.
         // if it is unary on top of parent stack, then we
         // need atleast one elem in arg stack, and so on for other
         // types
-        if self.arg_stack.len() >= 2 {
+        if self.arg_stack.len() >= args {
             true
         } else {
             false
@@ -63,6 +63,12 @@ impl OpStacks {
         }
     }
 
+    // FIXME: Bug in initializing `id = 0`
+    // WORKAROUND: For now, insert in table hashmap happens
+    // only when the id doesn't exist and it's a new entry
+    // But, ideally we would want to fix the issue of not
+    // having a default value of id = 0 in None case
+    // of `match idx {..}`
     pub fn insert_in_hashmap(
         &mut self,
         table: &mut HashMap<usize, String>,
@@ -71,15 +77,24 @@ impl OpStacks {
         argnum: String) {
         let mut id: usize = 0;
         let mut argname = name;
+        println!("fn: insert_in_hashmap(): name= {}, argnum/val = {}", argname, argnum);
         match idx {
             Some(i) => id = i,
-            _ => {},
+            _ => {
+                println!("for immediate args, idx is None and hance assigned id = {}", id);
+            },
         }
         if let Some(i) = argnum.find('[') {
             argname.push_str(&(argnum)[i..]);
         }
-        println!("Inserting idx = {}, name = {}\n", id, argname);
-        table.insert(id, argname);
+        println!("Check if this ID is already assigned any argname?");
+        if table.contains_key(&id) {
+            println!("Yes, id = {} exists in hashmap with value = {}", id, table[&id]);
+        } else {
+            println!("No, id = {} doesn't exist in table, so add it surely", id);
+            println!("Going to insert idx = {}, name = {}\n", id, argname);
+            table.insert(id, argname);
+        }
     }
 }
 
@@ -94,13 +109,18 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
             },
             NodeType::InstType => {
                 match nodes[node].node_value.as_ref() {
+                    // FIXME: TODO: Add another case for UnaryImm, Unary
+                    // and in that only pop one node, i.e. replicate logic
+                    // for n1 only.
                     "Binary" | "BinaryImm" |
-                    "Unary" | "UnaryImm" |
                     "IntCompare" | "IntCompareImm" => {
                         // FIXME: fix implementation of popping logic check test
                         // details mentioned above
-                        if process.ready_to_pop_from_arg_stack() {
+                        // FIXED: Feb 1, 21 - Passing the parameter "2" i.e.
+                        // total number of arguments for node
+                        if process.ready_to_pop_from_arg_stack(2) {
                             let parent_arg_name = &nodes[node].arg_name.clone();
+                            // pop/update the first node and then second, n1 and n2
                             let n1 = process.pop_from_arg_stack();
                             match n1 {
                                 Some(n) => {
@@ -133,6 +153,33 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
                                         updated_n2.idx_num,
                                         updated_n2.arg_name,
                                         updated_n2.node_value
+                                    );
+                                },
+                                None => {},
+                            }
+                        } else {
+                            println!("Push node: {} to parent stacj\n", nodes[node].id);
+                            process.push_to_parent_stack(nodes[node].clone());
+                        }
+                    },
+                    "Unary" | "UnaryImm" => {
+                        if process.ready_to_pop_from_arg_stack(1) {
+                            let parent_arg_name = &nodes[node].arg_name.clone();
+                            // pop/update the first node and then second, n1 and n2
+                            let n1 = process.pop_from_arg_stack();
+                            match n1 {
+                                Some(n) => {
+                                    println!("Popped node: {} from arg_stack\n", n.id);
+                                    let updated_n1 = process. 
+                                        update_arg_name_for_node(
+                                            n,
+                                            parent_arg_name.clone());
+                                    process.update_in_lhs(updated_n1.clone(), &mut nodes);
+                                    process.insert_in_hashmap(
+                                        &mut idx_to_arg_name,
+                                        updated_n1.idx_num,
+                                        updated_n1.arg_name,
+                                        updated_n1.node_value
                                     );
                                 },
                                 None => {},
