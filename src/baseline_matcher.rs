@@ -90,21 +90,21 @@ impl Opt {
         // pop the stack until that level and then
         // push the new level.
         // Debug
-        println!("\n************ Current stack before entering scope is: \n");
-        for x in 0 .. self.scope_stack.len() {
-            println!("stack levels pushed so far = {}", self.scope_stack[x].level);
-        }
-        println!("Current level number = {}", current_level);
+        // println!("\n************ Current stack before entering scope is: \n");
+        // for x in 0 .. self.scope_stack.len() {
+        //     println!("stack levels pushed so far = {}", self.scope_stack[x].level);
+        // }
+        //println!("Current level number = {}", current_level);
         let index = self.does_level_exist_in_stack(current_level);
         //println!("Found index from stack == {}", index);
         if index != 0 {
             // index exists
             // pop first
-            println!("Level {} exists, pop and exit scope first", current_level);
+            //println!("Level {} exists, pop and exit scope first", current_level);
             self.pop_and_exit_scope_from(index);
         }
         // push the level
-        println!("Push the level {}", current_level);
+        //println!("Push the level {}", current_level);
         self.scope_stack.push(ScopeStack {
             scope_type: scope.clone(),
             level: current_level,
@@ -112,22 +112,22 @@ impl Opt {
         // append the string
         match scope {
             ScopeType::ScopeMatch => {
-                println!("match scope");
+                //println!("match scope");
                 self.append(String::from(" {\n"));
             }
             ScopeType::ScopeFunc => {
-                println!("function scope");
+                //println!("function scope");
                 self.append(String::from(" {\n"));
             }
             ScopeType::ScopeCase => {
-                println!("case scope");
+                //println!("case scope");
                 self.append(String::from(" => {\n"));
             }
         }
     }
 
     pub fn exit_scope(&mut self, scope: ScopeType, _level: usize) {
-        println!("Exit scope for level number : {}", _level);
+        //println!("Exit scope for level number : {}", _level);
         match scope {
             ScopeType::ScopeMatch => {
                 self.append(String::from("\n}"));
@@ -577,8 +577,13 @@ pub fn generate_baseline_matcher(
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                         opt_func.set_entity(String::from("opcode"));
                         // FIXED: Generate: "let args_<counter> = arg;"
-                        opt_func.append(String::from("let args_"));
-                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        // FIXME: TODO: Feb 9: Do we need a fix here?
+                        // shouldn't it be: "let <arg name of node> = arg;"
+                        // opt_func.append(String::from("let args_"));
+                        // arg_counter = opt_func.get_argument_counter(arg_counter);
+                        // NEW FIX: "let <arg name of node> = arg;
+                        opt_func.append(String::from("let "));
+                        opt_func.append(nodes[node].arg_name.clone());
                         opt_func.append(String::from(" = arg;\n"));
                     }
                     "UnaryImm" => {
@@ -601,8 +606,12 @@ pub fn generate_baseline_matcher(
                         ));
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                         opt_func.set_entity(String::from("opcode"));
-                        opt_func.append(String::from("let args_"));
-                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        //opt_func.append(String::from("let args_"));
+                        //arg_counter = opt_func.get_argument_counter(arg_counter);
+                        // NEWFIX:just as we have in Binary "let <arg name of node> = arg"
+
+                        opt_func.append(String::from("let "));
+                        opt_func.append(nodes[node].arg_name.clone());
                         opt_func.append(String::from(" = arg;\n"));
                         // Push the rhs_<count> to ConstStack
                         const_counter = opt_func.get_const_counter(const_counter);
@@ -621,8 +630,12 @@ pub fn generate_baseline_matcher(
                         ));
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                         opt_func.set_entity(String::from("opcode"));
-                        opt_func.append(String::from("let args_"));
-                        arg_counter = opt_func.get_argument_counter(arg_counter);
+                        // opt_func.append(String::from("let args_"));
+                        // arg_counter = opt_func.get_argument_counter(arg_counter);
+                        // NEW FIX: just as IntCompare node
+
+                        opt_func.append(String::from("let "));
+                        opt_func.append(nodes[node].arg_name.clone());
                         opt_func.append(String::from(" = arg;\n"));
                         // Push the rhs_<count> to ConstStack
                         const_counter = opt_func.get_const_counter(const_counter);
@@ -890,6 +903,7 @@ pub fn generate_baseline_matcher(
                         optional_argstr.push_str(&(nodes[node].node_value.clone())[i..]);
                     }
                     optional_argstr.push_str(&(String::from(")")));
+                    println!("in Match Args node ----> argument parameter = {}", optional_argstr.clone());
                 }
                 // FIXME: Do we want to take action here and should we
                 // append to arg_str, or opt_func?
