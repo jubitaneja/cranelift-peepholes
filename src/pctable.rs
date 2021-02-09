@@ -55,6 +55,7 @@ pub fn get_path_condition_args_for_lhs(nodes: Vec<Node>) -> HashMap<String, usiz
     let mut nextnode_table: HashMap<usize, String> = HashMap::new();
 
     for n in 0..nodes.len() {
+        println!("***** Node ID = {}", nodes[n].id);
         match nodes[n].node_type {
             NodeType::MatchArgs => {
                 // check if next node is Result or Param
@@ -90,12 +91,16 @@ pub fn get_path_condition_args_for_lhs(nodes: Vec<Node>) -> HashMap<String, usiz
                     "Result" => {
                         let id = nodes[n].clone().id;
                         let pcarg_name = get_pcarg_from_node_id(nextnode_table.clone(), id);
+                        println!("Node type is ValueDef: Result => pcarg_name = {}", pcarg_name.clone());
                         update_pchashtable(&mut pcargs_to_idx, pcarg_name);
                     },
                     _ => {},
                 }
             },
             _ => {},
+        }
+        for (x, y) in pcargs_to_idx.clone() {
+            println!("arg = {}, idx = {}", x, y);
         }
     }
     pcargs_to_idx

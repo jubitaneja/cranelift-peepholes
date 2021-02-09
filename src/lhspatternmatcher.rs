@@ -406,6 +406,7 @@ impl Arena {
         if let Some(ops) = cops {
             for op in ops {
                 if op.idx_val.is_some() {
+                    println!("op is an index");
                     list_ops.push("index");
                 }
                 if op.const_val.is_some() {
@@ -425,13 +426,16 @@ impl Arena {
         clift_inst: &CtonInst,
         arg_num: usize,
     ) -> Option<usize> {
+        println!("fn: get_clift_op_index_num_from_arg_num()");
         let cops = &clift_inst.cops;
         let mut idx = None;
         if let Some(ops) = cops {
             for op in 0..ops.len() {
+                println!("\tfor op = {}, argnum = {}", op, arg_num);
                 if op == arg_num {
                     match ops[op].idx_val {
                         Some(i) => {
+                            println!("\t\tidx = {}", i);
                             idx = Some(i);
                         },
                         None => {},
@@ -620,7 +624,7 @@ pub fn generate_single_tree_patterns(
     arena.clift_insts = clift_insts.clone();
     let all_nodes = arena.build_sequence_of_nodes(inst_at_infer_op_idx);
 
-    println!("--------------------------------");
+    println!("--- LHS pattern Matcher module: list of nodes -----------");
     for n in 0 .. all_nodes.len() {
         println!("Node id = {}", all_nodes[n].id);
         match all_nodes[n].clone().var_id {

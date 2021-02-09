@@ -658,6 +658,7 @@ pub fn parse(text: &str) -> Vec<Inst> {
     }
 
     // Debug
+    println!("Parsed Souper Instructions:\n");
     for i in insts.clone() {
         println!("Inst = {}\n", p.get_kind_name(i.kind));
         println!("\t LHS = {}\n", i.lhs);
@@ -682,7 +683,7 @@ pub fn parse(text: &str) -> Vec<Inst> {
             None => {},
         }
     }
-    println!("\n******* Debugging the hashtable for \
+    println!("\n******* Parser: Debugging the hashtable for \
         LHS name to Index ***\n");
     for (key, val) in p.lhs_val_names_to_idx {
         println!("LHS = {}, Idx = {}\n", key, val);

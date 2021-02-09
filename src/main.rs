@@ -69,7 +69,7 @@ fn main() {
         let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
 
         // Debug
-        println!("====================================\n");
+        println!("==== After Souper to Clift Instructions ========\n");
         for ci in clift_insts.clone() {
             println!("Clift Inst = {}\n",
                 cliftinstbuilder::get_clift_opcode_name(ci.opcode));
@@ -106,9 +106,11 @@ fn main() {
 
         // Process linear prefix tree of LHS for updating arg names
         // from parent instdata nodes to arg nodes
+        println!("\n---- ProcessLHS module: update arg names from parent to arg nodes\n");
         let lhs_info = processlhs::update_arg_nodes_in_lhs(
             lhs_single_tree.clone()
         );
+        println!("\n----- ProcessLHS module end\n");
 
         // Build path conditions hashtable for each LHS vector of nodes
         let lhs_pc = pctable::get_path_condition_args_for_lhs(
