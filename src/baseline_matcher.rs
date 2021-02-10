@@ -24,6 +24,7 @@ pub enum ScopeType {
     ScopeMatch,
     ScopeCase,
     ScopeFunc,
+    ScopeIfCond,
 }
 
 impl Opt {
@@ -89,22 +90,36 @@ impl Opt {
         // if level already exists in stack,
         // pop the stack until that level and then
         // push the new level.
+        // NEW FIX: Exception for if condition levels, if the incoming level
+        // exists on top of stack and if the type of incoming entry and
+        // top of the stack entry is scoptType::IfCond, then
+        // we should not pop, rather push it again as it creates
+        // a nested if condition case at the same level
+
         // Debug
-        // println!("\n************ Current stack before entering scope is: \n");
-        // for x in 0 .. self.scope_stack.len() {
-        //     println!("stack levels pushed so far = {}", self.scope_stack[x].level);
-        // }
-        //println!("Current level number = {}", current_level);
+        println!("\n************ Current stack before entering scope is: \n");
+        for x in 0 .. self.scope_stack.len() {
+            println!("stack levels pushed so far = {}", self.scope_stack[x].level);
+        }
+        println!("Current level number = {}", current_level);
         let index = self.does_level_exist_in_stack(current_level);
-        //println!("Found index from stack == {}", index);
+        println!("Found index from stack == {}", index);
         if index != 0 {
             // index exists
-            // pop first
-            //println!("Level {} exists, pop and exit scope first", current_level);
-            self.pop_and_exit_scope_from(index);
+            // pop only if the scope type is NOT ifcond
+            match scope {
+                ScopeType::ScopeIfCond => {
+                    println!("Level {} exists, but NOT Popping because of ifcond scopt type", current_level);
+                },
+                _ => {
+                    //
+                    println!("Level {} exists, pop and exit scope first", current_level);
+                    self.pop_and_exit_scope_from(index);
+                },
+            }
         }
         // push the level
-        //println!("Push the level {}", current_level);
+        println!("Push the level {}", current_level);
         self.scope_stack.push(ScopeStack {
             scope_type: scope.clone(),
             level: current_level,
@@ -112,15 +127,19 @@ impl Opt {
         // append the string
         match scope {
             ScopeType::ScopeMatch => {
-                //println!("match scope");
+                println!("match scope");
                 self.append(String::from(" {\n"));
             }
             ScopeType::ScopeFunc => {
-                //println!("function scope");
+                println!("function scope");
                 self.append(String::from(" {\n"));
             }
+            ScopeType::ScopeIfCond => {
+                println!("if condition scope");
+                 self.append(String::from(" {\n"));
+            }
             ScopeType::ScopeCase => {
-                //println!("case scope");
+                println!("case scope");
                 self.append(String::from(" => {\n"));
             }
         }
@@ -133,6 +152,9 @@ impl Opt {
                 self.append(String::from("\n}"));
             }
             ScopeType::ScopeFunc => {
+                self.append(String::from("\n}"));
+            }
+            ScopeType::ScopeIfCond => {
                 self.append(String::from("\n}"));
             }
             ScopeType::ScopeCase => {
@@ -290,7 +312,7 @@ impl Opt {
             // FIXED: You can't enter into scope without pushing them
             // on the stack with level number of the node on scope stack
             //self.func_str.push_str(&" {\n".to_string());
-            self.enter_scope(ScopeType::ScopeFunc, _level);
+            self.enter_scope(ScopeType::ScopeIfCond, _level);
         }
         let mut replace_inst_str = "".to_owned();
         if rhs.len() == 1 {
@@ -943,7 +965,7 @@ pub fn generate_baseline_matcher(
                 opt_func.append(String::from(rhs_arg.to_string()));
                 opt_func.append(String::from(" == "));
                 opt_func.append(const_value.to_string());
-                opt_func.enter_scope(ScopeType::ScopeFunc, current_level);
+                opt_func.enter_scope(ScopeType::ScopeIfCond, current_level);
                 if action_flag {
                     let found_rhs = &rhs[&nodes[node].id];
                     opt_func.take_action(found_rhs.to_vec(), pc_table.clone(), current_level);
@@ -964,6 +986,9 @@ pub fn generate_baseline_matcher(
         match elem.scope_type {
             ScopeType::ScopeFunc => {
                 println!("scope func");
+            },
+            ScopeType::ScopeIfCond => {
+                println!("scope if cond");
             },
             ScopeType::ScopeMatch => {
                 println!("scope match");
