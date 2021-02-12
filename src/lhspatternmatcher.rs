@@ -407,13 +407,15 @@ impl Arena {
         if let Some(ops) = cops {
             for op in ops {
                 if op.idx_val.is_some() {
-                    println!("op is an index");
+                    //////println!("op is an index");
                     list_ops.push("index");
                 }
                 if op.const_val.is_some() {
                     list_ops.push("const");
                     match op.const_val {
-                        Some(c) => println!("Op is a constant with value: {}\n", c),
+                        Some(c) => {
+                            //////println!("Op is a constant with value: {}\n", c);
+                        },
                         _ => {},
                     }
                 }
@@ -427,16 +429,16 @@ impl Arena {
         clift_inst: &CtonInst,
         arg_num: usize,
     ) -> Option<usize> {
-        println!("fn: get_clift_op_index_num_from_arg_num()");
+        //////println!("fn: get_clift_op_index_num_from_arg_num()");
         let cops = &clift_inst.cops;
         let mut idx = None;
         if let Some(ops) = cops {
             for op in 0..ops.len() {
-                println!("\tfor op = {}, argnum = {}", op, arg_num);
+                //////println!("\tfor op = {}, argnum = {}", op, arg_num);
                 if op == arg_num {
                     match ops[op].idx_val {
                         Some(i) => {
-                            println!("\t\tidx = {}", i);
+                            //////println!("\t\tidx = {}", i);
                             idx = Some(i);
                         },
                         None => {},
@@ -625,35 +627,35 @@ pub fn generate_single_tree_patterns(
     arena.clift_insts = clift_insts.clone();
     let all_nodes = arena.build_sequence_of_nodes(inst_at_infer_op_idx);
 
-    println!("--- LHS pattern Matcher module: list of nodes -----------");
-    for n in 0 .. all_nodes.len() {
-        println!("Node id = {}", all_nodes[n].id);
-        match all_nodes[n].clone().var_id {
-            Some (var_num) => {
-                println!("Var number = {}", var_num);
-            },
-            None => {
-                println!("Var number = None\n");
-            },
-        }
-        println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
-        println!("Node value = {}", all_nodes[n].node_value);
-        match all_nodes[n].idx_num.clone() {
-            Some(i) => println!("Node op idx num = {}", i),
-            None => println!("Node op idx num = NONE"),
-        }
-        println!("Node arg_name == {}", all_nodes[n].arg_name);
-        match all_nodes[n].clone().next {
-            Some(x) => {
-                for i in 0 .. x.len() {
-                    println!("next = {}", x[i].index);
-                }
-            },
-            None => {
-                println!("next = None");
-            }
-        }
-        println!("--------------------------------");
-    }
+    //////println!("--- LHS pattern Matcher module: list of nodes -----------");
+    //////for n in 0 .. all_nodes.len() {
+    //////    println!("Node id = {}", all_nodes[n].id);
+    //////    match all_nodes[n].clone().var_id {
+    //////        Some (var_num) => {
+    //////            println!("Var number = {}", var_num);
+    //////        },
+    //////        None => {
+    //////            println!("Var number = None\n");
+    //////        },
+    //////    }
+    //////    println!("Node type = {}", get_node_type(all_nodes[n].clone().node_type));
+    //////    println!("Node value = {}", all_nodes[n].node_value);
+    //////    match all_nodes[n].idx_num.clone() {
+    //////        Some(i) => println!("Node op idx num = {}", i),
+    //////        None => println!("Node op idx num = NONE"),
+    //////    }
+    //////    println!("Node arg_name == {}", all_nodes[n].arg_name);
+    //////    match all_nodes[n].clone().next {
+    //////        Some(x) => {
+    //////            for i in 0 .. x.len() {
+    //////                println!("next = {}", x[i].index);
+    //////            }
+    //////        },
+    //////        None => {
+    //////            println!("next = None");
+    //////        }
+    //////    }
+    //////    println!("--------------------------------");
+    //////}
     all_nodes
 }

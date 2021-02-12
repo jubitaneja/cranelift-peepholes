@@ -689,38 +689,38 @@ pub fn parse(text: &str) -> Vec<Inst> {
     }
 
     // Debug
-    println!("Parsed Souper Instructions:\n");
-    for i in updated_insts.clone() {
-        println!("Inst = {}\n", p.get_kind_name(i.kind));
-        println!("\t LHS = {}\n", i.lhs);
-        println!("\t\tLHS index num = {}", i.lhs_idx);
-        match i.ops {
-            Some(ops_lst) => {
-                for op in ops_lst {
-                    //
-                    match op.idx_val {
-                        Some(id) => {
-                            println!("\t op: idx_val = {}\n", id);
-                        },
-                        None => {},
-                    }
-                    match op.const_val {
-                        Some(c) => {
-                            println!("\t op: const_val = {}\n", c);
-                        },
-                        None => {},
-                    }
-                }
-            },
-            None => {},
-        }
-    }
-    println!("\n******* Parser: Debugging the hashtable for \
-        LHS name to Index ***\n");
-    for (key, val) in p.lhs_val_names_to_idx {
-        println!("LHS = {}, Idx = {}\n", key, val);
-    }
-    println!("\n*******************\n");
+    //////println!("Parsed Souper Instructions:\n");
+    //////for i in updated_insts.clone() {
+    //////    println!("Inst = {}\n", p.get_kind_name(i.kind));
+    //////    println!("\t LHS = {}\n", i.lhs);
+    //////    println!("\t\tLHS index num = {}", i.lhs_idx);
+    //////    match i.ops {
+    //////        Some(ops_lst) => {
+    //////            for op in ops_lst {
+    //////                //
+    //////                match op.idx_val {
+    //////                    Some(id) => {
+    //////                        println!("\t op: idx_val = {}\n", id);
+    //////                    },
+    //////                    None => {},
+    //////                }
+    //////                match op.const_val {
+    //////                    Some(c) => {
+    //////                        println!("\t op: const_val = {}\n", c);
+    //////                    },
+    //////                    None => {},
+    //////                }
+    //////            }
+    //////        },
+    //////        None => {},
+    //////    }
+    //////}
+    //////println!("\n******* Parser: Debugging the hashtable for \
+    //////    LHS name to Index ***\n");
+    //////for (key, val) in p.lhs_val_names_to_idx {
+    //////    println!("LHS = {}, Idx = {}\n", key, val);
+    //////}
+    //////println!("\n*******************\n");
 
     updated_insts
 }

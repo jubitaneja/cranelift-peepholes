@@ -77,22 +77,22 @@ impl OpStacks {
         argnum: String) {
         let mut id: usize = 0;
         let mut argname = name;
-        println!("fn: insert_in_hashmap(): name= {}, argnum/val = {}", argname, argnum);
+        //////println!("fn: insert_in_hashmap(): name= {}, argnum/val = {}", argname, argnum);
         match idx {
             Some(i) => id = i,
             _ => {
-                println!("for immediate args, idx is None and hance assigned id = {}", id);
+                //////println!("for immediate args, idx is None and hance assigned id = {}", id);
             },
         }
         if let Some(i) = argnum.find('[') {
             argname.push_str(&(argnum)[i..]);
         }
-        println!("Check if this ID is already assigned any argname?");
+        //////println!("Check if this ID is already assigned any argname?");
         if table.contains_key(&id) {
-            println!("Yes, id = {} exists in hashmap with value = {}", id, table[&id]);
+            //////println!("Yes, id = {} exists in hashmap with value = {}", id, table[&id]);
         } else {
-            println!("No, id = {} doesn't exist in table, so add it surely", id);
-            println!("Going to insert idx = {}, name = {}\n", id, argname);
+            //////println!("No, id = {} doesn't exist in table, so add it surely", id);
+            //////println!("Going to insert idx = {}, name = {}\n", id, argname);
             table.insert(id, argname);
         }
     }
@@ -104,7 +104,7 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
     for node in (0..nodes.len()).rev() {
         match nodes[node].node_type {
             NodeType::MatchArgs => {
-                println!("Push node: {} to arg stack\n", nodes[node].id);
+                //////println!("Push node: {} to arg stack\n", nodes[node].id);
                 process.push_to_arg_stack(nodes[node].clone());
             },
             NodeType::InstType => {
@@ -124,7 +124,7 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
                             let n1 = process.pop_from_arg_stack();
                             match n1 {
                                 Some(n) => {
-                                    println!("Popped node: {} from arg_stack\n", n.id);
+                                    //////println!("Popped node: {} from arg_stack\n", n.id);
                                     let updated_n1 = process. 
                                         update_arg_name_for_node(
                                             n,
@@ -142,7 +142,7 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
                             let n2 = process.pop_from_arg_stack();
                             match n2 {
                                 Some(n) => {
-                                    println!("Popped node: {} from arg_stack\n", n.id);
+                                    //////println!("Popped node: {} from arg_stack\n", n.id);
                                     let updated_n2 = process.
                                         update_arg_name_for_node(
                                             n,
@@ -158,7 +158,7 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
                                 None => {},
                             }
                         } else {
-                            println!("Push node: {} to parent stacj\n", nodes[node].id);
+                            //////println!("Push node: {} to parent stacj\n", nodes[node].id);
                             process.push_to_parent_stack(nodes[node].clone());
                         }
                     },
@@ -169,7 +169,7 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
                             let n1 = process.pop_from_arg_stack();
                             match n1 {
                                 Some(n) => {
-                                    println!("Popped node: {} from arg_stack\n", n.id);
+                                    //////println!("Popped node: {} from arg_stack\n", n.id);
                                     let updated_n1 = process. 
                                         update_arg_name_for_node(
                                             n,
@@ -185,7 +185,7 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
                                 None => {},
                             }
                         } else {
-                            println!("Push node: {} to parent stacj\n", nodes[node].id);
+                            //////println!("Push node: {} to parent stacj\n", nodes[node].id);
                             process.push_to_parent_stack(nodes[node].clone());
                         }
                     },
@@ -195,35 +195,35 @@ pub fn update_arg_nodes_in_lhs(mut nodes: Vec<Node>) -> LHSInfo {
             _ => {},
         }
     }
-    println!("----**** Debugging updated LHS with arg names ****----");
-    for n in 0..nodes.len() {
-        println!("Node id = {}", nodes[n].id);
-        match nodes[n].clone().var_id {
-            Some (var_num) => {
-                println!("Var number = {}", var_num);
-            },
-            None => {
-                println!("Var number = None\n");
-            },
-        }
-        println!("Node value = {}", nodes[n].node_value);
-        match nodes[n].idx_num.clone() {
-            Some(i) => println!("Node op idx num = {}", i),
-            None => println!("Node op idx num = NONE"),
-        }
-        println!("Node arg_name == {}", nodes[n].arg_name);
-        match nodes[n].clone().next {
-            Some(x) => {
-                for i in 0 .. x.len() {
-                    println!("next = {}", x[i].index);
-                }
-            },
-            None => {
-                println!("next = None");
-            }
-        }
-        println!("-------***************************--------");
-    }
+    //////println!("----**** Debugging updated LHS with arg names ****----");
+    //////for n in 0..nodes.len() {
+    //////    println!("Node id = {}", nodes[n].id);
+    //////    match nodes[n].clone().var_id {
+    //////        Some (var_num) => {
+    //////            println!("Var number = {}", var_num);
+    //////        },
+    //////        None => {
+    //////            println!("Var number = None\n");
+    //////        },
+    //////    }
+    //////    println!("Node value = {}", nodes[n].node_value);
+    //////    match nodes[n].idx_num.clone() {
+    //////        Some(i) => println!("Node op idx num = {}", i),
+    //////        None => println!("Node op idx num = NONE"),
+    //////    }
+    //////    println!("Node arg_name == {}", nodes[n].arg_name);
+    //////    match nodes[n].clone().next {
+    //////        Some(x) => {
+    //////            for i in 0 .. x.len() {
+    //////                println!("next = {}", x[i].index);
+    //////            }
+    //////        },
+    //////        None => {
+    //////            println!("next = None");
+    //////        }
+    //////    }
+    //////    println!("-------***************************--------");
+    //////}
 
     LHSInfo {
         nodes: nodes,

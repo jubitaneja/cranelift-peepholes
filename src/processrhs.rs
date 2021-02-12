@@ -33,7 +33,7 @@ impl RHSInfo {
         match tbl.get(&idx) {
             Some(name) => arg_name.push_str(&name),
             None => {
-                println!("************** arg name not found, for index = {}\n", idx);
+                //////println!("************** arg name not found, for index = {}\n", idx);
                 arg_name.push_str(&String::from("rhs_inst_"));
                 arg_name.push_str(&idx.to_string());
             },
@@ -48,9 +48,9 @@ pub fn update_rhs_with_argnames(
 ) -> RHSInfo {
     let mut rhs_info = RHSInfo::new();
     
-    println!("= = = = = = = In fn: update_rhs_with_argnames()");
+    //////println!("= = = = = = = In fn: update_rhs_with_argnames()");
     for i in 0..insts.len() {
-        println!("for RHS inst #{}", i);
+        //////println!("for RHS inst #{}", i);
         let inst = insts[i].clone();
         let mut new_inst = CliftInstWithArgs {
             valuedef: inst.valuedef,
@@ -76,7 +76,7 @@ pub fn update_rhs_with_argnames(
 
         // Here, get_arg_name() function will always go to the None case
         // and create the new name of rhs instruction and return
-        println!("********************** get rhs inst name for index = {}", inst.lhs_index);
+        //////println!("********************** get rhs inst name for index = {}", inst.lhs_index);
         let rhs_inst_name = rhs_info.get_arg_name(inst.lhs_index, idx_to_argname.clone());
         idx_to_argname.insert(inst.lhs_index, rhs_inst_name);
 
@@ -87,7 +87,7 @@ pub fn update_rhs_with_argnames(
                         Some(idx) => {
                             // fetch arg name from hashmap for 'idx'
                             let arg_name = rhs_info.get_arg_name(idx, idx_to_argname.clone());
-                            println!("op index = {}, arg name from table = {}", idx, arg_name.clone());
+                            //////println!("op index = {}, arg name from table = {}", idx, arg_name.clone());
                             // push arg name to ops_list
                             ops_list.push(arg_name);
                         },
@@ -96,10 +96,12 @@ pub fn update_rhs_with_argnames(
                                 Some(c) => {
                                     // push constant val 'c'.to_string()
                                     // to ops_list
-                                    println!("op const val = {}", c);
+                                    //////println!("op const val = {}", c);
                                     ops_list.push(c.to_string())
                                 },
-                                None => {println!("op has no index and it's not constant");},
+                                None => {
+                                    //////println!("op has no index and it's not constant");
+                                },
                             }
                         },
                     }
@@ -118,9 +120,9 @@ pub fn update_rhs_with_argnames(
     //         println!("op = {}, ", rhslist[i].cops[j]);
     //     }
     // }
-    for (x, y) in &idx_to_argname {
-        println!("\t^^^^^^^^^^^^^^^idx = {}, arg = {}", x, y);
-    }
+    //////for (x, y) in &idx_to_argname {
+    //////    println!("\t^^^^^^^^^^^^^^^idx = {}, arg = {}", x, y);
+    //////}
 
     RHSInfo {
         rhs_insts: rhs_info.rhs_insts,

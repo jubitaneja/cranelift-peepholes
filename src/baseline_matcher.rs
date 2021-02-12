@@ -97,29 +97,29 @@ impl Opt {
         // a nested if condition case at the same level
 
         // Debug
-        println!("\n************ Current stack before entering scope is: \n");
-        for x in 0 .. self.scope_stack.len() {
-            println!("stack levels pushed so far = {}", self.scope_stack[x].level);
-        }
-        println!("Current level number = {}", current_level);
+        //////println!("\n************ Current stack before entering scope is: \n");
+        //////for x in 0 .. self.scope_stack.len() {
+        //////    println!("stack levels pushed so far = {}", self.scope_stack[x].level);
+        //////}
+        //////println!("Current level number = {}", current_level);
         let index = self.does_level_exist_in_stack(current_level);
-        println!("Found index from stack == {}", index);
+        //////println!("Found index from stack == {}", index);
         if index != 0 {
             // index exists
             // pop only if the scope type is NOT ifcond
             match scope {
                 ScopeType::ScopeIfCond => {
-                    println!("Level {} exists, but NOT Popping because of ifcond scopt type", current_level);
+                    //////println!("Level {} exists, but NOT Popping because of ifcond scopt type", current_level);
                 },
                 _ => {
                     //
-                    println!("Level {} exists, pop and exit scope first", current_level);
+                    //////println!("Level {} exists, pop and exit scope first", current_level);
                     self.pop_and_exit_scope_from(index);
                 },
             }
         }
         // push the level
-        println!("Push the level {}", current_level);
+        //////println!("Push the level {}", current_level);
         self.scope_stack.push(ScopeStack {
             scope_type: scope.clone(),
             level: current_level,
@@ -127,19 +127,19 @@ impl Opt {
         // append the string
         match scope {
             ScopeType::ScopeMatch => {
-                println!("match scope");
+                //////println!("match scope");
                 self.append(String::from(" {\n"));
             }
             ScopeType::ScopeFunc => {
-                println!("function scope");
+                //////println!("function scope");
                 self.append(String::from(" {\n"));
             }
             ScopeType::ScopeIfCond => {
-                println!("if condition scope");
+                //////println!("if condition scope");
                  self.append(String::from(" {\n"));
             }
             ScopeType::ScopeCase => {
-                println!("case scope");
+                //////println!("case scope");
                 self.append(String::from(" => {\n"));
             }
         }
@@ -267,7 +267,7 @@ impl Opt {
             result.push_str(&" != ".to_string());
             result.push_str(&arg2);
         }
-        println!("*** Result str = {}\n", result);
+        //////println!("*** Result str = {}\n", result);
         result
     }
 
@@ -282,7 +282,7 @@ impl Opt {
         let mut pcs = Vec::new();
         for i in 0..pc_args.len() {
             for j in i+1..pc_args.len() {
-                println!("pcarg i = {}, j = {}\n", pc_args[i], pc_args[j]);
+                //////println!("pcarg i = {}, j = {}\n", pc_args[i], pc_args[j]);
                 let pc = self.get_relation_in_args(
                     pctable.clone(),
                     pc_args[i].clone(),
@@ -446,7 +446,7 @@ pub fn get_arg_name_dup(idx: usize, tbl: HashMap<usize, String>) -> String {
     match tbl.get(&idx) {
         Some(name) => arg_name.push_str(&name),
         None => {
-            println!("***```````` arg name not found, for index = {}\n", idx);
+            //////println!("***```````` arg name not found, for index = {}\n", idx);
         },
     }
     arg_name
@@ -459,13 +459,13 @@ pub fn generate_baseline_matcher(
     idx_to_argname: HashMap<usize, String>,
     pc_table: HashMap<String, usize>
 ) -> String {
-    for (id, rinsts) in &rhs {
-        println!("id = {} : \n", id);
-        for i in 0..rinsts.len() {
-            println!("\t\tinst = {}\n",
-                cliftinstbuilder::get_clift_opcode_name(rinsts[i].opcode.clone()));
-        }
-    }
+    //////for (id, rinsts) in &rhs {
+    //////    println!("id = {} : \n", id);
+    //////    for i in 0..rinsts.len() {
+    //////        println!("\t\tinst = {}\n",
+    //////            cliftinstbuilder::get_clift_opcode_name(rinsts[i].opcode.clone()));
+    //////    }
+    //////}
     let mut opt_func = Opt::new();
     let mut arg_str = String::from("");
     let mut arg_counter: u32 = 0;
@@ -478,39 +478,39 @@ pub fn generate_baseline_matcher(
     for node in 0..nodes.len() {
         let action_flag = is_node_actionable(nodes[node].id, rhs.clone());
         // dump: begin
-        println!("Node ==== ======================");
-        println!("\t\t Actionable? = {}", action_flag);
-        println!(
-            "\t\t Node Type = {}",
-            lhspatternmatcher::get_node_type(nodes[node].clone().node_type)
-        );
-        println!("\t\t Node Id = {}", nodes[node].id);
-        println!("\t\t Node Level = {}", nodes[node].level);
-        println!("\t\t Node Value = {}", nodes[node].node_value);
-        match nodes[node].idx_num.clone() {
-            Some(i) => {
-                println!("\t\t Node op idx number = {}", i);
-                println!("\t\t\t\t Node pre-cond name = {}\n", get_arg_name_dup(i, idx_to_argname.clone()));
-            },
-            None => println!("\t\t Node op idx number = NONE"),
-        }
-        println!("\t\t\t Node arg_name = {}", nodes[node].arg_name);
-        match nodes[node].clone().var_id {
-            Some (var_num) => {
-                println!("\t\t\t Node Var number = {}", var_num);
-            },
-            None => {
-                println!("\t\t\t Node Var number = None\n");
-            },
-        }
-        match nodes[node].next.clone() {
-            Some(ids) => {
-                for i in 0..ids.len() {
-                    println!("\t\t Node->next = {}", ids[i].index);
-                }
-            }
-            None => println!("No next\n"),
-        }
+        //////println!("Node ==== ======================");
+        //////println!("\t\t Actionable? = {}", action_flag);
+        //////println!(
+        //////    "\t\t Node Type = {}",
+        //////    lhspatternmatcher::get_node_type(nodes[node].clone().node_type)
+        //////);
+        //////println!("\t\t Node Id = {}", nodes[node].id);
+        //////println!("\t\t Node Level = {}", nodes[node].level);
+        //////println!("\t\t Node Value = {}", nodes[node].node_value);
+        //////match nodes[node].idx_num.clone() {
+        //////    Some(i) => {
+        //////        println!("\t\t Node op idx number = {}", i);
+        //////        println!("\t\t\t\t Node pre-cond name = {}\n", get_arg_name_dup(i, idx_to_argname.clone()));
+        //////    },
+        //////    None => println!("\t\t Node op idx number = NONE"),
+        //////}
+        //////println!("\t\t\t Node arg_name = {}", nodes[node].arg_name);
+        //////match nodes[node].clone().var_id {
+        //////    Some (var_num) => {
+        //////        println!("\t\t\t Node Var number = {}", var_num);
+        //////    },
+        //////    None => {
+        //////        println!("\t\t\t Node Var number = None\n");
+        //////    },
+        //////}
+        //////match nodes[node].next.clone() {
+        //////    Some(ids) => {
+        //////        for i in 0..ids.len() {
+        //////            println!("\t\t Node->next = {}", ids[i].index);
+        //////        }
+        //////    }
+        //////    None => println!("No next\n"),
+        //////}
         // dump: end
         match nodes[node].node_type {
             NodeType::MatchRoot => {
@@ -926,7 +926,7 @@ pub fn generate_baseline_matcher(
                         optional_argstr.push_str(&(nodes[node].node_value.clone())[i..]);
                     }
                     optional_argstr.push_str(&(String::from(")")));
-                    println!("in Match Args node ----> argument parameter = {}", optional_argstr.clone());
+                    //////println!("in Match Args node ----> argument parameter = {}", optional_argstr.clone());
                 }
                 // FIXME: Do we want to take action here and should we
                 // append to arg_str, or opt_func?
@@ -980,26 +980,26 @@ pub fn generate_baseline_matcher(
 
     // exit func scope
     // debug scope stack info
-    println!("********* Scope Stack ***********");
-    for x in 0 .. opt_func.scope_stack.len() {
-        let elem = opt_func.scope_stack[x].clone();
-        println!("Level of scope elem = {}", elem.level);
-        match elem.scope_type {
-            ScopeType::ScopeFunc => {
-                println!("scope func");
-            },
-            ScopeType::ScopeIfCond => {
-                println!("scope if cond");
-            },
-            ScopeType::ScopeMatch => {
-                println!("scope match");
-            },
-            ScopeType::ScopeCase => {
-                println!("scope case");
-            },
-        }
-    }
-    println!("********* Scope Stack End ***********");
+    //////println!("********* Scope Stack ***********");
+    //////for x in 0 .. opt_func.scope_stack.len() {
+    //////    let elem = opt_func.scope_stack[x].clone();
+    //////    println!("Level of scope elem = {}", elem.level);
+    //////    match elem.scope_type {
+    //////        ScopeType::ScopeFunc => {
+    //////            println!("scope func");
+    //////        },
+    //////        ScopeType::ScopeIfCond => {
+    //////            println!("scope if cond");
+    //////        },
+    //////        ScopeType::ScopeMatch => {
+    //////            println!("scope match");
+    //////        },
+    //////        ScopeType::ScopeCase => {
+    //////            println!("scope case");
+    //////        },
+    //////    }
+    //////}
+    //////println!("********* Scope Stack End ***********");
     while let Some(elem) = opt_func.scope_stack.pop() {
         opt_func.exit_scope(elem.scope_type, elem.level);
         //let elem_ty = opt_func.scope_stack.pop();

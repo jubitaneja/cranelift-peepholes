@@ -22,13 +22,13 @@ pub fn update_pchashtable(
 }
 
 pub fn build_pc_argname(node: Node) -> String {
-    println!("\nbuild pc argname\n");
+    //////println!("\nbuild pc argname\n");
     let mut argname = "".to_string();
     argname.push_str(&node.arg_name);
     // Bugfix: node value can be "imm" for
     // iconst nodes
-    println!("part1 of pcargname = {}\n", argname);
-    println!("\npart2 fetched from node value = {}\n", &node.node_value.clone());
+    //////println!("part1 of pcargname = {}\n", argname);
+    //////println!("\npart2 fetched from node value = {}\n", &node.node_value.clone());
     // fixme: fix this bug here, on matching node value to "arg"
     // "arg" is the node value for the binaryimm opcode cases.
     // if node.node_value != "imm" {
@@ -39,7 +39,7 @@ pub fn build_pc_argname(node: Node) -> String {
     else {
         argname.push_str(&node.node_value[4..]);
     }
-    println!("pc argname returned = {}\n", argname);
+    //////println!("pc argname returned = {}\n", argname);
     argname
 }
 
@@ -50,12 +50,12 @@ pub fn get_pcarg_from_node_id(
 }
 
 pub fn get_path_condition_args_for_lhs(nodes: Vec<Node>) -> HashMap<String, usize> {
-    println!("** pctable: start func\n");
+    //////println!("** pctable: start func\n");
     let mut pcargs_to_idx: HashMap<String, usize> = HashMap::new();
     let mut nextnode_table: HashMap<usize, String> = HashMap::new();
 
     for n in 0..nodes.len() {
-        println!("***** Node ID = {}", nodes[n].id);
+        //////println!("***** Node ID = {}", nodes[n].id);
         match nodes[n].node_type {
             NodeType::MatchArgs => {
                 // check if next node is Result or Param
@@ -91,7 +91,7 @@ pub fn get_path_condition_args_for_lhs(nodes: Vec<Node>) -> HashMap<String, usiz
                     "Result" => {
                         let id = nodes[n].clone().id;
                         let pcarg_name = get_pcarg_from_node_id(nextnode_table.clone(), id);
-                        println!("Node type is ValueDef: Result => pcarg_name = {}", pcarg_name.clone());
+                        //////println!("Node type is ValueDef: Result => pcarg_name = {}", pcarg_name.clone());
                         update_pchashtable(&mut pcargs_to_idx, pcarg_name);
                     },
                     _ => {},
@@ -99,9 +99,9 @@ pub fn get_path_condition_args_for_lhs(nodes: Vec<Node>) -> HashMap<String, usiz
             },
             _ => {},
         }
-        for (x, y) in pcargs_to_idx.clone() {
-            println!("arg = {}, idx = {}", x, y);
-        }
+        //////for (x, y) in pcargs_to_idx.clone() {
+        //////    println!("arg = {}, idx = {}", x, y);
+        //////}
     }
     pcargs_to_idx
 }
