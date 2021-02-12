@@ -2,7 +2,7 @@
 
 use cliftinstbuilder::{self};
 use processrhs::CliftInstWithArgs;
-use lhspatternmatcher::{self, Node, NodeType};
+use lhspatternmatcher::{Node, NodeType};
 use std::collections::HashMap;
 
 #[derive(Clone)]
@@ -390,6 +390,7 @@ impl Opt {
         //self.func_str.push_str(&"\n}\n".to_string());
     }
 
+    #[allow(dead_code)]
     pub fn get_argument_counter(&mut self, mut count: u32) -> u32 {
         count = count + 1;
         self.append(String::from(count.to_string()));
@@ -441,6 +442,7 @@ pub fn get_cond_name(cmp: String) -> String {
     cond
 }
 
+#[allow(dead_code)]
 pub fn get_arg_name_dup(idx: usize, tbl: HashMap<usize, String>) -> String {
     let mut arg_name = "PC_ARG_".to_owned();
     match tbl.get(&idx) {
@@ -456,7 +458,7 @@ pub fn generate_baseline_matcher(
     mut nodes: Vec<Node>,
     rhs: HashMap<usize, Vec<CliftInstWithArgs>>,
     count: u32,
-    idx_to_argname: HashMap<usize, String>,
+    _idx_to_argname: HashMap<usize, String>,
     pc_table: HashMap<String, usize>
 ) -> String {
     //////for (id, rinsts) in &rhs {
@@ -468,7 +470,6 @@ pub fn generate_baseline_matcher(
     //////}
     let mut opt_func = Opt::new();
     let mut arg_str = String::from("");
-    let mut arg_counter: u32 = 0;
     let mut const_counter: u32 = 0;
 
     // Create and insert root node at the beginning of
@@ -490,7 +491,7 @@ pub fn generate_baseline_matcher(
         //////match nodes[node].idx_num.clone() {
         //////    Some(i) => {
         //////        println!("\t\t Node op idx number = {}", i);
-        //////        println!("\t\t\t\t Node pre-cond name = {}\n", get_arg_name_dup(i, idx_to_argname.clone()));
+        //////        println!("\t\t\t\t Node pre-cond name = {}\n", get_arg_name_dup(i, _idx_to_argname.clone()));
         //////    },
         //////    None => println!("\t\t Node op idx number = NONE"),
         //////}

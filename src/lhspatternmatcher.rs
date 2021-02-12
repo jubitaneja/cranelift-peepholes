@@ -413,8 +413,8 @@ impl Arena {
                 if op.const_val.is_some() {
                     list_ops.push("const");
                     match op.const_val {
-                        Some(c) => {
-                            //////println!("Op is a constant with value: {}\n", c);
+                        Some(_c) => {
+                            //////println!("Op is a constant with value: {}\n", _c);
                         },
                         _ => {},
                     }
