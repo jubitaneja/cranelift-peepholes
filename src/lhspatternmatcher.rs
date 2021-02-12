@@ -77,6 +77,7 @@ pub fn get_infer_clift_inst(clift_insts: Vec<CtonInst>) -> CtonInst {
         width: 0,
         var_num: Some(0),
         cops: None,
+        lhs_index: 0,
     };
     for inst in clift_insts {
         match inst.opcode {

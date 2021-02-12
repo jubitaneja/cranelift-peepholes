@@ -56,6 +56,7 @@ pub struct SouperOperand {
 pub struct Inst {
     pub kind: InstKind,
     pub lhs: String,
+    pub lhs_idx: usize,
     pub width: u32,
     pub var_number: Option<u32>,
     pub ops: Option<Vec<SouperOperand>>,
@@ -122,6 +123,7 @@ impl<'a> Parser<'a> {
         Inst {
             kind: instkind,
             lhs: instname,
+            lhs_idx: 0,
             width: instwidth,
             var_number: Some(self.var_count),
             ops: None,
@@ -141,6 +143,7 @@ impl<'a> Parser<'a> {
         Inst {
             kind: instkind,
             lhs: instname,
+            lhs_idx: 0,
             width: instwidth,
             var_number: None,
             ops: Some(ops),
@@ -342,6 +345,7 @@ impl<'a> Parser<'a> {
         Inst {
             kind: InstKind::Const,
             lhs: self.create_const_lhs(),
+            lhs_idx: 0,
             width: width,
             var_number: None,
             ops: Some(const_ops),
@@ -387,6 +391,7 @@ impl<'a> Parser<'a> {
         insts.push(Inst {
             kind: kind,
             lhs: lhs,
+            lhs_idx: 0,
             width: width,
             var_number: None,
             ops: Some(inst_ops),
@@ -579,6 +584,7 @@ impl<'a> Parser<'a> {
         Inst {
             kind: InstKind::Implies,
             lhs: String::from(""),
+            lhs_idx: 0,
             width: 0,
             var_number: Some(0),
             ops: None,
@@ -613,6 +619,21 @@ impl<'a> Parser<'a> {
                 );
             }
         }
+    }
+
+    // set lhs_idx of each inst
+    fn get_updated_inst_with_lhs_idx_num(
+        &mut self,
+        instruction: Inst,
+        idx: usize) -> Inst {
+            Inst {
+                kind: instruction.kind,
+                lhs: instruction.lhs,
+                lhs_idx: idx,
+                width: instruction.width,
+                var_number: instruction.var_number,
+                ops: instruction.ops,
+            }
     }
 }
 
@@ -656,12 +677,23 @@ pub fn parse(text: &str) -> Vec<Inst> {
             }
         }
     }
+    
+    let mut updated_insts: Vec<Inst> = Vec::new();
+    // set the lhs_idx number for each instruction
+    // get this info from the hashtable that stores LHS_name : Idx_num
+    for i in insts.clone() {
+        updated_insts.push(
+            p.get_updated_inst_with_lhs_idx_num(
+                i.clone(),
+                p.lhs_val_names_to_idx[&i.lhs.clone()]));
+    }
 
     // Debug
     println!("Parsed Souper Instructions:\n");
-    for i in insts.clone() {
+    for i in updated_insts.clone() {
         println!("Inst = {}\n", p.get_kind_name(i.kind));
         println!("\t LHS = {}\n", i.lhs);
+        println!("\t\tLHS index num = {}", i.lhs_idx);
         match i.ops {
             Some(ops_lst) => {
                 for op in ops_lst {
@@ -690,5 +722,5 @@ pub fn parse(text: &str) -> Vec<Inst> {
     }
     println!("\n*******************\n");
 
-    insts
+    updated_insts
 }

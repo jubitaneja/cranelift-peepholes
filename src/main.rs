@@ -71,8 +71,9 @@ fn main() {
         // Debug
         println!("==== After Souper to Clift Instructions ========\n");
         for ci in clift_insts.clone() {
-            println!("Clift Inst = {}\n",
+            println!("Clift Inst = {}",
                 cliftinstbuilder::get_clift_opcode_name(ci.opcode));
+            println!("\tInst Index = {}\n", ci.lhs_index);
             match ci.cops {
                 Some(ops) => {
                     for op in ops {
@@ -128,9 +129,14 @@ fn main() {
             rhscliftinsts::get_result_clift_insts_only(
                 clift_insts.clone());
 
-        let updated_rhs_insts =
+        let rhs_info =
             processrhs::update_rhs_with_argnames(
                 rhs_clift_insts.clone(), lhs_info.htable.clone());
+        // Debug
+        println!("= = = = = = hash table index_to_argnames = = = = =");
+        for (x, y) in rhs_info.full_table.clone() {
+            println!("idx = {}, argname = {}", x, y);
+        }
         // Debug
         // println!("- - - -  - - - - - - -\n");
         // for ri in rhs_clift_insts.clone() {
@@ -145,18 +151,21 @@ fn main() {
         // Debug
         //println!("hash id for LHS is: {}\n", hash_id);
 
-        rhs_table = tablerhs::map_lhs_to_rhs(hash_id, updated_rhs_insts, rhs_table.clone());
+        rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_info.rhs_insts, rhs_table.clone());
 
         // Debug
-        // println!("\n******************************\n");
-        // for (x, y) in rhs_table.clone() {
-        //     println!("******* For LHS ID = {}, RHS is == \n", x);
-        //     for n in y {
-        //         println!("RHS inst in hash table = {}, ",
-        //             cliftinstbuilder::get_clift_opcode_name(n.opcode));
-        //     }
-        // }
-        // println!("\n******************************\n");
+        println!("\n********RHS TABLE Debugger **********************\n");
+        for (x, y) in rhs_table.clone() {
+            println!("******* For LHS ID = {}, RHS is == \n", x);
+            for n in y {
+                println!("RHS inst in hash table = {}, ",
+                    cliftinstbuilder::get_clift_opcode_name(n.opcode));
+                for o in n.cops {
+                    println!("RHS inst arg = {}", o);
+                }
+            }
+        }
+        println!("\n******************************\n");
 
         if mode == "fast" {
             // Merged prefix tree

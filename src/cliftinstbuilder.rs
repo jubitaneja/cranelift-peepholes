@@ -13,6 +13,7 @@ pub struct CtonInst {
     pub width: u32,
     pub var_num: Option<u32>,
     pub cops: Option<Vec<CtonOperand>>,
+    pub lhs_index: usize,
 }
 
 #[derive(Clone)]
@@ -333,6 +334,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
     match souper_inst {
         Inst {
             kind,
+            lhs_idx,
             width,
             var_number,
             ops,
@@ -351,6 +353,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Add => {
@@ -369,6 +372,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Mul => {
@@ -387,6 +391,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Sub => {
@@ -405,6 +410,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Eq => {
@@ -423,6 +429,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: 1,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Ne => {
@@ -441,6 +448,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: 1,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Slt => {
@@ -459,6 +467,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: 1,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Ult => {
@@ -477,6 +486,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: 1,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Sle => {
@@ -495,6 +505,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: 1,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Ule => {
@@ -513,6 +524,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: 1,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::And => {
@@ -531,6 +543,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Or => {
@@ -549,6 +562,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Xor => {
@@ -567,6 +581,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Shl => {
@@ -585,6 +600,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Lshr => {
@@ -603,6 +619,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Ashr => {
@@ -621,6 +638,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
                     }
                 }
                 InstKind::Ctpop => CtonInst {
@@ -631,6 +649,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     width: width,
                     var_num: var_number,
                     cops: build_clift_ops(ops),
+                    lhs_index: lhs_idx,
                 },
                 InstKind::Ctlz => CtonInst {
                     valuedef: CtonValueDef::Result,
@@ -640,6 +659,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     width: width,
                     var_num: var_number,
                     cops: build_clift_ops(ops),
+                    lhs_index: lhs_idx,
                 },
                 InstKind::Cttz => CtonInst {
                     valuedef: CtonValueDef::Result,
@@ -649,6 +669,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     width: width,
                     var_num: var_number,
                     cops: build_clift_ops(ops),
+                    lhs_index: lhs_idx,
                 },
                 InstKind::Var => CtonInst {
                     valuedef: CtonValueDef::Param,
@@ -658,6 +679,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     width: width,
                     var_num: var_number,
                     cops: build_clift_ops(ops),
+                    lhs_index: lhs_idx,
                 },
                 InstKind::Infer => CtonInst {
                     valuedef: CtonValueDef::NoneType,
@@ -667,6 +689,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     width: width,
                     var_num: var_number,
                     cops: build_clift_ops(ops),
+                    lhs_index: lhs_idx,
                 },
                 InstKind::ResultInst => CtonInst {
                     valuedef: CtonValueDef::NoneType,
@@ -676,6 +699,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     width: width,
                     var_num: var_number,
                     cops: build_clift_ops(ops),
+                    lhs_index: lhs_idx,
                 },
                 _ => CtonInst {
                     valuedef: CtonValueDef::Param,
@@ -685,6 +709,7 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                     width: width,
                     var_num: None,
                     cops: build_clift_ops(ops),
+                    lhs_index: lhs_idx,
                 },
             }
         }

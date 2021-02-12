@@ -343,8 +343,9 @@ impl Opt {
             for inst in 0..rhs.len() - 2 {
                 let each_inst = rhs[inst].clone();
 
-                let mut insert_inst_str = "let inst".to_owned();
-                insert_inst_str += &inst.to_string();
+                let mut insert_inst_str = "let ".to_owned();
+                insert_inst_str += &"rhs_inst_".to_owned();
+                insert_inst_str += &each_inst.lhs_index.to_string();
                 insert_inst_str += &" = pos.ins().".to_owned();
                 insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
                 insert_inst_str += &"(".to_owned();
