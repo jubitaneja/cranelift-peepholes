@@ -772,7 +772,7 @@ pub fn generate_baseline_matcher(
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                     }
                     "irsub_imm" => {
-                        opt_func.append(String::from("Opcode::IsubImm"));
+                        opt_func.append(String::from("Opcode::IrsubImm"));
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                     }
                     "icmp" => {
