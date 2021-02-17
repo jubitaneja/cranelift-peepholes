@@ -63,6 +63,12 @@ pub struct Inst {
 }
 
 #[derive(Clone)]
+pub struct OpsInfo {
+    pub both_index: bool,
+    pub const_index: usize,
+}
+
+#[derive(Clone)]
 pub struct Parser<'a> {
     lex: Lexer<'a>,
 
@@ -418,6 +424,25 @@ impl<'a> Parser<'a> {
         op_type
     }
 
+    fn both_ops_index(&mut self, ops: Vec<SouperOperand>) -> OpsInfo {
+        let mut op_type = true;
+        let mut idx = 0;
+        for op in 0..ops.len() {
+            match ops[op].kind {
+                SouperOpType::Constant => {
+                    op_type = false;
+                    idx = op;
+                    break
+                },
+                _ => {},
+            }
+        }
+        OpsInfo {
+            both_index: op_type,
+            const_index: idx,
+        }
+    }
+
     fn parse_inst_types(&mut self) -> Vec<Inst> {
         if let Some(TokKind::Ident(text)) = self.lookahead.clone() {
             match self.get_inst_kind(text.clone()) {
@@ -446,15 +471,130 @@ impl<'a> Parser<'a> {
                             instwidth,
                             ops)
                     } else {
+                        // FIXME: check if any op is constant and get its
+                        // op-index i.e. is it op0 or op1
+                        let ops_info = self.both_ops_index(ops.clone());
                         let mut insts = vec![];
-                        insts.push(
-                            self.create_inst(
-                                inst_kind,
-                                instname,
-                                instwidth,
-                                ops
-                            )
-                        );
+                        if ops_info.both_index {
+                            insts.push(
+                                self.create_inst(
+                                    inst_kind,
+                                    instname,
+                                    instwidth,
+                                    ops
+                                )
+                            );
+                        } else {
+                            let mut ordered_ops = vec![];
+                            // In this we are sorting operands to match semantics
+                            // of cranelift IR i.e. inst_imm X, c
+                            // Subtraction c -x is represented as irsub_imm X, c
+                            // However, X -c is transformed to add_imm X, -c
+                            if ops_info.const_index == 0 {
+                                match inst_kind.clone() {
+                                    InstKind::Add | InstKind::Mul |
+                                    InstKind::And | InstKind::Or |
+                                    InstKind:: Xor | InstKind::Eq |
+                                    InstKind::Ne | InstKind::Slt |
+                                    InstKind::Ult | InstKind::Sle |
+                                    InstKind::Ule | InstKind::Sub => {
+                                        ordered_ops.push(ops[1].clone());
+                                        ordered_ops.push(ops[0].clone());
+                                        insts.push(
+                                            self.create_inst(
+                                                inst_kind,
+                                                instname,
+                                                instwidth,
+                                                ordered_ops
+                                            )
+                                        );
+                                    },
+                                    _ => {
+                                        insts.push(
+                                            self.create_inst(
+                                                inst_kind,
+                                                instname,
+                                                instwidth,
+                                                ops
+                                            )
+                                        );
+                                    },
+                                }
+                            } else if ops_info.const_index == 1 {
+                                match inst_kind.clone() {
+                                    InstKind::Sub => {
+                                        ordered_ops.push(ops[0].clone());
+                                        let const_op = ops[1].clone();
+                                        let new_const;
+                                        match const_op.const_val.clone() {
+                                            Some(c) => {
+                                                new_const = -1 * c;
+                                                ordered_ops.push(
+                                                    SouperOperand {
+                                                        kind: SouperOpType::Constant,
+                                                        idx_val: None,
+                                                        const_val: Some(new_const),
+                                                        width: instwidth,
+                                                    }
+                                                );
+                                                insts.push(
+                                                    self.create_inst(
+                                                        InstKind::Add,
+                                                        instname,
+                                                        instwidth,
+                                                        ordered_ops
+                                                    )
+                                                );
+                                            },
+                                            _ => {
+                                                insts.push(
+                                                    self.create_inst(
+                                                        inst_kind,
+                                                        instname,
+                                                        instwidth,
+                                                        ops
+                                                    )
+                                                );
+                                            },
+                                        }
+                                    },
+                                    _ => {
+                                        insts.push(
+                                            self.create_inst(
+                                                inst_kind,
+                                                instname,
+                                                instwidth,
+                                                ops
+                                            )
+                                        );
+                                    },
+                                }
+                            }
+                        }
+                        // OpInfo {
+                        //    result: bool => are_both_ops_index() - if false, go ahead and check further
+                        //    op-index: usize -- save index of constant operand
+                        // } = self.both_ops_index(ops.clone());
+                        // if OpInfo.result is false {
+                        //     if op-index is 0 {
+                        //         match inst_kind {
+                        //             Add || Mul || And || Or || Xor => {
+                        //                 ordered_ops.push(ops[1]) in list first
+                        //                 ordered_ops.push(ops[0]) later becuase we want 'imm' operand in the end
+                        //             },
+                        //             Sub => {
+                        //                 ordered_ops.push(ops[1]) in list first
+                        //                 ordered_ops.push(ops[0]) later becuase we want 'imm' operand in the end
+                        //             },
+                        //             _ => {},
+                        //         }
+                        //     } else if op-index is 1 && inst_kind is Sub {
+                        //         ordered_ops.push(ops[0]) in list
+                        //         ordered_ops.push(negative value of constant op i..e ops[1])
+                        //         modify inst kind to "ADD" now sub x, c ==> add x, -c
+                        //     }
+
+                        // }
                         insts
                     }
                 }
