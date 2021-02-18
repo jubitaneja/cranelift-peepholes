@@ -807,6 +807,22 @@ pub fn generate_baseline_matcher(
                         opt_func.append(String::from("Opcode::BxorImm"));
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);
                     }
+                    "band_not" => {
+                        opt_func.append(String::from("Opcode::BandNot"));
+                        opt_func.enter_scope(ScopeType::ScopeCase, current_level);
+                    }
+                    "bor_not" => {
+                        opt_func.append(String::from("Opcode::BorNot"));
+                        opt_func.enter_scope(ScopeType::ScopeCase, current_level);
+                    }
+                    "bxor_not" => {
+                        opt_func.append(String::from("Opcode::BxorNot"));
+                        opt_func.enter_scope(ScopeType::ScopeCase, current_level);
+                    }
+                    "bnot" => {
+                        opt_func.append(String::from("Opcode::Bnot"));
+                        opt_func.enter_scope(ScopeType::ScopeCase, current_level);
+                    }
                     "ishl" => {
                         opt_func.append(String::from("Opcode::Ishl"));
                         opt_func.enter_scope(ScopeType::ScopeCase, current_level);

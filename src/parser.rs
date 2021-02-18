@@ -35,6 +35,10 @@ pub enum InstKind {
     ResultInst,
     Implies,
     NoneType,
+    AndNot,
+    OrNot,
+    XorNot,
+    Not,
 }
 
 #[derive(Clone)]
@@ -180,6 +184,10 @@ impl<'a> Parser<'a> {
             "cttz" => InstKind::Cttz,
             "infer" => InstKind::Infer,
             "result" => InstKind::ResultInst,
+            "andNot" => InstKind::AndNot,
+            "orNot" => InstKind::OrNot,
+            "xorNot" => InstKind::XorNot,
+            "not" => InstKind::Not,
             "->" => InstKind::Implies,
             _ => InstKind::NoneType,
         }
@@ -212,6 +220,10 @@ impl<'a> Parser<'a> {
             InstKind::Implies => "->".to_string(),
             InstKind::Infer => "infer".to_string(),
             InstKind::Const => "const".to_string(),
+            InstKind::AndNot => "andNot".to_string(),
+            InstKind::OrNot => "orNot".to_string(),
+            InstKind::XorNot => "xorNot".to_string(),
+            InstKind::Not => "not".to_string(),
             _ => "Inst Kind name is not yet handled in function: get_kind_name()".to_string(),
         }
     }
@@ -358,6 +370,53 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn create_single_const_inst_sequence(
+        &mut self,
+        kind: InstKind,
+        lhs: String,
+        width: u32,
+        ops: Vec<SouperOperand>,
+        const_index: usize
+    ) -> Vec<Inst> {
+        let mut insts = vec![];
+        // create const inst for first operand
+        let const_inst0 = self.create_const_inst(ops[const_index].clone(), width);
+        let const_idx0 = self.total_insts;
+        self.lhs_val_names_to_idx.insert(const_inst0.lhs.clone(), const_idx0);
+        self.total_insts += 1;
+        insts.push(const_inst0);
+
+        // create final inst using above two as ops
+        let mut inst_ops = vec![];
+        if const_index == 0 {
+            inst_ops.push(SouperOperand {
+                kind: SouperOpType::Index,
+                idx_val: Some(const_idx0),
+                const_val: None,
+                width: width,
+            });
+            inst_ops.push(ops[1].clone());
+        } else if const_index == 1 {
+            inst_ops.push(ops[0].clone());
+            inst_ops.push(SouperOperand {
+                kind: SouperOpType::Index,
+                idx_val: Some(const_idx0),
+                const_val: None,
+                width: width,
+            });
+        } else {}
+        insts.push(Inst {
+            kind: kind,
+            lhs: lhs,
+            lhs_idx: 0,
+            width: width,
+            var_number: None,
+            ops: Some(inst_ops),
+        });
+
+        insts
+    }
+
     fn create_const_inst_sequence(
         &mut self,
         kind: InstKind,
@@ -484,6 +543,7 @@ impl<'a> Parser<'a> {
                                     ops
                                 )
                             );
+                            insts
                         } else {
                             let mut ordered_ops = vec![];
                             // In this we are sorting operands to match semantics
@@ -508,6 +568,18 @@ impl<'a> Parser<'a> {
                                                 ordered_ops
                                             )
                                         );
+                                        insts
+                                    },
+                                    InstKind::AndNot | InstKind::OrNot |
+                                    InstKind::XorNot => {
+                                        // TODO: create a separate constant instruction
+                                        // and then use that in andNot, etc.
+                                        self.create_single_const_inst_sequence(
+                                            inst_kind,
+                                            instname,
+                                            instwidth,
+                                            ops,
+                                            0)
                                     },
                                     _ => {
                                         insts.push(
@@ -518,9 +590,11 @@ impl<'a> Parser<'a> {
                                                 ops
                                             )
                                         );
+                                        insts
                                     },
                                 }
-                            } else if ops_info.const_index == 1 {
+                            } else {
+                            //} else if ops_info.const_index == 1 {
                                 match inst_kind.clone() {
                                     InstKind::Sub => {
                                         ordered_ops.push(ops[0].clone());
@@ -545,6 +619,7 @@ impl<'a> Parser<'a> {
                                                         ordered_ops
                                                     )
                                                 );
+                                                insts
                                             },
                                             _ => {
                                                 insts.push(
@@ -555,8 +630,20 @@ impl<'a> Parser<'a> {
                                                         ops
                                                     )
                                                 );
+                                                insts
                                             },
                                         }
+                                    },
+                                    InstKind::AndNot | InstKind::OrNot |
+                                    InstKind::XorNot => {
+                                        // TODO: create a separate constant instruction
+                                        // and then use that in andNot, etc.
+                                        self.create_single_const_inst_sequence(
+                                            inst_kind,
+                                            instname,
+                                            instwidth,
+                                            ops,
+                                            1)
                                     },
                                     _ => {
                                         insts.push(
@@ -567,35 +654,11 @@ impl<'a> Parser<'a> {
                                                 ops
                                             )
                                         );
+                                        insts
                                     },
                                 }
                             }
                         }
-                        // OpInfo {
-                        //    result: bool => are_both_ops_index() - if false, go ahead and check further
-                        //    op-index: usize -- save index of constant operand
-                        // } = self.both_ops_index(ops.clone());
-                        // if OpInfo.result is false {
-                        //     if op-index is 0 {
-                        //         match inst_kind {
-                        //             Add || Mul || And || Or || Xor => {
-                        //                 ordered_ops.push(ops[1]) in list first
-                        //                 ordered_ops.push(ops[0]) later becuase we want 'imm' operand in the end
-                        //             },
-                        //             Sub => {
-                        //                 ordered_ops.push(ops[1]) in list first
-                        //                 ordered_ops.push(ops[0]) later becuase we want 'imm' operand in the end
-                        //             },
-                        //             _ => {},
-                        //         }
-                        //     } else if op-index is 1 && inst_kind is Sub {
-                        //         ordered_ops.push(ops[0]) in list
-                        //         ordered_ops.push(negative value of constant op i..e ops[1])
-                        //         modify inst kind to "ADD" now sub x, c ==> add x, -c
-                        //     }
-
-                        // }
-                        insts
                     }
                 }
             }

@@ -65,6 +65,10 @@ pub enum CtonOpcode {
     IcmpImm,
     Infer,
     ResultInst,
+    BandNot,
+    BorNot,
+    BxorNot,
+    Bnot,
     NoneType,
 }
 
@@ -125,6 +129,10 @@ pub fn get_cton_inst_name(opcode: CtonOpcode) {
         CtonOpcode::Var => println!("CtonOpcode = Var"),
         CtonOpcode::Icmp => println!("CtonOpcode = Icmp"),
         CtonOpcode::IcmpImm => println!("CtonOpcode = IcmpImm"),
+        CtonOpcode::Bnot => println!("CtonOpcode = Bnot"),
+        CtonOpcode::BandNot => println!("CtonOpcode = BandNot"),
+        CtonOpcode::BorNot => println!("CtonOpcode = BorNot"),
+        CtonOpcode::BxorNot => println!("CtonOpcode = BxorNot"),
         _ => {
             println!("CtonOpcode not yet handled");
         }
@@ -160,6 +168,10 @@ pub fn get_cton_opcode_name(opcode: CtonOpcode) {
         CtonOpcode::ResultInst => println!("Cton::Opcode = Result"),
         CtonOpcode::Icmp => println!("Cton::Opcode = Icmp"),
         CtonOpcode::IcmpImm => println!("Cton::Opcode = IcmpImm"),
+        CtonOpcode::Bnot => println!("Cton::Opcode = Bnot"),
+        CtonOpcode::BandNot => println!("Cton::Opcode = BandNot"),
+        CtonOpcode::BorNot => println!("Cton::Opcode = BorNot"),
+        CtonOpcode::BxorNot => println!("Cton::Opcode = BorNot"),
         _ => println!("Cton: other type yet to be handled"),
     }
 }
@@ -226,6 +238,10 @@ pub fn get_clift_opcode_name<'a>(opcode: CtonOpcode) -> String {
         CtonOpcode::IcmpImm => "icmp_imm".to_string(),
         CtonOpcode::Infer => "Infer".to_string(),
         CtonOpcode::ResultInst => "Result".to_string(),
+        CtonOpcode::Bnot => "bnot".to_string(),
+        CtonOpcode::BandNot => "band_not".to_string(),
+        CtonOpcode::BorNot => "bor_not".to_string(),
+        CtonOpcode::BxorNot => "bxor_not".to_string(),
         _ => "".to_string(),
     }
 }
@@ -581,6 +597,52 @@ pub fn mapping_souper_to_cton_isa(souper_inst: Inst) -> CtonInst {
                         width: width,
                         var_num: var_number,
                         cops: clift_ops,
+                        lhs_index: lhs_idx,
+                    }
+                }
+                InstKind::Not => CtonInst {
+                    valuedef: CtonValueDef::Result,
+                    kind: CtonInstKind::Unary,
+                    opcode: CtonOpcode::Bnot,
+                    cond: None,
+                    width: width,
+                    var_num: var_number,
+                    cops: build_clift_ops(ops),
+                    lhs_index: lhs_idx,
+                },
+                InstKind::AndNot => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::BandNot,
+                        cond: None,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                        lhs_index: lhs_idx,
+                    }
+                }
+                InstKind::OrNot => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::BorNot,
+                        cond: None,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
+                        lhs_index: lhs_idx,
+                    }
+                }
+                InstKind::XorNot => {
+                    CtonInst {
+                        valuedef: CtonValueDef::Result,
+                        kind: CtonInstKind::Binary,
+                        opcode: CtonOpcode::BxorNot,
+                        cond: None,
+                        width: width,
+                        var_num: var_number,
+                        cops: build_clift_ops(ops),
                         lhs_index: lhs_idx,
                     }
                 }
