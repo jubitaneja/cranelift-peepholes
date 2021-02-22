@@ -1,6 +1,6 @@
 // Matcher
 
-use cliftinstbuilder::{self};
+use cliftinstbuilder::{self, CtonOpcode};
 use processrhs::CliftInstWithArgs;
 use lhspatternmatcher::{Node, NodeType};
 use std::collections::HashMap;
@@ -315,10 +315,12 @@ impl Opt {
             self.enter_scope(ScopeType::ScopeIfCond, _level);
         }
         let mut replace_inst_str = "".to_owned();
+        // FIXME: when RHS.len() == 1 doesn't always mean it will be a constant folding
+        // It can also be result %x where %x is any other instruction as well.
         if rhs.len() == 1 {
             let each_inst = rhs[0].clone();
             replace_inst_str += &"pos.func.dfg.replace(".to_owned();
-            // FIXME: fix the inst name here
+            // FIXME: Maybe fix the inst name here?
             replace_inst_str += &"inst".to_owned();
             replace_inst_str += &").".to_owned();
             replace_inst_str += &"iconst(".to_owned();
@@ -347,15 +349,26 @@ impl Opt {
                 insert_inst_str += &"rhs_inst_".to_owned();
                 insert_inst_str += &each_inst.lhs_index.to_string();
                 insert_inst_str += &" = pos.ins().".to_owned();
-                insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode);
+                insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode.clone());
+                // FIXME: special case the ops part according to
+                // different types of instructions.
+                // Like, iconst or bconst takes width and arg
+                // other arithmetic insts take ops list
                 insert_inst_str += &"(".to_owned();
+
+                match each_inst.opcode.clone() {
+                    CtonOpcode::Iconst => {
+                        insert_inst_str += &"width, ".to_owned();
+                    },
+                    _ => {},
+                }
 
                 // FIX: Insert the rhs.cops string args list
                 for i in 0..each_inst.cops.len() {
                     if i > 0 {
-                        replace_inst_str += &", ".to_owned();
+                        insert_inst_str += &", ".to_owned();
                     }
-                    replace_inst_str += &each_inst.cops[i].to_owned();
+                    insert_inst_str += &each_inst.cops[i].to_owned();
                 }
 
                 insert_inst_str += &");\n".to_owned();
