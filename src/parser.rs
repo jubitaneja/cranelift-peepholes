@@ -73,6 +73,12 @@ pub struct OpsInfo {
 }
 
 #[derive(Clone)]
+pub struct ParsedInfo {
+    pub souper_insts: Vec<Inst>,
+    pub width_table: HashMap<usize, u32>,
+}
+
+#[derive(Clone)]
 pub struct Parser<'a> {
     lex: Lexer<'a>,
 
@@ -572,8 +578,15 @@ impl<'a> Parser<'a> {
                                     },
                                     InstKind::AndNot | InstKind::OrNot |
                                     InstKind::XorNot => {
-                                        // TODO: create a separate constant instruction
-                                        // and then use that in andNot, etc.
+                                        self.create_single_const_inst_sequence(
+                                            inst_kind,
+                                            instname,
+                                            instwidth,
+                                            ops,
+                                            0)
+                                    },
+                                    InstKind::Ashr | InstKind::Lshr |
+                                    InstKind::Shl => {
                                         self.create_single_const_inst_sequence(
                                             inst_kind,
                                             instname,
@@ -838,6 +851,123 @@ impl<'a> Parser<'a> {
                 ops: instruction.ops,
             }
     }
+
+    // update the hashmap <lhs idex, width>
+    fn update_lhs_idx_to_width_map(
+        &mut self,
+        i: Inst,
+        mut idx_to_width: HashMap<usize, u32>
+    ) -> HashMap<usize, u32> {
+        //
+        if idx_to_width.contains_key(&i.lhs_idx) {
+        } else {
+            // first check if inst width is 0? yes-> then look for ops index and look them up in hashmap
+            // insert to hashmap
+            match i.kind {
+                InstKind::Infer  => {
+                    match i.ops {
+                        Some(operands) => {
+                            match operands[0].idx_val {
+                                Some(idx) => {
+                                    // lookup this index in hashmap and insert it then
+                                    if idx_to_width.contains_key(&idx) {
+                                        let w = idx_to_width[&idx];
+                                        idx_to_width.insert(i.lhs_idx ,w);
+                                    }
+                                }
+                                None => {},
+                            }
+                        },
+                        _ => {},
+                    }
+                },
+                InstKind::ResultInst  => {
+                    match i.ops {
+                        Some(operands) => {
+                            match operands[0].idx_val {
+                                Some(idx) => {
+                                    // lookup this index in hashmap and insert it then
+                                    if idx_to_width.contains_key(&idx) {
+                                        let w = idx_to_width[&idx];
+                                        idx_to_width.insert(i.lhs_idx ,w);
+                                    }
+                                },
+                                None => {
+                                    // result can be constant as well, fetch width from operand directly
+                                    idx_to_width.insert(i.lhs_idx ,operands[0].width);
+                                },
+                            }
+                        },
+                        _ => {},
+                    }
+                },
+                _ => {
+                    idx_to_width.insert(i.lhs_idx, i.width);
+                },
+            }
+        }
+        idx_to_width
+    }
+
+    pub fn update_width_info(
+        &mut self,
+        mut i: Inst,
+        table: HashMap<usize, u32>) -> Inst {
+        // update `width` info of `inst` by looking
+        // up `table
+        if i.width == 0 {
+            // FIX: width can be zero for 'result' instruction when it folds to a constant
+            // like, result 1:i32 or result 1:i1 or any const value
+            // In this case we want to fetch bitwidth either from infer inst or from
+            // constant argument along with result instruction.
+            if table.contains_key(&i.lhs_idx) {
+                i.width = table[&i.lhs_idx];
+            }
+        }
+        let mut updated_ops = Vec::new();
+        match i.ops.clone() {
+            Some(op_list) => {
+                for op in op_list.clone() {
+                    match op.idx_val {
+                        Some(idx) => {
+                            updated_ops.push(
+                                SouperOperand {
+                                    kind: SouperOpType::Index,
+                                    idx_val: Some(idx),
+                                    const_val: None,
+                                    width: table[&idx],
+                                }
+                            );
+                        },
+                        None => {
+                            match op.const_val {
+                                Some(c) => {
+                                    updated_ops.push(
+                                        SouperOperand {
+                                            kind: SouperOpType::Constant,
+                                            idx_val: None,
+                                            const_val: Some(c),
+                                            width: table[&i.lhs_idx], // This is wrong for %res:i1 = eq %a:i32, 3:i32
+                                        }
+                                    );
+                                },
+                                None => {},
+                            }
+                        },
+                    }
+                }
+            },
+            _ => {},
+        }
+        Inst {
+            kind: i.kind,
+            lhs: i.lhs,
+            lhs_idx: i.lhs_idx,
+            width: i.width,
+            var_number: i.var_number,
+            ops: Some(updated_ops),
+        }
+    }
 }
 
 pub fn parse(text: &str) -> Vec<Inst> {
@@ -891,11 +1021,29 @@ pub fn parse(text: &str) -> Vec<Inst> {
                 p.lhs_val_names_to_idx[&i.lhs.clone()]));
     }
 
+    let mut lhs_idx_to_width = HashMap::new();
+    for i in updated_insts.clone() {
+        lhs_idx_to_width = p.update_lhs_idx_to_width_map(i.clone(), lhs_idx_to_width);
+    }
+
+    //////for (k, v) in &lhs_idx_to_width {
+    //////    println!("idx = {}, width = {}", k, v);
+    //////}
+    let mut final_insts = Vec::new();
+    for i in updated_insts {
+        //////println!("before W = {}", i.width);
+        //////println!("I kind is = {}", p.get_kind_name(i.kind.clone()));
+        let ins = p.update_width_info(i.clone(), lhs_idx_to_width.clone());
+        //////println!("After W = {}", ins.width);
+        final_insts.push(ins);
+    }
+
     // Debug
     //////println!("Parsed Souper Instructions:\n");
-    //////for i in updated_insts.clone() {
+    //////for i in final_insts.clone() {
     //////    println!("Inst = {}\n", p.get_kind_name(i.kind));
     //////    println!("\t LHS = {}\n", i.lhs);
+    //////    println!("\t LHS Width = {}", i.width);
     //////    println!("\t\tLHS index num = {}", i.lhs_idx);
     //////    match i.ops {
     //////        Some(ops_lst) => {
@@ -904,12 +1052,14 @@ pub fn parse(text: &str) -> Vec<Inst> {
     //////                match op.idx_val {
     //////                    Some(id) => {
     //////                        println!("\t op: idx_val = {}\n", id);
+    //////                        println!("\t op: WIDTH = {}\n", op.width);
     //////                    },
     //////                    None => {},
     //////                }
     //////                match op.const_val {
     //////                    Some(c) => {
     //////                        println!("\t op: const_val = {}\n", c);
+    //////                        println!("\t const: WIDTH = {}", op.width);
     //////                    },
     //////                    None => {},
     //////                }
@@ -925,5 +1075,5 @@ pub fn parse(text: &str) -> Vec<Inst> {
     //////}
     //////println!("\n*******************\n");
 
-    updated_insts
+    final_insts
 }
