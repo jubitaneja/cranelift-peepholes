@@ -317,28 +317,40 @@ impl Opt {
         let mut replace_inst_str = "".to_owned();
         // FIXME: when RHS.len() == 1 doesn't always mean it will be a constant folding
         // It can also be result %x where %x is any other instruction as well.
+        // Current implementation assumes that it's a constant folding RHS
         if rhs.len() == 1 {
             let each_inst = rhs[0].clone();
+            //if each_inst.cops[0].contains("arg") | each_inst.cops[0].contains("rhs") {
+            //    // FIXME
+            //    println!("*** Take action for inst_result and alias here!");
+            //} else {
+            //    println!("Just replace with constant here");
+            //}
             replace_inst_str += &"pos.func.dfg.replace(".to_owned();
-            // FIXME: Maybe fix the inst name here?
             replace_inst_str += &"inst".to_owned();
             replace_inst_str += &").".to_owned();
-            replace_inst_str += &"iconst(".to_owned();
-            // FIXME: fix the width part
-            // Note: Width is not set in CliftInst operands
-            // for constant type, only const_val exists.
-            // Only parser has the correct width for constant, see
-            // how you pass that information further to CliftInst struct
-            replace_inst_str += &"width".to_owned();
-            replace_inst_str += &", ".to_owned();
-
-            // FIX: Add the rhs.cops vector string - should be one element only.
-            for i in 0..each_inst.cops.len() {
-                if i > 0 {
-                    replace_inst_str += &", ".to_owned();
+            let w = rhs[0].width;
+            if w == 1 {
+                replace_inst_str += &"bconst(B1, ".to_owned();
+                if each_inst.cops[0].clone() == String::from("1".to_string()) {
+                    replace_inst_str += &"true".to_owned();
+                } else {
+                    replace_inst_str += &"false".to_owned();
                 }
-                replace_inst_str += &each_inst.cops[i].to_owned();
+            } else {
+                replace_inst_str += &"iconst(I".to_owned();
+                replace_inst_str += &w.to_string();
+                replace_inst_str += &", ".to_owned();
+                replace_inst_str += &each_inst.cops[0].to_owned();
+                replace_inst_str += &"_u64 as i64".to_owned();
             }
+            // FIX: Add the rhs.cops vector string - should be one element only.
+            //for i in 0..each_inst.cops.len() {
+            //    if i > 0 {
+            //        replace_inst_str += &", ".to_owned();
+            //    }
+            //    replace_inst_str += &each_inst.cops[i].to_owned();
+            //}
             replace_inst_str += &"); ".to_owned();
             self.func_str.push_str(&replace_inst_str);
         } else {
@@ -349,29 +361,42 @@ impl Opt {
                 insert_inst_str += &"rhs_inst_".to_owned();
                 insert_inst_str += &each_inst.lhs_index.to_string();
                 insert_inst_str += &" = pos.ins().".to_owned();
-                insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode.clone());
                 // FIXME: special case the ops part according to
                 // different types of instructions.
                 // Like, iconst or bconst takes width and arg
                 // other arithmetic insts take ops list
-                insert_inst_str += &"(".to_owned();
 
                 match each_inst.opcode.clone() {
                     CtonOpcode::Iconst => {
-                        insert_inst_str += &"width, ".to_owned();
+                        let w = each_inst.width;
+                        if w == 1 {
+                            insert_inst_str += &"bconst(B1, ".to_owned();
+                            if each_inst.cops[0].clone() == String::from("1".to_string()) {
+                                insert_inst_str += &"true".to_owned();
+                            } else {
+                                insert_inst_str += &"false".to_owned();
+                            }
+                        } else {
+                            insert_inst_str += &"iconst(I".to_owned();
+                            insert_inst_str += &w.to_string();
+                            insert_inst_str += &", ".to_owned();
+                            insert_inst_str += &each_inst.cops[0].to_owned();
+                            insert_inst_str += &"_u64 as i64".to_owned();
+                        }
+                        insert_inst_str += &");\n".to_owned();
                     },
-                    _ => {},
+                    _ => {
+                        insert_inst_str += &cliftinstbuilder::get_clift_opcode_name(each_inst.opcode.clone());
+                        insert_inst_str += &"(".to_owned();
+                        for i in 0..each_inst.cops.len() {
+                            if i > 0 {
+                                insert_inst_str += &", ".to_owned();
+                            }
+                            insert_inst_str += &each_inst.cops[i].to_owned();
+                        }
+                        insert_inst_str += &");\n".to_owned();
+                    },
                 }
-
-                // FIX: Insert the rhs.cops string args list
-                for i in 0..each_inst.cops.len() {
-                    if i > 0 {
-                        insert_inst_str += &", ".to_owned();
-                    }
-                    insert_inst_str += &each_inst.cops[i].to_owned();
-                }
-
-                insert_inst_str += &");\n".to_owned();
                 self.func_str.push_str(&insert_inst_str);
             }
             for inst in rhs.len() - 2..rhs.len() - 1 {
