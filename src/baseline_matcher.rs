@@ -320,38 +320,42 @@ impl Opt {
         // Current implementation assumes that it's a constant folding RHS
         if rhs.len() == 1 {
             let each_inst = rhs[0].clone();
-            //if each_inst.cops[0].contains("arg") | each_inst.cops[0].contains("rhs") {
-            //    // FIXME
-            //    println!("*** Take action for inst_result and alias here!");
-            //} else {
-            //    println!("Just replace with constant here");
-            //}
-            replace_inst_str += &"pos.func.dfg.replace(".to_owned();
-            replace_inst_str += &"inst".to_owned();
-            replace_inst_str += &").".to_owned();
-            let w = rhs[0].width;
-            if w == 1 {
-                replace_inst_str += &"bconst(B1, ".to_owned();
-                if each_inst.cops[0].clone() == String::from("1".to_string()) {
-                    replace_inst_str += &"true".to_owned();
-                } else {
-                    replace_inst_str += &"false".to_owned();
-                }
-            } else {
-                replace_inst_str += &"iconst(I".to_owned();
-                replace_inst_str += &w.to_string();
-                replace_inst_str += &", ".to_owned();
+            if each_inst.cops[0].contains("arg") | each_inst.cops[0].contains("rhs") {
+                replace_inst_str += &"let rep_insts = pos.func.dfg.inst_results(inst);\n".to_owned();
+                replace_inst_str += &"pos.func.dfg.change_to_alias(".to_owned();
                 replace_inst_str += &each_inst.cops[0].to_owned();
-                replace_inst_str += &"_u64 as i64".to_owned();
+                replace_inst_str += &", rep_insts[0]);".to_owned();
+            } else {
+                replace_inst_str += &"pos.func.dfg.replace(".to_owned();
+                replace_inst_str += &"inst".to_owned();
+                replace_inst_str += &").".to_owned();
+                let w = rhs[0].width;
+                if w == 1 {
+                    replace_inst_str += &"bconst(B1, ".to_owned();
+                    if each_inst.cops[0].clone() == String::from("1".to_string()) {
+                        replace_inst_str += &"true".to_owned();
+                    } else {
+                        replace_inst_str += &"false".to_owned();
+                    }
+                } else {
+                    replace_inst_str += &"iconst(I".to_owned();
+                    replace_inst_str += &w.to_string();
+                    replace_inst_str += &", ".to_owned();
+                    replace_inst_str += &each_inst.cops[0].to_owned();
+                    //if each_inst.cops[0].clone().contains("arg") {
+                    //} else {
+                    //    replace_inst_str += &"_u64 as i64".to_owned();
+                    //}
+                }
+                // FIX: Add the rhs.cops vector string - should be one element only.
+                //for i in 0..each_inst.cops.len() {
+                //    if i > 0 {
+                //        replace_inst_str += &", ".to_owned();
+                //    }
+                //    replace_inst_str += &each_inst.cops[i].to_owned();
+                //}
+                replace_inst_str += &"); ".to_owned();
             }
-            // FIX: Add the rhs.cops vector string - should be one element only.
-            //for i in 0..each_inst.cops.len() {
-            //    if i > 0 {
-            //        replace_inst_str += &", ".to_owned();
-            //    }
-            //    replace_inst_str += &each_inst.cops[i].to_owned();
-            //}
-            replace_inst_str += &"); ".to_owned();
             self.func_str.push_str(&replace_inst_str);
         } else {
             for inst in 0..rhs.len() - 2 {
@@ -381,7 +385,10 @@ impl Opt {
                             insert_inst_str += &w.to_string();
                             insert_inst_str += &", ".to_owned();
                             insert_inst_str += &each_inst.cops[0].to_owned();
-                            insert_inst_str += &"_u64 as i64".to_owned();
+                            //if each_inst.cops[0].clone().contains("arg") {
+                            //} else {
+                            //    insert_inst_str += &"_u64 as i64".to_owned();
+                            //}
                         }
                         insert_inst_str += &");\n".to_owned();
                     },

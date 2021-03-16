@@ -97,7 +97,9 @@ pub fn update_rhs_with_argnames(
                                     // push constant val 'c'.to_string()
                                     // to ops_list
                                     //////println!("op const val = {}", c);
-                                    ops_list.push(c.to_string())
+                                    let mut const_val = c.to_string();
+                                    const_val += &"_u64 as i64".to_owned();
+                                    ops_list.push(const_val.to_string())
                                 },
                                 None => {
                                     //////println!("op has no index and it's not constant");

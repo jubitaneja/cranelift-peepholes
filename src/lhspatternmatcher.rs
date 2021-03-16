@@ -311,7 +311,7 @@ impl Arena {
         idx_num: Option<usize>,
     ) -> Node {
         let node_val = match parent_instdata.as_ref() {
-            "BinaryImm" | "IntCompareImm" | "UnaryImm" => get_arg_name_for_binary_imm(arg, &argtype),
+            "BinaryImm" | "IntCompareImm" | "UnaryImm" | "Unary" => get_arg_name_for_binary_imm(arg, &argtype),
             _ => {
                 // Binary, Var, Unary
                 get_arg_name(arg)
