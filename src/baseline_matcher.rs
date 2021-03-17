@@ -322,9 +322,10 @@ impl Opt {
             let each_inst = rhs[0].clone();
             if each_inst.cops[0].contains("arg") | each_inst.cops[0].contains("rhs") {
                 replace_inst_str += &"let rep_insts = pos.func.dfg.inst_results(inst);\n".to_owned();
+                replace_inst_str += &"let rep_insts_0 = rep_insts[0];\n".to_owned();
                 replace_inst_str += &"pos.func.dfg.change_to_alias(".to_owned();
                 replace_inst_str += &each_inst.cops[0].to_owned();
-                replace_inst_str += &", rep_insts[0]);".to_owned();
+                replace_inst_str += &", rep_insts_0);".to_owned();
             } else {
                 replace_inst_str += &"pos.func.dfg.replace(".to_owned();
                 replace_inst_str += &"inst".to_owned();
