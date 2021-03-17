@@ -33,6 +33,10 @@ fn main() {
 
     let filename = &args[1];
     let mode = &args[2];
+    let totalpeeps = &args[3];
+    let total_peepholes: u32 = totalpeeps.parse().unwrap();
+    let mut peep_counter: u32 = 0;
+
     match mode.as_ref() {
         "fast" => {}
         "baseline" => {}
@@ -57,7 +61,11 @@ fn main() {
     let mut rhs_table = HashMap::new();
     let mut global_nodes_count: usize = 0;
     let mut lhs_count = 1;
+
     for s in splitter {
+        if peep_counter >= total_peepholes {
+            break;
+        }
         //////println!("*******   Test Case   *******\n{}\n", s);
         // lexing
         //lexer::start_lexer(&s);
@@ -74,17 +82,20 @@ fn main() {
         //////    println!("Clift Inst = {}",
         //////        cliftinstbuilder::get_clift_opcode_name(ci.opcode));
         //////    println!("\tInst Index = {}\n", ci.lhs_index);
+        //////    println!("\tInst width = {}", ci.width);
         //////    match ci.cops {
         //////        Some(ops) => {
         //////            for op in ops {
         //////                match op.idx_val {
         //////                    Some(idx_val) => {
         //////                        println!("Op idx = {}\n", idx_val);
+        //////                        //println!("op width = {}", op.width);
         //////                    },
         //////                    None => {
         //////                        match op.const_val {
         //////                            Some(c) => {
         //////                                println!("Op const val = {}\n", c);
+        //////                                //println!("op width = {}", op.width);
         //////                            },
         //////                            None => {},
         //////                        }
@@ -219,7 +230,175 @@ fn main() {
             lhs_count += 1;
             println!("{}", base_matcher);
         }
+        peep_counter += 1;
     }
+
+    //for s in splitter {
+    //    //////println!("*******   Test Case   *******\n{}\n", s);
+    //    // lexing
+    //    //lexer::start_lexer(&s);
+
+    //    // Parsing
+    //    let souper_insts = parser::parse(&s);
+
+    //    // Cranelift Instruction Building
+    //    let clift_insts = cliftinstbuilder::transform_souper_to_clift_insts(souper_insts);
+
+    //    // Debug
+    //    //////println!("==== After Souper to Clift Instructions ========\n");
+    //    //////for ci in clift_insts.clone() {
+    //    //////    println!("Clift Inst = {}",
+    //    //////        cliftinstbuilder::get_clift_opcode_name(ci.opcode));
+    //    //////    println!("\tInst Index = {}\n", ci.lhs_index);
+    //    //////    println!("\tInst width = {}", ci.width);
+    //    //////    match ci.cops {
+    //    //////        Some(ops) => {
+    //    //////            for op in ops {
+    //    //////                match op.idx_val {
+    //    //////                    Some(idx_val) => {
+    //    //////                        println!("Op idx = {}\n", idx_val);
+    //    //////                        //println!("op width = {}", op.width);
+    //    //////                    },
+    //    //////                    None => {
+    //    //////                        match op.const_val {
+    //    //////                            Some(c) => {
+    //    //////                                println!("Op const val = {}\n", c);
+    //    //////                                //println!("op width = {}", op.width);
+    //    //////                            },
+    //    //////                            None => {},
+    //    //////                        }
+    //    //////                    },
+    //    //////                }
+    //    //////            }
+    //    //////        },
+    //    //////        None => {},
+    //    //////    }
+    //    //////}
+    //    //////println!("====================================\n");
+
+    //    // Pattern Matching - Single prefix tree
+    //    let lhs_single_tree = lhspatternmatcher::generate_single_tree_patterns(
+    //        clift_insts.clone(),
+    //        global_nodes_count + 1,
+    //    );
+
+    //    global_nodes_count += lhs_single_tree.len();
+
+    //    // Process linear prefix tree of LHS for updating arg names
+    //    // from parent instdata nodes to arg nodes
+    //    //////println!("\n---- ProcessLHS module: update arg names from parent to arg nodes\n");
+    //    let lhs_info = processlhs::update_arg_nodes_in_lhs(
+    //        lhs_single_tree.clone()
+    //    );
+    //    //////println!("\n----- ProcessLHS module end\n");
+
+    //    // Build path conditions hashtable for each LHS vector of nodes
+    //    let lhs_pc = pctable::get_path_condition_args_for_lhs(
+    //        lhs_info.nodes.clone()
+    //    );
+    //    //////println!("\n************* PC HASHTABLE *****************\n");
+    //    //////for (x, y) in lhs_pc.clone() {
+    //    //////    println!("Arg: {}, idx: {}", x, y);
+    //    //////}
+    //    //////println!("\n******************************\n");
+
+
+    //    // Separate out only RHS cranelift insts
+    //    let rhs_clift_insts =
+    //        rhscliftinsts::get_result_clift_insts_only(
+    //            clift_insts.clone());
+
+    //    let rhs_info =
+    //        processrhs::update_rhs_with_argnames(
+    //            rhs_clift_insts.clone(), lhs_info.htable.clone());
+    //    // Debug
+    //    //////println!("= = = = = = hash table index_to_argnames = = = = =");
+    //    //////for (x, y) in rhs_info.full_table.clone() {
+    //    //////    println!("idx = {}, argname = {}", x, y);
+    //    //////}
+    //    // Debug
+    //    // println!("- - - -  - - - - - - -\n");
+    //    // for ri in rhs_clift_insts.clone() {
+    //    //     println!("rhs inst = {}\n",
+    //    //         cliftinstbuilder::get_clift_opcode_name(ri.opcode));
+    //    // }
+    //    // println!("- - - - - - -  - - - -\n");
+
+    //    //let hash_id = lhs_single_tree[lhs_single_tree.len() - 1].id;
+    //    let hash_id = lhs_info.nodes[lhs_info.nodes.len() - 1].id;
+
+    //    // Debug
+    //    //println!("hash id for LHS is: {}\n", hash_id);
+
+    //    rhs_table = tablerhs::map_lhs_to_rhs(hash_id, rhs_info.rhs_insts, rhs_table.clone());
+
+    //    // Debug
+    //    //////println!("\n********RHS TABLE Debugger **********************\n");
+    //    //////for (x, y) in rhs_table.clone() {
+    //    //////    println!("******* For LHS ID = {}, RHS is == \n", x);
+    //    //////    for n in y {
+    //    //////        println!("RHS inst in hash table = {}, ",
+    //    //////            cliftinstbuilder::get_clift_opcode_name(n.opcode));
+    //    //////        for o in n.cops {
+    //    //////            println!("RHS inst arg = {}", o);
+    //    //////        }
+    //    //////    }
+    //    //////}
+    //    //////println!("\n******************************\n");
+
+    //    if mode == "fast" {
+    //        // Merged prefix tree
+    //        merged_arena = mergedtree::generate_merged_prefix_tree(
+    //            //lhs_single_tree.clone(),
+    //            lhs_info.nodes.clone(),
+    //            merged_arena.clone(),
+    //        );
+
+    //        // Debug: Pretty print the merged arena
+    //        // println!("----- nodes in merged_tree are -----");
+    //        // for n in 0 .. merged_arena.merged_tree.len() {
+    //        //     println!("Node id = {}",
+    //        //         merged_arena.merged_tree[n].id);
+    //        //     if let Some(sub_nodes) =
+    //        //         merged_arena.merged_tree[n].next.clone() {
+    //        //             for sub_node in 0 .. sub_nodes.len() {
+    //        //                 println!("\t\tSub Node id: {}",
+    //        //                     sub_nodes[sub_node].index);
+    //        //             }
+    //        //     } else {
+    //        //         continue;
+    //        //     }
+    //        // }
+
+    //        // match merged_arena.merged_tree[0].next.clone() {
+    //        //     Some(nodes_list) => {
+    //        //         for x in 0 .. nodes_list.len() {
+    //        //             println!("root's next = {}",
+    //        //                 nodes_list[x].index);
+    //        //         }
+    //        //     },
+    //        //     None => {},
+    //        // }
+    //        // println!("==== hashmap entries =====");
+    //        // for (val, idx) in &merged_arena.hmap {
+    //        //     println!("{}: {}", val, idx);
+    //        // }
+
+    //        // println!("========================");
+    //    }
+
+    //    if mode == "baseline" {
+    //        let base_matcher = baseline_matcher::generate_baseline_matcher(
+    //            lhs_info.nodes.clone(),
+    //            rhs_table.clone(),
+    //            lhs_count,
+    //            lhs_info.htable.clone(),
+    //            lhs_pc.clone()
+    //        );
+    //        lhs_count += 1;
+    //        println!("{}", base_matcher);
+    //    }
+    //}
 
     if mode == "fast" {
         let matcher_func = matcher::generate_matcher(merged_arena.clone(), rhs_table.clone());
