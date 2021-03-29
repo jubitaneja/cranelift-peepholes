@@ -1,0 +1,38 @@
+The log files:
+
+rustc-*-backend-log.txt are for building pulldown-camrk benchmark in sightglass
+with different variants of rustc compiler.
+
+
+average compile time:
+
+cranelift+superopt = 2.388 sec
+cranelift original = 2.413 sec
+llvm backend       = 3.06  sec
+
+
+speed up compile time:
+1) from cranelift original ->  cranelift + superopt = 1.24%
+    ++ compile time reduced by 1.24%
+
+2) from llvm backend ->  cranelift + superopt = 22.22%
+    ++ compile time reduced by 22.22%
+
+3) from llvm backend ->  cranelift original = 21.24%
+    ++ compile time reduced by 21.24%
+
+average run time:
+cranelift + superopt = 0.0382 sec
+cranelift original   = 0.0381 sec
+llvm backend         = 0.0419 sec
+
+
+speed up run time:
+1) from cranelift original to crnaelift + superopt = 0%
+    ++ no speedup, the run time is exact same
+
+2) from llvm backend -> cranelift + superopt or cranelift original = 9.52%
+    ++ execution time reduced by cranelift backend by 9.52%
+
+
+

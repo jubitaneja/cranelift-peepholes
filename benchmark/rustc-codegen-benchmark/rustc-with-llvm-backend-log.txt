@@ -1,0 +1,163 @@
+rustc with llvm backend
+**** Test# 1 ****
+   Compiling version_check v0.9.3
+   Compiling memchr v2.3.4
+   Compiling bitflags v1.2.1
+   Compiling unicode-width v0.1.8
+   Compiling pulldown-cmark v0.8.0
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.06s
+**** Test# 2 ****
+   Compiling version_check v0.9.3
+   Compiling memchr v2.3.4
+   Compiling bitflags v1.2.1
+   Compiling unicode-width v0.1.8
+   Compiling pulldown-cmark v0.8.0
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.05s
+**** Test# 3 ****
+   Compiling version_check v0.9.3
+   Compiling bitflags v1.2.1
+   Compiling memchr v2.3.4
+   Compiling pulldown-cmark v0.8.0
+   Compiling unicode-width v0.1.8
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.08s
+**** Test# 4 ****
+   Compiling version_check v0.9.3
+   Compiling bitflags v1.2.1
+   Compiling memchr v2.3.4
+   Compiling unicode-width v0.1.8
+   Compiling pulldown-cmark v0.8.0
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.06s
+**** Test# 5 ****
+   Compiling version_check v0.9.3
+   Compiling bitflags v1.2.1
+   Compiling memchr v2.3.4
+   Compiling unicode-width v0.1.8
+   Compiling pulldown-cmark v0.8.0
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.05s
+**** Test# 6 ****
+   Compiling version_check v0.9.3
+   Compiling memchr v2.3.4
+   Compiling bitflags v1.2.1
+   Compiling unicode-width v0.1.8
+   Compiling pulldown-cmark v0.8.0
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.06s
+**** Test# 7 ****
+   Compiling version_check v0.9.3
+   Compiling memchr v2.3.4
+   Compiling bitflags v1.2.1
+   Compiling pulldown-cmark v0.8.0
+   Compiling unicode-width v0.1.8
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.05s
+**** Test# 8 ****
+   Compiling version_check v0.9.3
+   Compiling memchr v2.3.4
+   Compiling bitflags v1.2.1
+   Compiling pulldown-cmark v0.8.0
+   Compiling unicode-width v0.1.8
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.06s
+**** Test# 9 ****
+   Compiling version_check v0.9.3
+   Compiling memchr v2.3.4
+   Compiling bitflags v1.2.1
+   Compiling pulldown-cmark v0.8.0
+   Compiling unicode-width v0.1.8
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.06s
+**** Test# 10 ****
+   Compiling version_check v0.9.3
+   Compiling memchr v2.3.4
+   Compiling bitflags v1.2.1
+   Compiling unicode-width v0.1.8
+   Compiling pulldown-cmark v0.8.0
+   Compiling sightglass-api v0.1.0
+   Compiling getopts v0.2.21
+   Compiling unicase v2.6.0
+   Compiling pulldown-cmark-wasm-benchmark v0.1.0 (/home/jubi/myrepo/mozilla/paper/sightglass/benchmarks-next/pulldown-cmark/rust-benchmark)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.07s
+
+rustc with llvm backend
+**** Test# 1 ****
+
+real	0m0.040s
+user	0m0.040s
+sys	0m0.000s
+**** Test# 2 ****
+
+real	0m0.043s
+user	0m0.039s
+sys	0m0.004s
+**** Test# 3 ****
+
+real	0m0.043s
+user	0m0.039s
+sys	0m0.004s
+**** Test# 4 ****
+
+real	0m0.046s
+user	0m0.046s
+sys	0m0.000s
+**** Test# 5 ****
+
+real	0m0.044s
+user	0m0.040s
+sys	0m0.004s
+**** Test# 6 ****
+
+real	0m0.044s
+user	0m0.036s
+sys	0m0.008s
+**** Test# 7 ****
+
+real	0m0.039s
+user	0m0.039s
+sys	0m0.000s
+**** Test# 8 ****
+
+real	0m0.039s
+user	0m0.039s
+sys	0m0.000s
+**** Test# 9 ****
+
+real	0m0.041s
+user	0m0.037s
+sys	0m0.004s
+**** Test# 10 ****
+
+real	0m0.040s
+user	0m0.040s
+sys	0m0.000s
